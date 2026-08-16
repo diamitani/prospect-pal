@@ -1,7 +1,7 @@
 /**
- * Next.js Middleware (Proxy) — Route Protection
+ * Next.js Middleware — Route Protection
  * /dashboard and /api/* (except /api/auth) require a valid session cookie.
- * Public: /, /home, /login, /signup, /api/auth/*
+ * Public: /, /home, /login, /signup, /api/auth/*, /api/composio/*, /api/n8n/*
  */
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
@@ -11,36 +11,31 @@ const JWT_SECRET = new TextEncoder().encode(
 );
 const COOKIE_NAME = "ppal_session";
 
-// Routes that require auth
 const PROTECTED_PREFIXES = ["/dashboard", "/api/pal", "/api/projects", "/api/workflow"];
 
-// Routes that are always public
 const PUBLIC_PREFIXES = [
   "/login", "/signup", "/forgot-password", "/api/auth",
-  "/home", "/_next", "/favicon", "/images",
+  "/home", "/_next", "/favicon", "/images", "/api/composio", "/api/n8n",
 ];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Always allow static files and known public paths
   if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p)) || pathname.includes(".")) {
     return NextResponse.next();
   }
 
-  // Root redirect: check session and redirect appropriately
   if (pathname === "/") {
     const token = req.cookies.get(COOKIE_NAME)?.value;
     if (token) {
       try {
         await jwtVerify(token, JWT_SECRET);
         return NextResponse.redirect(new URL("/dashboard", req.url));
-      } catch { /* fall through to public */ }
+      } catch { /* fall through */ }
     }
     return NextResponse.redirect(new URL("/home", req.url));
   }
 
-  // Protected routes
   if (PROTECTED_PREFIXES.some((p) => pathname.startsWith(p))) {
     const token = req.cookies.get(COOKIE_NAME)?.value;
     if (!token) {

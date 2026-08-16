@@ -19,14 +19,15 @@ export default function SignupPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
       });
+      // Await full body — browser commits Set-Cookie when body is read
       const data = await res.json() as { error?: string; user?: unknown };
       if (!res.ok) {
         setError(data.error || "Sign up failed — please try again");
         setLoading(false);
         return;
       }
-      // Signed up + logged in — hard navigate so cookie is read
-      window.location.href = "/dashboard";
+      // Cookie is now stored — navigate
+      window.location.replace("/dashboard");
     } catch {
       setError("Connection error — please try again");
       setLoading(false);

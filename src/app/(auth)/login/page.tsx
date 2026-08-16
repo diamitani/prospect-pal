@@ -21,16 +21,19 @@ function LoginForm() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        // Pass redirectTo so server can echo it back
+        body: JSON.stringify({ email, password, redirectTo }),
       });
-      const data = await res.json() as { error?: string };
+      // IMPORTANT: await .json() fully before navigating.
+      // The browser commits Set-Cookie headers when the response body is read.
+      const data = await res.json() as { error?: string; redirectTo?: string };
       if (!res.ok) {
         setError(data.error || "Invalid email or password");
         setLoading(false);
         return;
       }
-      // Hard navigate to ensure cookie is applied
-      window.location.href = redirectTo;
+      // Cookie is now stored — navigate
+      window.location.replace(data.redirectTo || redirectTo);
     } catch {
       setError("Connection error — please try again");
       setLoading(false);
