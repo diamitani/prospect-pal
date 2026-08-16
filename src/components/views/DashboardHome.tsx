@@ -109,7 +109,7 @@ export default function DashboardHome({ userName, onNavigate }: DashboardHomePro
               onClick={() => onNavigate(a.view)}
               style={{
                 textAlign: "left", padding: "18px 18px 16px",
-                borderRadius: 14, cursor: "pointer", border: "none",
+                borderRadius: 14, cursor: "pointer",
                 background: a.primary ? "#1c5a1c" : "white",
                 boxShadow: a.primary
                   ? "0 4px 20px rgba(28,90,28,0.28)"
