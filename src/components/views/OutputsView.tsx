@@ -9,9 +9,21 @@ interface OutputsViewProps {
 
 type Tab = "n8n" | "skill" | "guide" | "email" | "prompts";
 
+interface PushResult {
+  success:     boolean;
+  workflowId?: string;
+  workflowUrl?:string;
+  nodeCount?:  number;
+  name?:       string;
+  message?:    string;
+  error?:      string;
+}
+
 export default function OutputsView({ palOutput, projectId }: OutputsViewProps) {
   const [activeTab, setActiveTab] = useState<Tab>("n8n");
-  const [copied, setCopied] = useState<string | null>(null);
+  const [copied,    setCopied]    = useState<string | null>(null);
+  const [pushing,   setPushing]   = useState(false);
+  const [pushResult,setPushResult]= useState<PushResult | null>(null);
 
   const tabs: { id: Tab; label: string; icon: string; desc: string }[] = [
     { id: "n8n",     label: "n8n Workflow",    icon: "⚡", desc: "Import-ready JSON" },
@@ -48,19 +60,43 @@ export default function OutputsView({ palOutput, projectId }: OutputsViewProps) 
     URL.revokeObjectURL(url);
   };
 
+  const pushToN8n = async () => {
+    const n8nUrl    = localStorage.getItem("ppal_n8n_url")  || "";
+    const n8nApiKey = localStorage.getItem("ppal_n8n_key")  || "";
+    if (!n8nUrl || !n8nApiKey) {
+      alert("Set your n8n URL and API key in Integrations first.");
+      return;
+    }
+    const workflowJson = getContent("n8n");
+    if (!workflowJson || workflowJson.startsWith("//")) {
+      alert("Generate a workflow first.");
+      return;
+    }
+    setPushing(true); setPushResult(null);
+    try {
+      const res  = await fetch("/api/n8n/push", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ n8nUrl, n8nApiKey, workflowJson, workflowName: "Prospect PAL Workflow" }),
+      });
+      const data = await res.json() as PushResult;
+      setPushResult(data);
+    } catch {
+      setPushResult({ success: false, error: "Network error — please try again" });
+    } finally {
+      setPushing(false);
+    }
+  };
+
   if (!palOutput) {
     return (
-      <div className="p-8 max-w-3xl mx-auto">
-        <div className="bg-white border border-surface-200 rounded-2xl p-12 shadow-card text-center">
-          <div className="w-16 h-16 bg-surface-100 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">📦</div>
-          <h2 className="text-lg font-bold text-ink mb-2">No outputs yet</h2>
-          <p className="text-sm text-ink-secondary mb-6">
-            Chat with the PAL Agent or run the Guided Wizard to generate your workflow package.
+      <div style={{ padding: 32, maxWidth: 640, margin: "0 auto" }}>
+        <div style={{ background: "white", border: "1px solid #eceae4", borderRadius: 18, padding: 48, textAlign: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+          <div style={{ fontSize: 40, marginBottom: 16 }}>📦</div>
+          <h2 style={{ fontSize: 18, fontWeight: 800, color: "#111", margin: "0 0 8px" }}>No outputs yet</h2>
+          <p style={{ fontSize: 14, color: "#6B7280", margin: "0 0 24px" }}>
+            Build a workflow in the Builder tab to generate your n8n workflow package.
           </p>
-          <div className="flex gap-3 justify-center">
-            <button className="btn-brand">Chat with PAL Agent</button>
-            <button className="btn-outline">Run Wizard</button>
-          </div>
         </div>
       </div>
     );
@@ -167,6 +203,72 @@ export default function OutputsView({ palOutput, projectId }: OutputsViewProps) 
         </div>
       </div>
 
+      {/* Push to n8n — shown when on the n8n tab */}
+      {activeTab === "n8n" && (
+        <div style={{
+          marginTop: 16, background: "white",
+          border: "1px solid #eceae4", borderRadius: 14,
+          padding: "18px 22px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: "#ff6d5a18", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>⚡</div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#111" }}>Push to n8n Workspace</div>
+                <div style={{ fontSize: 12, color: "#6B7280" }}>Deploy this workflow directly into your n8n canvas — no copy-paste</div>
+              </div>
+            </div>
+            <button
+              onClick={pushToN8n}
+              disabled={pushing}
+              style={{
+                padding: "10px 22px", fontSize: 13, fontWeight: 700,
+                color: "white", background: pushing ? "#2d762d" : "#1c5a1c",
+                border: "none", borderRadius: 10, cursor: pushing ? "not-allowed" : "pointer",
+                display: "flex", alignItems: "center", gap: 8, fontFamily: "inherit",
+                boxShadow: "0 2px 8px rgba(28,90,28,0.25)", whiteSpace: "nowrap" as const,
+              }}
+            >
+              {pushing ? <><PushSpinner /> Pushing...</> : "⚡ Push to n8n"}
+            </button>
+          </div>
+
+          {/* Push result */}
+          {pushResult && (
+            <div style={{
+              marginTop: 14, padding: "12px 16px", borderRadius: 10,
+              background: pushResult.success ? "#f0f9f0" : "#fef2f2",
+              border: `1px solid ${pushResult.success ? "#bce3bc" : "#fca5a5"}`,
+            }}>
+              {pushResult.success ? (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1c5a1c" }}>✓ Workflow pushed!</div>
+                    <div style={{ fontSize: 12, color: "#2d762d", marginTop: 2 }}>
+                      {pushResult.nodeCount} nodes · {pushResult.name}
+                    </div>
+                  </div>
+                  <a
+                    href={pushResult.workflowUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: "8px 16px", fontSize: 12, fontWeight: 700,
+                      color: "white", background: "#1c5a1c",
+                      borderRadius: 8, textDecoration: "none", whiteSpace: "nowrap" as const,
+                    }}
+                  >
+                    Open in n8n →
+                  </a>
+                </div>
+              ) : (
+                <div style={{ fontSize: 13, color: "#dc2626" }}>✗ {pushResult.error}</div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* PAL Stage Timeline */}
       {Array.isArray(palOutput.palStages) && palOutput.palStages.length > 0 && (
         <div className="mt-6 bg-white border border-surface-200 rounded-2xl p-5 shadow-card">
@@ -191,5 +293,16 @@ export default function OutputsView({ palOutput, projectId }: OutputsViewProps) 
         </div>
       )}
     </div>
+  );
+}
+
+function PushSpinner() {
+  return (
+    <span style={{
+      width: 13, height: 13,
+      border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white",
+      borderRadius: "50%", display: "inline-block",
+      animation: "spin 0.7s linear infinite",
+    }} />
   );
 }
