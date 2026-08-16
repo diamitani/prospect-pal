@@ -11,9 +11,9 @@ import {
   CognitoIdentityProviderClient,
   InitiateAuthCommand,
   SignUpCommand,
-  ConfirmSignUpCommand,
+  AdminConfirmSignUpCommand,
+  AdminUpdateUserAttributesCommand,
   GetUserCommand,
-  ForgotPasswordCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -64,22 +64,24 @@ export async function getSession(): Promise<SessionUser | null> {
 
 export function setCookieHeaders(token: string): Record<string, string> {
   const maxAge = SESSION_DAYS * 24 * 60 * 60;
+  const isLocal = process.env.NODE_ENV === "development";
+  // Omit Secure flag on localhost (http://) so cookie is actually set
+  const secureFlag = isLocal ? "" : "; Secure";
   return {
-    "Set-Cookie": `${COOKIE_NAME}=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${maxAge}`,
+    "Set-Cookie": `${COOKIE_NAME}=${token}; HttpOnly${secureFlag}; SameSite=Lax; Path=/; Max-Age=${maxAge}`,
   };
 }
 
 export function clearCookieHeaders(): Record<string, string> {
   return {
-    "Set-Cookie": `${COOKIE_NAME}=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0`,
+    "Set-Cookie": `${COOKIE_NAME}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`,
   };
 }
 
 // ===========================================================================
-// AWS COGNITO CLIENT (optional — falls back to demo mode)
+// AWS COGNITO CLIENT
 // ===========================================================================
 
-// Detect if Cognito is properly configured (not just placeholder values)
 const PLACEHOLDER_PATTERNS = ["your_", "XXXXXXXXX", "example", "changeme", "xxx"];
 const isRealValue = (v?: string) =>
   !!v && !PLACEHOLDER_PATTERNS.some((p) => v.toLowerCase().includes(p.toLowerCase()));
@@ -113,31 +115,39 @@ export async function loginUser(
       });
       const res = await cognitoClient.send(cmd);
       const accessToken = res.AuthenticationResult?.AccessToken;
-      if (!accessToken) return { error: "Authentication failed" };
+      if (!accessToken) return { error: "Authentication failed — please check your credentials" };
 
       // Get user details
       const userCmd = new GetUserCommand({ AccessToken: accessToken });
       const userRes = await cognitoClient.send(userCmd);
-      const sub     = userRes.UserAttributes?.find((a) => a.Name === "sub")?.Value || email;
-      const name    = userRes.UserAttributes?.find((a) => a.Name === "name")?.Value || email.split("@")[0];
+      const sub  = userRes.UserAttributes?.find((a) => a.Name === "sub")?.Value || email;
+      const name = userRes.UserAttributes?.find((a) => a.Name === "name")?.Value || email.split("@")[0];
 
       const user: SessionUser = { id: sub, email, name, plan: "pro" };
       const token = await createSession(user);
       return { user, token };
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Login failed";
+      // Friendly messages for common Cognito errors
+      if (msg.includes("NotAuthorizedException") || msg.includes("Incorrect username or password")) {
+        return { error: "Incorrect email or password" };
+      }
+      if (msg.includes("UserNotConfirmedException")) {
+        return { error: "Account not confirmed — please check your email or sign up again" };
+      }
+      if (msg.includes("UserNotFoundException")) {
+        return { error: "No account found with that email" };
+      }
       return { error: msg };
     }
   }
 
   // ── Demo mode (no Cognito configured) ────────────────────────────────────
-  // Accept any email/password with password length >= 8 for demo
   if (password.length < 8) {
     return { error: "Password must be at least 8 characters" };
   }
 
   try {
-    // Use btoa instead of Buffer (works in all runtimes)
     const idHash = btoa(email).replace(/[^a-zA-Z0-9]/g, "").slice(0, 8);
     const user: SessionUser = {
       id:   `demo-${idHash}`,
@@ -157,9 +167,10 @@ export async function signupUser(
   email: string,
   password: string,
   name: string
-): Promise<{ success: true } | { error: string }> {
+): Promise<{ user: SessionUser; token: string } | { error: string }> {
 
   if (COGNITO_CONFIGURED && cognitoClient) {
+    // Step 1: Register with Cognito
     try {
       await cognitoClient.send(new SignUpCommand({
         ClientId: process.env.COGNITO_CLIENT_ID!,
@@ -170,12 +181,41 @@ export async function signupUser(
           { Name: "name",  Value: name  },
         ],
       }));
-      return { success: true };
     } catch (err) {
-      return { error: err instanceof Error ? err.message : "Signup failed" };
+      const msg = err instanceof Error ? err.message : "Signup failed";
+      if (msg.includes("UsernameExistsException") || msg.includes("already exists")) {
+        return { error: "An account with this email already exists — try signing in" };
+      }
+      if (msg.includes("InvalidPasswordException")) {
+        return { error: "Password must be at least 8 characters with uppercase, lowercase, and a number" };
+      }
+      return { error: msg };
     }
+
+    // Step 2: Auto-confirm the user (skip email verification entirely)
+    try {
+      await cognitoClient.send(new AdminConfirmSignUpCommand({
+        UserPoolId: process.env.COGNITO_USER_POOL_ID!,
+        Username:   email,
+      }));
+
+      // Also mark email as verified
+      await cognitoClient.send(new AdminUpdateUserAttributesCommand({
+        UserPoolId: process.env.COGNITO_USER_POOL_ID!,
+        Username:   email,
+        UserAttributes: [{ Name: "email_verified", Value: "true" }],
+      }));
+    } catch (err) {
+      // AdminConfirmSignUp requires IAM credentials — if it fails, fall back
+      // to returning an error so the user knows to verify their email
+      console.error("[auth] AdminConfirmSignUp failed:", err);
+      return { error: "Account created but needs verification — please check your email for a confirmation code" };
+    }
+
+    // Step 3: Auto-login immediately after confirmation
+    return loginUser(email, password);
   }
 
-  // Demo mode: just return success
-  return { success: true };
+  // ── Demo mode ─────────────────────────────────────────────────────────────
+  return loginUser(email, password);
 }

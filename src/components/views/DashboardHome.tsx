@@ -13,9 +13,8 @@ const quickActions = [
     id: "builder",
     icon: "⚡",
     title: "Build New Workflow",
-    description: "Walk through tools, ICP, and generate your n8n workflow",
-    color: "bg-brand-700 text-white",
-    iconBg: "bg-brand-600",
+    description: "Describe your ICP → pick tools → generate n8n workflow live",
+    primary: true,
     view: "builder" as View,
   },
   {
@@ -23,8 +22,7 @@ const quickActions = [
     icon: "↓",
     title: "Download Outputs",
     description: "Get your n8n JSON, deploy guide & email template",
-    color: "bg-white border border-surface-200",
-    iconBg: "bg-surface-100",
+    primary: false,
     view: "outputs" as View,
   },
   {
@@ -32,8 +30,7 @@ const quickActions = [
     icon: "◫",
     title: "My Campaigns",
     description: "View all your generated workflows",
-    color: "bg-white border border-surface-200",
-    iconBg: "bg-surface-100",
+    primary: false,
     view: "projects" as View,
   },
   {
@@ -41,128 +38,175 @@ const quickActions = [
     icon: "◎",
     title: "Connect Tools",
     description: "Add Apollo, HubSpot, Smartlead credentials",
-    color: "bg-white border border-surface-200",
-    iconBg: "bg-surface-100",
+    primary: false,
     view: "settings" as View,
   },
 ];
 
-const palStages = [
-  { num: 1, name: "Extract", desc: "Parse your ICP description" },
-  { num: 2, name: "Categorize", desc: "Classify industry & persona" },
-  { num: 3, name: "Enhance", desc: "Add pain points & triggers" },
-  { num: 4, name: "Instruct", desc: "Write AI system prompt" },
-  { num: 5, name: "Compile", desc: "Generate n8n workflow" },
+const pipeline = [
+  { num: 1, name: "Extract",    desc: "Parse your ICP",        icon: "📝" },
+  { num: 2, name: "Categorize", desc: "Classify persona",       icon: "🎯" },
+  { num: 3, name: "Enhance",    desc: "Add pain points",        icon: "⚡" },
+  { num: 4, name: "Instruct",   desc: "Write AI prompt",        icon: "🤖" },
+  { num: 5, name: "Compile",    desc: "Generate n8n workflow",  icon: "🏗️" },
 ];
 
 const stats = [
-  { label: "Leads/Day", value: "25-50", unit: "auto", color: "text-brand-700" },
-  { label: "Speed to Lead", value: "15", unit: "min", color: "text-blue-600" },
-  { label: "Bounce Rate", value: "<2", unit: "%", color: "text-emerald-600" },
-  { label: "Time Saved", value: "10+", unit: "hrs/wk", color: "text-violet-600" },
+  { label: "Leads/Day",    value: "25–50", unit: "auto",   accent: "#1c5a1c" },
+  { label: "Speed to Lead",value: "15",    unit: "min",    accent: "#2563EB" },
+  { label: "Bounce Rate",  value: "<2",    unit: "%",      accent: "#059669" },
+  { label: "Time Saved",   value: "10+",   unit: "hrs/wk", accent: "#7C3AED" },
 ];
 
-export default function DashboardHome({ userName, onNavigate, onNewProject }: DashboardHomeProps) {
-  return (
-    <div style={{ padding: "32px", maxWidth: 960, margin: "0 auto", overflowY: "auto", height: "100%" }}>
+function getGreeting(name: string) {
+  const h = new Date().getHours();
+  const part = h < 12 ? "morning" : h < 17 ? "afternoon" : "evening";
+  return `Good ${part}, ${name}!`;
+}
 
-      {/* Quick Actions Grid */}
-      <section className="mb-10">
-        <h2 className="text-sm font-semibold text-ink-muted uppercase tracking-wider mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-3 gap-4">
-          {quickActions.map((action) => (
-            <button
-              key={action.id}
-              onClick={() => onNavigate(action.view)}
-              className={`text-left p-5 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover ${action.color}`}
-            >
-              <div className={`w-10 h-10 rounded-xl ${action.iconBg} flex items-center justify-center text-xl mb-3 ${action.color.includes("brand-700") ? "bg-brand-600" : ""}`}>
-                {action.icon}
-              </div>
-              <div className={`font-semibold text-sm mb-1 ${action.color.includes("brand-700") ? "text-white" : "text-ink"}`}>
-                {action.title}
-              </div>
-              <div className={`text-xs leading-relaxed ${action.color.includes("brand-700") ? "text-brand-200" : "text-ink-secondary"}`}>
-                {action.description}
-              </div>
-            </button>
-          ))}
-        </div>
-      </section>
+export default function DashboardHome({ userName, onNavigate }: DashboardHomeProps) {
+  return (
+    <div style={{
+      overflowY: "auto", height: "100%",
+      padding: "32px 32px 48px",
+      maxWidth: 1020, margin: "0 auto",
+    }}>
+
+      {/* Greeting */}
+      <div style={{ marginBottom: 28 }}>
+        <h1 style={{
+          fontSize: 26, fontWeight: 900, color: "#111", letterSpacing: "-0.6px",
+          margin: "0 0 4px",
+        }}>{getGreeting(userName)}</h1>
+        <p style={{ fontSize: 14, color: "#6B7280", margin: 0 }}>
+          Ready to build your next outbound workflow? It takes 5 minutes.
+        </p>
+      </div>
 
       {/* Stats Row */}
-      <section className="mb-10">
-        <div className="grid grid-cols-4 gap-4">
-          {stats.map((stat) => (
-            <div key={stat.label} className="bg-white border border-surface-200 rounded-2xl p-5 shadow-card">
-              <div className={`text-2xl font-bold tracking-tight mb-1 ${stat.color}`}>
-                {stat.value}
-                <span className="text-sm font-medium ml-1">{stat.unit}</span>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 28 }}>
+        {stats.map((s) => (
+          <div key={s.label} style={{
+            background: "white", border: "1px solid #eceae4",
+            borderRadius: 14, padding: "16px 20px",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+          }}>
+            <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: "-0.5px", color: s.accent, lineHeight: 1.1 }}>
+              {s.value}<span style={{ fontSize: 13, fontWeight: 600, marginLeft: 3, color: s.accent + "bb" }}>{s.unit}</span>
+            </div>
+            <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600, marginTop: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Quick Actions */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#9CA3AF", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>Quick Actions</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+          {quickActions.map((a) => (
+            <button
+              key={a.id}
+              onClick={() => onNavigate(a.view)}
+              style={{
+                textAlign: "left", padding: "18px 18px 16px",
+                borderRadius: 14, cursor: "pointer", border: "none",
+                background: a.primary ? "#1c5a1c" : "white",
+                boxShadow: a.primary
+                  ? "0 4px 20px rgba(28,90,28,0.28)"
+                  : "0 1px 3px rgba(0,0,0,0.05)",
+                border: a.primary ? "none" : "1px solid #eceae4",
+                fontFamily: "inherit",
+                transition: "transform 0.18s, box-shadow 0.18s",
+              } as React.CSSProperties}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = a.primary ? "0 8px 28px rgba(28,90,28,0.32)" : "0 4px 20px rgba(0,0,0,0.09)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = a.primary ? "0 4px 20px rgba(28,90,28,0.28)" : "0 1px 3px rgba(0,0,0,0.05)"; }}
+            >
+              <div style={{
+                width: 36, height: 36, borderRadius: 10, marginBottom: 12,
+                background: a.primary ? "rgba(255,255,255,0.15)" : "#f4f3ef",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 18,
+              }}>{a.icon}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: a.primary ? "white" : "#111", marginBottom: 4 }}>{a.title}</div>
+              <div style={{ fontSize: 11, color: a.primary ? "rgba(255,255,255,0.65)" : "#9CA3AF", lineHeight: 1.5 }}>{a.description}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 5-Stage Pipeline */}
+      <div style={{
+        background: "white", border: "1px solid #eceae4",
+        borderRadius: 16, padding: "22px 24px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.05)", marginBottom: 20,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: "#111", marginBottom: 2 }}>How the PAL Pipeline Works</div>
+            <div style={{ fontSize: 12, color: "#6B7280" }}>5 AI stages turn your ICP into a complete automation</div>
+          </div>
+          <button
+            onClick={() => onNavigate("builder")}
+            style={{
+              padding: "8px 16px", fontSize: 12, fontWeight: 700,
+              color: "white", background: "#1c5a1c", border: "none",
+              borderRadius: 8, cursor: "pointer", fontFamily: "inherit",
+            }}
+          >Start Building →</button>
+        </div>
+        <div style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
+          {pipeline.map((stage, i) => (
+            <div key={stage.num} style={{ display: "flex", alignItems: "center", flex: 1 }}>
+              <div style={{
+                flex: 1, background: "#fafaf8", border: "1px solid #eceae4",
+                borderRadius: 12, padding: "14px 10px", textAlign: "center",
+              }}>
+                <div style={{ fontSize: 20, marginBottom: 6 }}>{stage.icon}</div>
+                <div style={{
+                  width: 20, height: 20, borderRadius: "50%",
+                  background: "#1c5a1c", color: "white",
+                  fontSize: 10, fontWeight: 800,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  margin: "0 auto 6px",
+                }}>{stage.num}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#111" }}>{stage.name}</div>
+                <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2, lineHeight: 1.3 }}>{stage.desc}</div>
               </div>
-              <div className="text-xs text-ink-muted font-medium">{stat.label}</div>
+              {i < pipeline.length - 1 && (
+                <div style={{ width: 20, textAlign: "center", color: "#D1D5DB", fontSize: 14, flexShrink: 0 }}>→</div>
+              )}
             </div>
           ))}
         </div>
-      </section>
+      </div>
 
-      {/* PAL Pipeline Explainer */}
-      <section className="mb-8">
-        <div className="bg-white border border-surface-200 rounded-2xl p-6 shadow-card">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="font-bold text-ink">How the PAL Pipeline Works</h2>
-              <p className="text-sm text-ink-secondary mt-0.5">5 AI stages transform your description into a complete automation</p>
-            </div>
-            <button
-              onClick={() => onNavigate("builder")}
-              className="btn-brand text-xs px-4 py-2"
-            >
-              Start Building →
-            </button>
+      {/* CTA Banner */}
+      <div style={{
+        background: "linear-gradient(135deg, #0f2d0f 0%, #1c5a1c 100%)",
+        borderRadius: 16, padding: "24px 28px",
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20,
+      }}>
+        <div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: "white", marginBottom: 4 }}>
+            Ready to automate your outbound?
           </div>
-          <div className="flex items-center gap-2">
-            {palStages.map((stage, i) => (
-              <div key={stage.num} className="flex items-center gap-2 flex-1">
-                <div className="flex-1 bg-surface-50 border border-surface-200 rounded-xl p-3 text-center">
-                  <div className="w-6 h-6 rounded-full bg-brand-700 text-white text-xs font-bold flex items-center justify-center mx-auto mb-2">
-                    {stage.num}
-                  </div>
-                  <div className="text-xs font-semibold text-ink">{stage.name}</div>
-                  <div className="text-[10px] text-ink-muted mt-0.5 leading-tight">{stage.desc}</div>
-                </div>
-                {i < palStages.length - 1 && (
-                  <div className="text-ink-muted text-sm flex-shrink-0">→</div>
-                )}
-              </div>
-            ))}
+          <div style={{ fontSize: 13, color: "#9fce9f", lineHeight: 1.6 }}>
+            Describe your ICP → pick your tools → get a production n8n workflow in under 5 minutes.
           </div>
         </div>
-      </section>
-
-      {/* Getting Started */}
-      <section>
-        <div className="bg-brand-50 border border-brand-200 rounded-2xl p-6">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-brand-700 flex items-center justify-center text-white text-lg flex-shrink-0">✦</div>
-            <div className="flex-1">
-              <h3 className="font-bold text-ink mb-1">Ready to automate your outbound?</h3>
-              <p className="text-sm text-ink-secondary mb-4">
-                Start by describing what you sell and who you target. The PAL Agent will extract your ICP,
-                categorize your ideal buyer, enhance with pain points and triggers, write the AI agent system prompt,
-                and compile your entire n8n workflow — all in under 2 minutes.
-              </p>
-              <div className="flex gap-3">
-                <button onClick={() => onNavigate("builder")} className="btn-brand">
-                  Launch Guided Wizard
-                </button>
-                <button onClick={() => onNavigate("builder")} className="btn-outline">
-                  Chat with PAL Agent
-                </button>
-              </div>
-            </div>
-          </div>
+        <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
+          <button
+            onClick={() => onNavigate("builder")}
+            style={{
+              padding: "10px 20px", fontSize: 13, fontWeight: 700,
+              color: "#1c5a1c", background: "white", border: "none",
+              borderRadius: 10, cursor: "pointer", fontFamily: "inherit",
+              whiteSpace: "nowrap",
+            }}
+          >⚡ Build Workflow</button>
         </div>
-      </section>
+      </div>
+
     </div>
   );
 }

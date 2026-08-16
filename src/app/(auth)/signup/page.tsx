@@ -1,19 +1,14 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function SignupPage() {
-  const router = useRouter();
   const [name,     setName]     = useState("");
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
   const [error,    setError]    = useState("");
   const [loading,  setLoading]  = useState(false);
-  const [step,     setStep]     = useState<"form" | "verify">("form");
-  const [verifyCode, setVerifyCode] = useState("");
-  const [verifyEmail, setVerifyEmail] = useState("");
 
   const handleSignup = async (e: FormEvent) => {
     e.preventDefault();
@@ -24,33 +19,13 @@ export default function SignupPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
       });
-      const data = await res.json() as { error?: string; needsVerification?: boolean; user?: unknown };
-      if (!res.ok) { setError(data.error || "Sign up failed"); setLoading(false); return; }
-      if (data.needsVerification) {
-        setVerifyEmail(email);
-        setStep("verify");
+      const data = await res.json() as { error?: string; user?: unknown };
+      if (!res.ok) {
+        setError(data.error || "Sign up failed — please try again");
         setLoading(false);
         return;
       }
-      // Auto-logged in — go to dashboard
-      window.location.href = "/dashboard";
-    } catch {
-      setError("Connection error — please try again");
-      setLoading(false);
-    }
-  };
-
-  const handleVerify = async (e: FormEvent) => {
-    e.preventDefault();
-    setError(""); setLoading(true);
-    try {
-      const res = await fetch("/api/auth/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: verifyEmail, code: verifyCode, password }),
-      });
-      const data = await res.json() as { error?: string };
-      if (!res.ok) { setError(data.error || "Verification failed"); setLoading(false); return; }
+      // Signed up + logged in — hard navigate so cookie is read
       window.location.href = "/dashboard";
     } catch {
       setError("Connection error — please try again");
@@ -63,6 +38,7 @@ export default function SignupPage() {
     border: "1.5px solid #e5e5e0", borderRadius: 10,
     outline: "none", fontFamily: "inherit", color: "#111",
     boxSizing: "border-box" as const, background: "white",
+    transition: "border-color 0.15s",
   };
 
   return (
@@ -88,10 +64,9 @@ export default function SignupPage() {
             Build your first outbound automation in 5 minutes.
           </h2>
           <p style={{ fontSize: 14, color: "#9fce9f", lineHeight: 1.65, margin: "0 0 32px" }}>
-            No code. No consultants. Just describe your ICP and get a production-ready n8n workflow.
+            No code. No consultants. Describe your ICP and get a production-ready n8n workflow.
           </p>
 
-          {/* Feature checklist */}
           {[
             "Live n8n node canvas as you build",
             "AI-written email templates included",
@@ -117,94 +92,68 @@ export default function SignupPage() {
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px", background: "white" }}>
         <div style={{ width: "100%", maxWidth: 380 }}>
 
-          {step === "form" ? (
-            <>
-              <div style={{ marginBottom: 28 }}>
-                <h1 style={{ fontSize: 26, fontWeight: 900, color: "#111", letterSpacing: "-0.5px", margin: "0 0 6px" }}>Create your workspace</h1>
-                <p style={{ fontSize: 14, color: "#6B7280", margin: 0 }}>Free forever · No credit card needed</p>
+          <div style={{ marginBottom: 28 }}>
+            <h1 style={{ fontSize: 26, fontWeight: 900, color: "#111", letterSpacing: "-0.5px", margin: "0 0 6px" }}>Create your workspace</h1>
+            <p style={{ fontSize: 14, color: "#6B7280", margin: 0 }}>Free forever · No credit card needed</p>
+          </div>
+
+          <form onSubmit={handleSignup} style={{ display: "flex", flexDirection: "column", gap: 13 }}>
+            <div>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>Full name</label>
+              <input
+                type="text" required value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Alex Johnson" style={inp}
+                onFocus={(e) => e.target.style.borderColor = "#1c5a1c"}
+                onBlur={(e)  => e.target.style.borderColor = "#e5e5e0"}
+              />
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>Work email</label>
+              <input
+                type="email" required value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@company.com" style={inp}
+                onFocus={(e) => e.target.style.borderColor = "#1c5a1c"}
+                onBlur={(e)  => e.target.style.borderColor = "#e5e5e0"}
+              />
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>Password</label>
+              <input
+                type="password" required value={password} minLength={8}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="8+ characters" style={inp}
+                onFocus={(e) => e.target.style.borderColor = "#1c5a1c"}
+                onBlur={(e)  => e.target.style.borderColor = "#e5e5e0"}
+              />
+            </div>
+
+            {error && (
+              <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#dc2626" }}>
+                {error}
               </div>
+            )}
 
-              <form onSubmit={handleSignup} style={{ display: "flex", flexDirection: "column", gap: 13 }}>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>Full name</label>
-                  <input type="text" required value={name} onChange={(e) => setName(e.target.value)} placeholder="Alex Johnson" style={inp}
-                    onFocus={(e) => e.target.style.borderColor = "#1c5a1c"}
-                    onBlur={(e)  => e.target.style.borderColor = "#e5e5e0"} />
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>Work email</label>
-                  <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" style={inp}
-                    onFocus={(e) => e.target.style.borderColor = "#1c5a1c"}
-                    onBlur={(e)  => e.target.style.borderColor = "#e5e5e0"} />
-                </div>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>Password</label>
-                  <input type="password" required value={password} minLength={8} onChange={(e) => setPassword(e.target.value)} placeholder="8+ characters" style={inp}
-                    onFocus={(e) => e.target.style.borderColor = "#1c5a1c"}
-                    onBlur={(e)  => e.target.style.borderColor = "#e5e5e0"} />
-                </div>
+            <button type="submit" disabled={loading} style={{
+              width: "100%", padding: "13px", fontSize: 14, fontWeight: 700,
+              color: "white", background: "#1c5a1c", border: "none", borderRadius: 10,
+              cursor: loading ? "not-allowed" : "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              opacity: loading ? 0.8 : 1, fontFamily: "inherit", marginTop: 4,
+              boxShadow: "0 2px 8px rgba(28,90,28,0.25)",
+            }}>
+              {loading ? <><Spinner />Creating workspace...</> : "Create free workspace →"}
+            </button>
+          </form>
 
-                {error && <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#dc2626" }}>{error}</div>}
-
-                <button type="submit" disabled={loading} style={{
-                  width: "100%", padding: "13px", fontSize: 14, fontWeight: 700,
-                  color: "white", background: "#1c5a1c", border: "none", borderRadius: 10,
-                  cursor: loading ? "not-allowed" : "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                  opacity: loading ? 0.8 : 1, fontFamily: "inherit", marginTop: 4,
-                  boxShadow: "0 2px 8px rgba(28,90,28,0.25)",
-                }}>
-                  {loading ? <><Spinner />Creating workspace...</> : "Create free workspace →"}
-                </button>
-              </form>
-
-              <p style={{ textAlign: "center", fontSize: 13, color: "#6B7280", marginTop: 20 }}>
-                Already have an account?{" "}
-                <Link href="/login" style={{ color: "#1c5a1c", fontWeight: 700, textDecoration: "none" }}>Sign in</Link>
-              </p>
-              <p style={{ textAlign: "center", fontSize: 11, color: "#D1D5DB", marginTop: 10 }}>
-                By signing up you agree to our Terms &amp; Privacy Policy.
-              </p>
-            </>
-          ) : (
-            /* Verification step */
-            <>
-              <div style={{ textAlign: "center", marginBottom: 28 }}>
-                <div style={{ fontSize: 40, marginBottom: 16 }}>📬</div>
-                <h1 style={{ fontSize: 22, fontWeight: 900, color: "#111", margin: "0 0 8px" }}>Check your email</h1>
-                <p style={{ fontSize: 14, color: "#6B7280" }}>We sent a 6-digit code to <strong>{verifyEmail}</strong></p>
-              </div>
-
-              <form onSubmit={handleVerify} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>Verification code</label>
-                  <input
-                    type="text" required value={verifyCode} onChange={(e) => setVerifyCode(e.target.value)}
-                    placeholder="123456" maxLength={6}
-                    style={{ ...inp, textAlign: "center", fontSize: 22, fontWeight: 700, letterSpacing: "0.3em" }}
-                    onFocus={(e) => e.target.style.borderColor = "#1c5a1c"}
-                    onBlur={(e)  => e.target.style.borderColor = "#e5e5e0"} />
-                </div>
-
-                {error && <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#dc2626" }}>{error}</div>}
-
-                <button type="submit" disabled={loading} style={{
-                  width: "100%", padding: "13px", fontSize: 14, fontWeight: 700,
-                  color: "white", background: "#1c5a1c", border: "none", borderRadius: 10,
-                  cursor: loading ? "not-allowed" : "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                  fontFamily: "inherit",
-                }}>
-                  {loading ? <><Spinner />Verifying...</> : "Verify & enter dashboard →"}
-                </button>
-
-                <button type="button" onClick={() => setStep("form")} style={{
-                  background: "none", border: "none", color: "#9CA3AF", fontSize: 13,
-                  cursor: "pointer", padding: 0, textAlign: "center",
-                }}>← Back to sign up</button>
-              </form>
-            </>
-          )}
+          <p style={{ textAlign: "center", fontSize: 13, color: "#6B7280", marginTop: 20 }}>
+            Already have an account?{" "}
+            <Link href="/login" style={{ color: "#1c5a1c", fontWeight: 700, textDecoration: "none" }}>Sign in</Link>
+          </p>
+          <p style={{ textAlign: "center", fontSize: 11, color: "#D1D5DB", marginTop: 10 }}>
+            By signing up you agree to our Terms &amp; Privacy Policy.
+          </p>
         </div>
       </div>
 
