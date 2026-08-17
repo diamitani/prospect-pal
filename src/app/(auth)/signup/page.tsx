@@ -150,7 +150,7 @@ export default function SignupPage() {
 
           <p style={{ textAlign: "center", fontSize: 13, color: "#6B7280", marginTop: 20 }}>
             Already have an account?{" "}
-            <Link href="/login" style={{ color: "#1c5a1c", fontWeight: 700, textDecoration: "none" }}>Sign in</Link>
+            <Link href="/login?from=/dashboard" style={{ color: "#1c5a1c", fontWeight: 700, textDecoration: "none" }}>Sign in</Link>
           </p>
           <p style={{ textAlign: "center", fontSize: 11, color: "#D1D5DB", marginTop: 10 }}>
             By signing up you agree to our Terms &amp; Privacy Policy.
