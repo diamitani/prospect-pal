@@ -91,7 +91,7 @@ export default function LandingPage() {
           <a href="#how-it-works" style={{ fontSize: 13, color: "#6B7280", textDecoration: "none", padding: "6px 12px" }}>How it works</a>
           <a href="#features" style={{ fontSize: 13, color: "#6B7280", textDecoration: "none", padding: "6px 12px" }}>Features</a>
           <a href="#pricing" style={{ fontSize: 13, color: "#6B7280", textDecoration: "none", padding: "6px 12px" }}>Pricing</a>
-          <Link href="/login?from=/dashboard" style={{
+          <Link href="/login" style={{
             fontSize: 13, fontWeight: 600, color: "#4B5563",
             textDecoration: "none", padding: "7px 14px",
             border: "1px solid #e5e5e0", borderRadius: 8, background: "white",
