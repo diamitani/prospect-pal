@@ -18,10 +18,20 @@ const PUBLIC_PREFIXES = [
   "/home", "/_next", "/favicon", "/images", "/api/composio", "/api/n8n",
 ];
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p)) || pathname.includes(".")) {
+    // If trying to access auth pages while already logged in, redirect to dashboard
+    if (pathname.startsWith("/login") || pathname.startsWith("/signup")) {
+      const token = req.cookies.get(COOKIE_NAME)?.value;
+      if (token) {
+        try {
+          await jwtVerify(token, JWT_SECRET);
+          return NextResponse.redirect(new URL("/dashboard", req.url));
+        } catch { /* fall through if token invalid */ }
+      }
+    }
     return NextResponse.next();
   }
 
