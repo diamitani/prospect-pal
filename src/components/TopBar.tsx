@@ -7,11 +7,14 @@ interface TopBarProps { userName: string; projectName: string | null; view: View
 const VIEW_META: Record<View, { title: string; crumb: string }> = {
   home:     { title: "Dashboard",        crumb: "Welcome back" },
   builder:  { title: "Workflow Builder", crumb: "Tools → ICP → Generate" },
-  outputs:  { title: "Outputs",          crumb: "Download your workflow package" },
+  wizard:   { title: "Intake Wizard",    crumb: "Step-by-step pipeline onboarding" },
+  outputs:  { title: "Outputs & Deploy", crumb: "Download your workflow package" },
+  scripts:  { title: "Scripts Studio",   crumb: "A/B testing 3-sentence PAS email lab" },
+  signals:  { title: "Tech Signals",     crumb: "n8n stack detection & hiring leads" },
   analyst:  { title: "Execution Analyst",crumb: "Diagnose and repair n8n failures" },
-  academy:  { title: "Sales Academy & Digital Products", crumb: "Unleash Your Sales Greatness Suite" },
+  academy:  { title: "Sales Academy",    crumb: "Unleash Your Sales Greatness Suite" },
   projects: { title: "My Campaigns",     crumb: "All generated workflows" },
-  settings: { title: "Integrations",     crumb: "Connect your tools" },
+  settings: { title: "Integrations & Keys", crumb: "Connect your tools & self-hosted n8n" },
 };
 
 export default function TopBar({ userName, projectName, view }: TopBarProps) {
