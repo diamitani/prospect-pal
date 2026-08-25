@@ -13,6 +13,7 @@ const NAV = [
   { id: "builder" as View, label: "Build Workflow", icon: "⚡", highlight: true },
   { id: "outputs" as View, label: "Outputs & Deploy", icon: "↓" },
   { id: "analyst" as View, label: "Execution Analyst", icon: "🔬" },
+  { id: "academy" as View, label: "Sales Academy & Courses", icon: "🎓" },
   { id: "projects" as View, label: "My Campaigns", icon: "◫" },
   { id: "settings" as View, label: "Integrations", icon: "◎" },
 ];

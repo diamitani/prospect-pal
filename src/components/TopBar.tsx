@@ -9,6 +9,7 @@ const VIEW_META: Record<View, { title: string; crumb: string }> = {
   builder:  { title: "Workflow Builder", crumb: "Tools → ICP → Generate" },
   outputs:  { title: "Outputs",          crumb: "Download your workflow package" },
   analyst:  { title: "Execution Analyst",crumb: "Diagnose and repair n8n failures" },
+  academy:  { title: "Sales Academy & Digital Products", crumb: "Unleash Your Sales Greatness Suite" },
   projects: { title: "My Campaigns",     crumb: "All generated workflows" },
   settings: { title: "Integrations",     crumb: "Connect your tools" },
 };

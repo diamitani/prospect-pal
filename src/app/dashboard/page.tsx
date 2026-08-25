@@ -7,6 +7,7 @@ import DashboardHome from "@/components/views/DashboardHome";
 import BuilderView from "@/components/views/BuilderView";
 import OutputsView from "@/components/views/OutputsView";
 import AnalystView from "@/components/views/AnalystView";
+import AcademyView from "@/components/views/AcademyView";
 import ProjectsView from "@/components/views/ProjectsView";
 import SettingsView from "@/components/views/SettingsView";
 import { View } from "@/types/app";
@@ -38,6 +39,7 @@ export default function DashboardPage() {
           {view === "builder" && <BuilderView onOutputReady={handleOutputReady} />}
           {view === "outputs" && <OutputsView palOutput={output} projectId={projectId} />}
           {view === "analyst" && <AnalystView />}
+          {view === "academy" && <AcademyView />}
           {view === "projects" && (
             <ProjectsView
               onSelect={(id, name) => {
