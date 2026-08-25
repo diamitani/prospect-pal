@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "prospect-pal-local-dev-secret-2025"
+  process.env.NEXTAUTH_SECRET || "prospect-pal-dev-secret-change-in-production"
 );
 const COOKIE_NAME = "ppal_session";
 
