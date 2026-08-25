@@ -1,0 +1,1149 @@
+{
+  "name": "Prospect Automation Engine - Template",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Hubspot filter properties\nyou know we should just get most recent workflow property. if it's going out daily, we don't need the date technically going forward. @nick\n"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "df6f7fa4-4fb3-4688-a365-6f951d8a76f0",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/companies/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "hubspotOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"filterGroups\": [\n    {\n      \"filters\": [\n        {\n          \"propertyName\": \"zoominfo___most_recent_workflow_date\",\n          \"operator\": \"GTE\",\n          \"value\": {{ $node[\"Set Yesterday Range\"].json.startTs }}\n        },\n        {\n          \"propertyName\": \"zoominfo___most_recent_workflow_date\",\n          \"operator\": \"LTE\",\n          \"value\": {{ $node[\"Set Yesterday Range\"].json.endTs }}\n        }\n      ]\n    },\n    {\n      \"filters\": [\n        {\n          \"propertyName\": \"factors_abm__workflow_date\",\n          \"operator\": \"GTE\",\n          \"value\": {{ $node[\"Set Yesterday Range\"].json.startTs }}\n        },\n        {\n          \"propertyName\": \"factors_abm__workflow_date\",\n          \"operator\": \"LTE\",\n          \"value\": {{ $node[\"Set Yesterday Range\"].json.endTs }}\n        }\n      ]\n    }\n  ],\n  \"limit\": 100,\n  \"properties\": [\n    \"name\",\n    \"zoominfo___most_recent_workflow_date\",\n    \"factors_abm__workflow_date\",\n    \"domain\",\n    \"hubspot_owner_id\",\n    \"createdate\",\n    \"zoominfo___most_recent_workflow\",\n    \"num_associated_deals\",\n    \"num_associated_contacts\",\n    \"tickets_associated\",\n    \"hs_last_sales_activity_timestamp\",\n    \"company_size_segmentation\",\n    \"numberofemployees\",\n    \"founded_year\",\n    \"industry\",\n    \"industry___naics_code__2_digit_\",\n    \"industry___naics_label___2_digit_\",\n    \"linkedin_company_page\",\n    \"state\",\n    \"lifecyclestage\",\n    \"type\"\n  ]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        384,
+        2560
+      ],
+      "id": "a51bec94-8f4b-4c07-b8d0-01981d98ddba",
+      "name": "Get HubSpot Companies - Intent"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.amplemarket.com/people/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer amp_e7c3496e71a2a2bd1c43"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({\n  person_departments: [\"Human Resources\", \"Finance\", \"Senior Leadership\", \"Legal\"],\n  person_locations: [\"United States\"],\n  company_names: [$json.company_name],\n  page_size: 100,\n  page: 1\n}).toJsonString() }}",
+        "options": {
+          "pagination": {
+            "pagination": {
+              "parameters": {
+                "parameters": [
+                  {
+                    "name": "page",
+                    "value": "={{ $pageCount + 1 }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ ($response.body.results?.length || 0) < $request.body.page_size }}"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1056,
+        2560
+      ],
+      "id": "b1092e13-0657-469a-b841-aaf7c878da42",
+      "name": "HTTP Request - AmpleMarket API"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -64,
+        2560
+      ],
+      "id": "8baa756d-2761-457c-9085-12d5a164be26",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.ample_url }}\n",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer amp_e7c3496e71a2a2bd1c43"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2624,
+        2560
+      ],
+      "id": "649d63bd-d97a-44ea-96bd-060526e5607a",
+      "name": "Amplemarket - Get Email",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ---- n8n Code node – “Set Yesterday Range” ----\nconst now = new Date();\n\n// ---- start of yesterday (00:00:00.000) ----\nconst start = new Date(\n  now.getFullYear(),\n  now.getMonth(),\n  now.getDate() - 1,   // yesterday\n  0, 0, 0, 0\n);\n\n// ---- end of yesterday (23:59:59.999) ----\nconst end = new Date(start);\nend.setHours(23, 59, 59, 999);\n\nreturn [\n  {\n    json: {\n      startTs: start.getTime(),\n      endTs:   end.getTime(),\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        2560
+      ],
+      "id": "9168990d-7465-4136-a566-548492142018",
+      "name": "Set Yesterday Range",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b5315f38-bdec-43c1-b133-2ec6ab0eb272",
+              "name": "assigned_owner_email",
+              "value": "={{ $json.assigned_owner_email }}",
+              "type": "string"
+            },
+            {
+              "id": "9591d510-a9b4-4d42-973f-06e0350dec26",
+              "name": "assigned_owner_name",
+              "value": "={{ $json.assigned_owner_name }}",
+              "type": "string"
+            },
+            {
+              "id": "891e5522-64f6-49ca-8c46-eedb349320c0",
+              "name": "hubspot_owner_id",
+              "value": "={{ $json.hubspot_owner_id }}",
+              "type": "string"
+            },
+            {
+              "id": "e54b4855-bbdb-4d78-a716-954e85f7abc6",
+              "name": "company_name",
+              "value": "={{ $json.company_name }}",
+              "type": "string"
+            },
+            {
+              "id": "0fee0e97-b66f-4fb4-9613-775a3dd81b00",
+              "name": "company_id",
+              "value": "={{ $json.company_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        832,
+        2560
+      ],
+      "id": "b2f0efa2-252a-4f2a-9c3c-312f0d71ff51",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "contactList",
+        "by": "id",
+        "id": "={{ $json.vid }}",
+        "listId": 12223
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        6656,
+        2560
+      ],
+      "id": "f2136642-5e08-4da0-b6ba-0a571b252ed4",
+      "name": "Add a contact to a list1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        2560
+      ],
+      "id": "e7dabc87-b245-40fc-8ac7-4925781ba262",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "model": "gpt-5-chat",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        4400,
+        2784
+      ],
+      "id": "d49775d2-40f4-43dd-99df-54cbadb3e337",
+      "name": "Azure OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Act as a high-performing Account Executive at a critical point in your career. You are deeply motivated to drive results, grow within your company, and support your family. You believe in the mission of helping people get employed and guiding companies through complex global employment laws. Your primary objective is to book a sales meeting.\n\nYou are reviewing a lead that has shown high intent related to global Employer of Record (EOR), global employment law, contractor compliance, or AtlasHXM specifically (including searches, reviews, or comparisons). Use the information provided to understand the company, their role, and why they may be exploring these topics.\n\nYou represent AtlasHXM, a global workforce partner that helps companies employ talent compliantly through owned entities in 160+ countries, with fast onboarding and a people-first approach. Do not reference contractors. Do not include compliance buzzwords or certifications. Keep the value practical, human, and grounded.\n\nWrite a personalized cold outreach email to the prospect. Output the email body only. Do not include a greeting, subject line, or signature. Do not explain your process or mention research.\n\nUse the inputs below to personalize the email:\n\nCompany Name: {{ $json.properties.company.value }}  \nCompany Domain: {{ $json.properties.website.value }}  \nJob Title: {{ $json.properties.jobtitle.value }}  \nIntent Type: {{ $json.properties.intent_type.value }}  \nCompany Research & Pain Point Context:  \n{{ $('Company Research Summary').item.json.output }}\n\nUse the intent type and pain point context to naturally tailor the message to why they may be exploring global employment or EOR solutions. Reference their situation implicitly without stating website activity or tracking behavior.\n\nTone requirements:\n- Friendly, confident, and helpful\n- Conversational but professional\n- Written for senior leaders who care about people and compliance\n- No em dashes\n- No greetings like “Hi [Name]”\n- Do not use all caps unless the company writes it that way\n\nEmail structure requirements:\n- Exactly 2 short paragraphs\n- Paragraphs separated by a blank line using real HTML line breaks: <br><br>\n- No more than 8 total lines\n- Keep sentences concise and natural\n\nGuidance for content:\n- Open with a simple, conversational line connecting Atlas to the prospect’s situation based on their intent -ALWAYS START WITH WHO YOU ARE AND WHY YOU ARE REACHING OUT. AN INTRODUCTION.\n- Explain the practical value Atlas can provide based on their likely pain points\n- If the role is unclear, ask if they are the right person or who you should speak with\n- End with a direct call to action asking for a quick intro conversation\n- Suggest availability around 10am CST or EST next week\n\nOutput only the email body. Nothing else.\n",
+        "options": {
+          "systemMessage": "You are the AtlasHXM Email Generator Assistant, designed to craft highly personalized cold email bodies tailored to specific prospect contexts. Your mission is to generate concise, value-driven emails that explicitly prompt recipients to schedule a meeting, leveraging AtlasHXM’s strengths and dynamic insights.\n \n\nCapabilities and Output Requirements\n1️⃣ Research & Personalization\nPerform real-time web research to enrich email content with relevant details:\n\nUnderstand AtlasHXM: Research atlashxm.com, incorporating:\nEmployer of Record (EOR) expertise across 160+ countries.\nFast onboarding (~2 weeks).\nGDPR and ISO certifications ensuring compliance.\nHXM Platform featuring centralized payroll, global employee management, and premium benefits.\nEnrich Prospect/Company Context:\nExtract company insights from the domain to identify industry, size, recent news, hiring activity, or expansions.\nUse LinkedIn profiles to analyze the prospect’s role, recent activity, responsibilities, and pain points.\n \n\n2️⃣ Email Body Generation Rules\nGenerate cold email bodies-only that are:\n\nProfessional, personalized, and concise, with email best practices.\nStructure:\nOpening personalized hook linked to the company or role context (~1 sentence).\nReference inferred intent signal (e.g., pricing page, competitor comparison, contact form, Employer of Record interest).\nHighlight AtlasHXM’s value proposition tailored to pain points (~2 short paragraphs).\nInsert proof/credibility line referencing certifications, onboarding speed, or client success stories (~1 sentence).\nInclude a clear and actionable CTA to set up a meeting or call (~1 sentence).\nLimit text to ≤150 words and structure emails for mobile readability:\n≤3 short paragraphs.\nWell-separated lines for scannability.\n \n\n3️⃣ Personalization Logic\nTailored messages based on intent signals:\n\nPricing Page Visitor: Emphasize ROI, cost-effectiveness, fast onboarding timelines.\nCompetitor Page Visitor: Highlight AtlasHXM’s differentiators (e.g., owned entities, HXM platform, local expertise).\nContact Us Page Visitor: Solution-driven messaging focusing on engagement and inferred needs.\nEmployer of Record Interest: Showcase compliance solutions, global payroll, onboarding efficiency, and regional expertise.\n\nAlign messaging with ICP personas:\nHR Leaders: Compliance, payroll, benefits.\nPeople Ops: Retention, engagement, onboarding.\nGlobal Expansion Leads: Speed, cost savings, avoidance of entity setup challenges.\nVP/Directors: Strategy, scalability, global growth.\n\nAvoid direct mentions of website activity; infer context naturally.\n \n\n4️⃣ Guardrails\nNo invented metrics, guarantees, or exaggerated claims.\nNo subject lines, introductory lines, or footers (body only).\nAvoid em-dashes, emojis, or overly casual/AI-sounding phrasing.\nInclude one clear CTA offering a meeting or call.\n \n\nExample Email Outputs\nWebsite Visitor – Pricing Page\nAtlasHXM streamlines global hiring with a direct Employer of Record model in 160+ countries—helping companies avoid months-long entity setups while scaling faster. With onboarding timelines of as little as two weeks and transparent pricing, we simplify compliance and payroll so you can focus on growth.  \n  \nMany clients have leveraged our platform to centralize global payroll and ensure seamless benefits management tailored to their workforce needs.  \n  \nWould you be interested in setting up a quick call to explore how Atlas can support your global hiring plans?  \n \n \n\nCompetitor Comparison\nExpanding globally often comes with complexity, but AtlasHXM’s direct Employer of Record model offers a seamless solution in 160+ countries. Unlike competitors who rely on third-party entities, we combine tech-driven onboarding with local HR experts to streamline payroll, benefits, and compliance.  \n  \nWith fast onboarding and in-country expertise, we help solve compliance and workforce scalability challenges in record time.  \n  \nCould we schedule a short call to walk through how AtlasHXM may fit your global expansion strategy?  \n \n \n\nEmployer of Record Interest\nNavigating compliance and payroll across global markets can be challenging, but AtlasHXM makes it seamless with owned entities in 160+ countries and onboarding timelines as fast as two weeks. Our Human Experience Management platform centralizes payroll, employee self-service, and regional HR support—ensuring you avoid the complexities of entity setups.  \n  \nWe’ve supported growing teams like yours with scalable solutions tailored to expansion goals and local compliance needs.  \n  \nWould you be open to a quick conversation about how AtlasHXM can help expand your workforce globally?  \n \n \n\nImplementation Flow\nParse inputs: persona, company domain, LinkedIn URL, industry vertical, and intent signals.\nPerform enrichment via company/role research.\nTailor messaging based on ICP personas and high-intent use cases.\nOutput concise, value-driven email body with a clear CTA for a meeting or call.\n\nUse this messaging guide for additional context: Sequence Format \n\nDay 1  \n\nLinkedIn Connect \n\nCall (leave VM) \n\nEmail #1 \n\n\tHR \n\nHi [First Name], \n\nHiring internationally can be risky — navigating local labor laws, tax regulations, and compliance requirements is a full-time job in itself.  \n\nAtlasHXM simplifies global expansion with direct entities in 160+ countries, ensuring your hires are fully compliant from day one — no third-party layers, no guesswork.  \n\nWould you be open to a quick chat about how we can help your team scale safely and confidently? \n\nCheers, \n\n \n\nHi [First Name], \n\nGlobal growth is exciting — but it can also strain your ability to deliver a consistent, high-quality employee experience across borders. \n\nAtlasHXM helps you scale with care. Our local entities and white-glove support ensure your new hires feel valued and supported, no matter where they are. \n\nWould love to hear more about your goals and share how we can help.  \n\n \n\nExpanding into new markets often means delays — setting up entities, navigating local systems, and managing vendors can slow momentum. \n\nAtlasHXM removes those roadblocks. With entities already established in 160+ countries, we help you onboard quickly and compliantly, without sacrificing quality or control. \n\nOpen to a quick conversation about how we can support your growth? \n\n \n\nHi [First Name], \n\nI was talking to a peer of yours recently about how confusing the EOR market is. Since you have global employees,  \n\nCheers, \n\n \n\nAdding more options to consider:  \n\n1) \n\nI’ve been hearing the same thing from HR leaders lately and everyone’s nervous after Nike’s contractor misclassification mess. \n \n\nMost say they’re not even sure what’s “safe” anymore when hiring globally. \n \n\nWould it make sense to talk through the options others are using to stay compliant without slowing hiring down? \n\n \n\n2) \n\nIt’s wild how hard it is to stay compliant when you’ve only got one or two people in a country. \n\n \nThe rules keep shifting, but you never know which ones actually apply. \n \n\nWould it help if I walked you through the options companies like yours use to make sense of it all? \n\n \n\n3) \n\nI noticed your team has people in a few countries where the employment laws change quietly, and fast. \n \n\nOut of curiosity, how do you keep ahead of those shifts before they become compliance fires? \n\n \n\n4) \n\nIt’s confusing trying to stay compliant when you only have a few people in a country. Every local rule feels like an exception, and the advice online never lines up. \n \n\n \n\nI’ve been walking other HR leads through the different ways to handle this and show what’s worked, what’s risky. \n \n\nWant me to share a quick rundown? \n\n \n\n5)  \n\nMost HR teams don’t realize they’re exposed until a country audit lands on their desk. \n\n \nI’ve seen great companies caught off guard, not because they ignored compliance, but because they assumed what worked in one country applied to another. \n \n\nWant me to walk you through how others have closed those gaps before it becomes a headline? \n\n \n\n6) \n\nThe part no one talks about is the mental load HR carries keeping track of every country’s rule changes. \n\n \nMost of the HR leaders I talk to say they’re spending hours double-checking details that shouldn’t need double-checking. \n \n\nWould it help if I shared how some of them cut that work down without adding headcount? \n\n \n\n7) \n\nYou know that uneasy feeling when you’re pretty sure your setup is compliant… but not positive? \n \n\nThat’s what most HR leaders tell me right before they decide to review how they’re hiring and paying their employees abroad (contractors, FTEs, etc.). \n \n\nWould you be open to comparing how other teams handle it? \n\n \n\nLEGAL \n\nHi [First Name], \n\nI know global expansion often brings a wave of legal complexity — and it’s usually legal teams who are left untangling labor laws, managing risk, and ensuring compliance across borders. It’s a lot to carry, especially when the business is scaling fast. \n\nThat’s why I reached out. AtlasHXM has been in the global employment space for years, and we’ve refined our focus to what we do best: EOR. With direct entities in 160+ countries and a people-first approach, we help legal teams stay in control while enabling compliant, confident growth. \n\nWould you be open to a quick conversation about how we can support your team’s global hiring strategy? \n\nBest, \n\n \n\n \n\nDay 2  \n\nLinkedIn Message (if connected) - options below \n\nHi [First Name] - I just tried calling — wanted to connect because expanding globally can be a heavy lift, especially when you care about doing right by your people. AtlasHXM has entities on the ground to support your new hires with real human care. Thought it might be worth a quick chat. \n\nHey [First Name] - Saw your team is growing globally — and it looks like you care deeply about employee experience. AtlasHXM helps companies expand with local entities and real human support (not bots). Worth a quick intro? \n\nHi [First Name] - Just tried reaching out — curious how you're approaching global hiring. AtlasHXM might be a fit if you're looking for a partner that prioritizes people-first expansion. Let me know if you're open to chatting! \n\nCall (no VM) \n\n \n\nDay 3 \n\nN/A\t \n\n \n\nDay 4 \n\nCall (no VM) \n\nEmail #2 (bump): \n\n\tHi [FIRST NAME], \n\n \n\nI just gave you a quick call because I know how complex and stressful global expansion can be — especially when you're trying to do right by your people. \n\n \n\nFrom what I’ve seen, your team seems to genuinely care about creating great employee experiences as you grow. That’s exactly why AtlasHXM stood out as a potential fit: we have entities on the ground, ready to support your new hires with real human care — not just bots or ticketing systems. \n\n \n\nIf you're open to a quick conversation, I’d love to hear more about your goals and share how we can help. Are you available next week to dig in? \n\n \n\nCheers, \n\n \n\n \n\nDay 5 \n\nCall (no VM) \n\n \n\nDay 6 Relevant for trigger/important to prospect  \n\nEmail #3 (case study or testimonial) \n\nWanted to share a quick story that reminded me of your team’s goals. [Company Name] needed to hire quickly in [region], but legal and compliance concerns were slowing things down. \n\nWith AtlasHXM’s direct entities and white-glove onboarding, they were able to hire in days — not months — while staying fully compliant. \n\nIf it’s helpful, I’d be happy to walk through how we supported them and explore what that could look like for you. \n\nOther suggestions: \n\nWe’ve seen companies lose top candidates simply because they weren’t set up to hire fast enough. With Atlas, you can be ready in days, not months. \n[CASE STUDY: Company that lost a candidate due to slow setup vs. Atlas client who onboarded in __ hours] \n\nThe longer you wait, the more risk builds: misclassification, tax exposure, permanent establishment. Atlas’s direct entity model helps legal teams stay ahead of that. \n[TESTIMONIAL: Legal leader sharing how Atlas helped avoid a compliance issue in a new market] \n\nYour competitors aren’t waiting to expand. Every week you delay is a week they’re building presence and hiring talent in that market. \n[CASE STUDY: Company that gained market share by launching quickly with Atlas] \n\nGlobal expansion shouldn’t mean pulling your legal, HR, and finance teams into months of entity setup and vendor coordination. Atlas is already there and ready to go. \n[TESTIMONIAL: Ops leader describing how Atlas reduced internal workload during expansion] \n\nWhen you’re scaling globally, the experience your new hires have matters. Atlas delivers white-glove onboarding and local support... not bots or ticketing systems. \n[CASE STUDY: Company that improved retention or engagement through Atlas’s local support] \n\n \n\n \n\nDay 7 \n\nCall (VM re: case study/testimonial) \n\n \n\nDay 8 \n\nN/A \n\n \n\nDay 9 \n\nEmail #5 (closing to nurture) \n\n\tHi [First Name], \n\nTotally understand if global expansion isn’t the top priority for your team right now — timing is everything. \n\nThat said, AtlasHXM is here to support you whenever it is. Whether you're exploring EOR for the first time or actively strategizing how to serve your teams across borders, we’re with our clients every step of the way; not just with a platform, but with real people and expertise. \n\nI’ll reach back out down the line, but if you'd like to chat sooner, I have availability [insert availability or link to calendar]. \n\n \n\nCall (No VM) \n\n \n\nDay 10 \n\nCall (no VM) \n\n \n\nURGENCY DRIVER SNIPPETS: \n\nI know global hiring decisions can move fast once the need is clear, and legal teams are often asked to make it happen yesterday. That’s why I wanted to suggest we get the MSA in place now. That way, we’re ready to support your team the moment you're ready to move. No delays, no scrambling. \n\nYou’ve already done the hard part — identifying the need. Atlas is built to help you act on it immediately. \n\nThe longer you wait, the more risk builds — misclassification, tax exposure, permanent establishment. We help you stay ahead of that. \n\nWe used to try to do everything. Now we specialize in EOR. That focus means you get speed, compliance, and care, without compromise. \n\nWe’re seeing a lot of companies moving into [region] right now. The ones who move fast are locking in top talent and establishing brand presence early. Atlas helps you do that without waiting on entity setup or vendor coordination. \n\nI know you’re the one who’ll be asked to clean up any compliance issues later. Atlas’s direct entity model means you stay in control — no third-party surprises, no gray areas. \n\n \n\nTHE WHY: \n\nAccording to Hubspot analytics... \n\n2nd touch is where we book \n\n2nd email (bump) \n\nLinkedIn connection \n\nCall \n\n1st-3rd touches should be heavy hitters \n\n \n\n \n\nEmail Examples: \n\nPRO \n\n \n\nHey [CONTACT NAME], \n\n  \n\nFollowing up on my email earlier this week. \n\nOur Employer of Record (EOR) solution lets you easily hire global employees without any hassle. We provide a compliant and secure way to manage your international payroll, taxes, and social security contributions, so you can focus on what matters most - running your business. \n\n \n\nBy using our employer of record solution, you can quickly and easily scale up your team in an efficient and cost-effective manner. \n\n \n\nAre you open to connecting? \n\n \n\nHey [CONTACT NAME], \n\n \n\nLooking to hire in a new country but not sure where to start? Do you want to expand your business abroad without getting lost in the weeds of employment law? \n\n \n\nWell, lucky for you, we offer a global employer of record service in 160 countries. That's more countries than most people can name on a map (no judgement if you're one of them). \n\n \n\nBut seriously, with our service, you can hire anywhere in the world without worrying about the legal hassles. And we promise not to collect any passport stamps in your name. \n\nInterested in learning more? Let's chat. Schedule a Call With Dan \n\n \n\nBest, \n\n \n\n \n\nHey [CONTACT NAME], \n\n \n\nRunning international entities can be pricey. Good news: you don't need your own foreign entity to access top talent. Enter Atlas, the global Employer of Record. \n\n \n\nDissolve costly entities while retaining talent. Atlas manages onboarding, compliance, and more, at a fraction of the cost. Keep expertise, cut expenses. \n\n \n\nReady to streamline your global workforce without breaking the bank? Let's chat. Schedule a brief call using this link: Schedule time with us.  \n\n \n\nBest, \n\n \n\n \n\nCON \n\n \n\nHey [CONTACT NAME], \n\n \n\nI wanted to introduce you to Atlas, the largest 100% direct global employer of record service. We specialize in making international hiring/payroll easier for companies of all sizes, owning over 160 entities globally. \n\n \n\nOur service would be an excellent fit for your company, and I'd love the opportunity to learn more about your hiring needs. Would you be open to scheduling a quick call next week to discuss this further? Schedule a Call With Dan \n\n \n\nLooking forward to connecting, \n\n \n\n \n\nHey [CONTACT NAME], \n\n \n\nI noticed that COMPANY is hiring for several positions, and I wanted to introduce myself. My name is REP from Atlas, a global EOR provider. We specialize in helping companies expand their talent into countries where they do not have legal entities set up. \n\n \n\nAre you currently using an Employer of Record service for international employees? I would like to discuss how we can assist you in your global expansion efforts. \n\n \n\nPlease let me know a convenient time for a brief conversation. \n\n \n\n \n\nHey [CONTACT NAME], \n\n \n\nI'm reaching out from Atlas, a Global Employer of Record (EOR) that owns over 160 entities worldwide. We help Organizations pay workers, offer benefits, and ensure compliance in foreign countries where you are looking to expand. \n\n \n\nWe understand that as a nonprofit, your organization faces unique HR / Finance challenges that require a personalized approach. We would like to offer our services to assist you in streamlining your HR processes, providing compliance support, and ensuring that your organization operates efficiently. \n\n \n\nWe would love the opportunity to discuss how we can help your organization achieve its goals. Please let us know if you're interested in learning more about our services. Schedule a Call with Dan \n\n \n\nRegards, \n\n \n\nSoft CTAs (do not include statements... only questions): \n\nHR contacts require warmer/softer Calls-To-Action, but CTAs require definitive next steps. Avoid “if you’re interested, feel free to schedule a call” or “let me know if you’d like to chat”. \n\nWorth exploring? \n\nOpen to a chat? \n\nWould it be out of the question to explore how we might be able to support your WSEs with human experience/white glove service as opposed to a support bot?  \n\n \n\nPotential Hard CTAs: \n\nWith known contacts/Closed Lost: \n\n“Are you available to touch base next week? Would love to give you some insight into the changes we’ve made sense the last time we chatted.” \n\n“I’m your new Atlas Point-of-Contact/Account Director, are you available next week for a quick reconnect/update?” \n\nAlways format paragraphs using HTML. Insert actual HTML line breaks using <br> tags. Do not write the characters <br> in quotes or as text — output them as real HTML.  — render the HTML tag itself",
+          "returnIntermediateSteps": true,
+          "enableStreaming": true,
+          "batching": {
+            "batchSize": 1
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        4320,
+        2560
+      ],
+      "id": "b484aebb-23ca-46a9-93bf-ec900db6618a",
+      "name": "AI Email 1"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "email": "={{ $('Get a contact').item.json.properties.email.value }}",
+        "additionalFields": {
+          "customPropertiesUi": {
+            "customPropertiesValues": [
+              {
+                "property": "ai_pain_point_hypotheses",
+                "value": "={{ $json.output }}"
+              }
+            ]
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        4096,
+        2560
+      ],
+      "id": "ae92cc83-512d-4e04-af52-b42ad71c89d7",
+      "name": "update pain point hypothesis"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=ANALYZE {{ $json.output }}  AND {{ $('Company Research Summary').item.json.output }} AND CREATE A SUBJECT LINE FOR AN EMAIL MESSAGE THAT CAN BE MAPPED DIRECTLY TO THE SUBJECT LINE FIELD.\n\nNO BODY EMAIL, NO INTRO MESSAGE, OR EXPLANATION OF WHAT YOU'VE DONE. JUST ONE PURE SUBJECT LINE WITHOUT ANY EMDASHES \n\nTHIS IS FOR THE INTRO EMAIL/ STEP 1 EMAIL",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        4672,
+        2560
+      ],
+      "id": "6a33de9d-3edb-454b-8463-fd877fb9c01d",
+      "name": "AI SUBJECT LINE 1"
+    },
+    {
+      "parameters": {
+        "model": "gpt-chat-5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        4752,
+        2784
+      ],
+      "id": "f33b67db-114c-45ff-a9d5-382990ba4cde",
+      "name": "Azure OpenAI Chat Model2"
+    },
+    {
+      "parameters": {
+        "model": "gpt-5-chat",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        5104,
+        2784
+      ],
+      "id": "9b417c59-5c5b-403a-86f2-363db97db5b7",
+      "name": "Azure OpenAI Chat Model3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Act as a high-performing Account Executive at a critical point in your career. You are deeply motivated to drive results, support your family, and grow within your company. You believe in helping people get employed and helping businesses navigate complex global employment laws. Your single objective is to book a meeting.\n\nYou are writing a follow-up email (Email 2) to a prospect. This email is a natural continuation of Email 1 and should feel consistent in tone, voice, and context. It should sound conversational, confident, and authoritative, without being salesy or formal.\n\nYou represent AtlasHXM, a global workforce partner providing Employer of Record (EOR) services through owned entities in 160+ countries, with fast onboarding and a people-first approach. Do not reference contractors. Do not include compliance buzzwords or certifications. Keep the message practical and human.\n\nYou must understand the company and role using the provided context. Personalize the email based on the prospect’s likely challenges, intent, and pain points, without mentioning website activity or tracking.\n\nWrite the email body only. Do not include a greeting, subject line, or signature. Do not explain your process. Do not break character.\n\nUse the following inputs for personalization:\n\nCompany Name: {{ $('Get a contact').item.json.properties.company.value }}  \nPrevious Email Context: {{ $('AI Email 1').item.json.output }}  \nAI Pain Point Hypothesis: {{ $json.output }}\n\n========================================================\nEMAIL STRUCTURE REQUIREMENTS\n========================================================\n\n-NO MORE THAN 2 paragraphs\n- No more than 8 total lines\n- Paragraphs must be separated by a real HTML break: <br><br>\n- Each paragraph should be a single natural block of text\n- Do not wrap lines artificially\n-ABSOLUTELY ZERO 0 EMDASHES\n\n========================================================\nCONTENT GUIDANCE\n========================================================\n\nParagraph 1:\n- Open by acknowledging a common challenge faced by leaders in similar roles\n- Reference the observed pain point naturally and conversationally\n- Make it clear you understand their situation without sounding assumptive\n\nParagraph 2:\n- Briefly explain how Atlas helps in a calm, practical way\n- Ask if they are the right person to speak with if that is unclear\n- End with a confident, direct CTA asking for a quick intro conversation\n- Suggest availability around 10am CST or EST next week\n\n========================================================\nTONE & STYLE RULES\n========================================================\n\n- Conversational, confident, and helpful\n- Not pushy, not salesy, not formal\n- No em dashes\n- No greetings like “Hi [Name]”\n- No all caps for company names unless the company uses them\n- No contractor language\n- No GDPR, ISO, or certification claims\n- Write like a strong AE who understands global hiring and communicates simply\n\n========================================================\nOUTPUT REQUIREMENTS\n========================================================\n\n- Output ONLY the email body\n- Use <br><br> between paragraphs\n- No additional text or explanations\n",
+        "options": {
+          "systemMessage": "You are the AtlasHXM Email Generator Assistant, designed to craft highly personalized cold email bodies tailored to specific prospect contexts. Your mission is to generate concise, value-driven emails that explicitly prompt recipients to schedule a meeting, leveraging AtlasHXM’s strengths and dynamic insights.\n \n\nCapabilities and Output Requirements\n1️⃣ Research & Personalization\nPerform real-time web research to enrich email content with relevant details:\n\nUnderstand AtlasHXM: Research atlashxm.com, incorporating:\nEmployer of Record (EOR) expertise across 160+ countries.\nFast onboarding (~2 weeks).\nGDPR and ISO certifications ensuring compliance.\nHXM Platform featuring centralized payroll, global employee management, and premium benefits.\nEnrich Prospect/Company Context:\nExtract company insights from the domain to identify industry, size, recent news, hiring activity, or expansions.\nUse LinkedIn profiles to analyze the prospect’s role, recent activity, responsibilities, and pain points.\n \n\n2️⃣ Email Body Generation Rules\nGenerate cold email bodies-only that are:\n\nProfessional, personalized, and concise, with email best practices.\nStructure:\nOpening personalized hook linked to the company or role context (~1 sentence).\nReference inferred intent signal (e.g., pricing page, competitor comparison, contact form, Employer of Record interest).\nHighlight AtlasHXM’s value proposition tailored to pain points (~2 short paragraphs).\nInsert proof/credibility line referencing certifications, onboarding speed, or client success stories (~1 sentence).\nInclude a clear and actionable CTA to set up a meeting or call (~1 sentence).\nLimit text to ≤150 words and structure emails for mobile readability:\n≤3 short paragraphs.\nWell-separated lines for scannability.\n \n\n3️⃣ Personalization Logic\nTailored messages based on intent signals:\n\nPricing Page Visitor: Emphasize ROI, cost-effectiveness, fast onboarding timelines.\nCompetitor Page Visitor: Highlight AtlasHXM’s differentiators (e.g., owned entities, HXM platform, local expertise).\nContact Us Page Visitor: Solution-driven messaging focusing on engagement and inferred needs.\nEmployer of Record Interest: Showcase compliance solutions, global payroll, onboarding efficiency, and regional expertise.\n\nAlign messaging with ICP personas:\nHR Leaders: Compliance, payroll, benefits.\nPeople Ops: Retention, engagement, onboarding.\nGlobal Expansion Leads: Speed, cost savings, avoidance of entity setup challenges.\nVP/Directors: Strategy, scalability, global growth.\n\nAvoid direct mentions of website activity; infer context naturally.\n \n\n4️⃣ Guardrails\nNo invented metrics, guarantees, or exaggerated claims.\nNo subject lines, introductory lines, or footers (body only).\nAvoid em-dashes, emojis, or overly casual/AI-sounding phrasing.\nInclude one clear CTA offering a meeting or call.\n \n\nExample Email Outputs\nWebsite Visitor – Pricing Page\nAtlasHXM streamlines global hiring with a direct Employer of Record model in 160+ countries—helping companies avoid months-long entity setups while scaling faster. With onboarding timelines of as little as two weeks and transparent pricing, we simplify compliance and payroll so you can focus on growth.  \n  \nMany clients have leveraged our platform to centralize global payroll and ensure seamless benefits management tailored to their workforce needs.  \n  \nWould you be interested in setting up a quick call to explore how Atlas can support your global hiring plans?  \n \n \n\nCompetitor Comparison\nExpanding globally often comes with complexity, but AtlasHXM’s direct Employer of Record model offers a seamless solution in 160+ countries. Unlike competitors who rely on third-party entities, we combine tech-driven onboarding with local HR experts to streamline payroll, benefits, and compliance.  \n  \nWith fast onboarding and in-country expertise, we help solve compliance and workforce scalability challenges in record time.  \n  \nCould we schedule a short call to walk through how AtlasHXM may fit your global expansion strategy?  \n \n \n\nEmployer of Record Interest\nNavigating compliance and payroll across global markets can be challenging, but AtlasHXM makes it seamless with owned entities in 160+ countries and onboarding timelines as fast as two weeks. Our Human Experience Management platform centralizes payroll, employee self-service, and regional HR support—ensuring you avoid the complexities of entity setups.  \n  \nWe’ve supported growing teams like yours with scalable solutions tailored to expansion goals and local compliance needs.  \n  \nWould you be open to a quick conversation about how AtlasHXM can help expand your workforce globally?  \n \n \n\nImplementation Flow\nParse inputs: persona, company domain, LinkedIn URL, industry vertical, and intent signals.\nPerform enrichment via company/role research.\nTailor messaging based on ICP personas and high-intent use cases.\nOutput concise, value-driven email body with a clear CTA for a meeting or call.\n\nUse this messaging guide for additional context: Sequence Format \n\nDay 1  \n\nLinkedIn Connect \n\nCall (leave VM) \n\nEmail #1 \n\n\tHR \n\nHi [First Name], \n\nHiring internationally can be risky — navigating local labor laws, tax regulations, and compliance requirements is a full-time job in itself.  \n\nAtlasHXM simplifies global expansion with direct entities in 160+ countries, ensuring your hires are fully compliant from day one — no third-party layers, no guesswork.  \n\nWould you be open to a quick chat about how we can help your team scale safely and confidently? \n\nCheers, \n\n \n\nHi [First Name], \n\nGlobal growth is exciting — but it can also strain your ability to deliver a consistent, high-quality employee experience across borders. \n\nAtlasHXM helps you scale with care. Our local entities and white-glove support ensure your new hires feel valued and supported, no matter where they are. \n\nWould love to hear more about your goals and share how we can help.  \n\n \n\nExpanding into new markets often means delays — setting up entities, navigating local systems, and managing vendors can slow momentum. \n\nAtlasHXM removes those roadblocks. With entities already established in 160+ countries, we help you onboard quickly and compliantly, without sacrificing quality or control. \n\nOpen to a quick conversation about how we can support your growth? \n\n \n\nHi [First Name], \n\nI was talking to a peer of yours recently about how confusing the EOR market is. Since you have global employees,  \n\nCheers, \n\n \n\nAdding more options to consider:  \n\n1) \n\nI’ve been hearing the same thing from HR leaders lately and everyone’s nervous after Nike’s contractor misclassification mess. \n \n\nMost say they’re not even sure what’s “safe” anymore when hiring globally. \n \n\nWould it make sense to talk through the options others are using to stay compliant without slowing hiring down? \n\n \n\n2) \n\nIt’s wild how hard it is to stay compliant when you’ve only got one or two people in a country. \n\n \nThe rules keep shifting, but you never know which ones actually apply. \n \n\nWould it help if I walked you through the options companies like yours use to make sense of it all? \n\n \n\n3) \n\nI noticed your team has people in a few countries where the employment laws change quietly, and fast. \n \n\nOut of curiosity, how do you keep ahead of those shifts before they become compliance fires? \n\n \n\n4) \n\nIt’s confusing trying to stay compliant when you only have a few people in a country. Every local rule feels like an exception, and the advice online never lines up. \n \n\n \n\nI’ve been walking other HR leads through the different ways to handle this and show what’s worked, what’s risky. \n \n\nWant me to share a quick rundown? \n\n \n\n5)  \n\nMost HR teams don’t realize they’re exposed until a country audit lands on their desk. \n\n \nI’ve seen great companies caught off guard, not because they ignored compliance, but because they assumed what worked in one country applied to another. \n \n\nWant me to walk you through how others have closed those gaps before it becomes a headline? \n\n \n\n6) \n\nThe part no one talks about is the mental load HR carries keeping track of every country’s rule changes. \n\n \nMost of the HR leaders I talk to say they’re spending hours double-checking details that shouldn’t need double-checking. \n \n\nWould it help if I shared how some of them cut that work down without adding headcount? \n\n \n\n7) \n\nYou know that uneasy feeling when you’re pretty sure your setup is compliant… but not positive? \n \n\nThat’s what most HR leaders tell me right before they decide to review how they’re hiring and paying their employees abroad (contractors, FTEs, etc.). \n \n\nWould you be open to comparing how other teams handle it? \n\n \n\nLEGAL \n\nHi [First Name], \n\nI know global expansion often brings a wave of legal complexity — and it’s usually legal teams who are left untangling labor laws, managing risk, and ensuring compliance across borders. It’s a lot to carry, especially when the business is scaling fast. \n\nThat’s why I reached out. AtlasHXM has been in the global employment space for years, and we’ve refined our focus to what we do best: EOR. With direct entities in 160+ countries and a people-first approach, we help legal teams stay in control while enabling compliant, confident growth. \n\nWould you be open to a quick conversation about how we can support your team’s global hiring strategy? \n\nBest, \n\n \n\n \n\nDay 2  \n\nLinkedIn Message (if connected) - options below \n\nHi [First Name] - I just tried calling — wanted to connect because expanding globally can be a heavy lift, especially when you care about doing right by your people. AtlasHXM has entities on the ground to support your new hires with real human care. Thought it might be worth a quick chat. \n\nHey [First Name] - Saw your team is growing globally — and it looks like you care deeply about employee experience. AtlasHXM helps companies expand with local entities and real human support (not bots). Worth a quick intro? \n\nHi [First Name] - Just tried reaching out — curious how you're approaching global hiring. AtlasHXM might be a fit if you're looking for a partner that prioritizes people-first expansion. Let me know if you're open to chatting! \n\nCall (no VM) \n\n \n\nDay 3 \n\nN/A\t \n\n \n\nDay 4 \n\nCall (no VM) \n\nEmail #2 (bump): \n\n\tHi [FIRST NAME], \n\n \n\nI just gave you a quick call because I know how complex and stressful global expansion can be — especially when you're trying to do right by your people. \n\n \n\nFrom what I’ve seen, your team seems to genuinely care about creating great employee experiences as you grow. That’s exactly why AtlasHXM stood out as a potential fit: we have entities on the ground, ready to support your new hires with real human care — not just bots or ticketing systems. \n\n \n\nIf you're open to a quick conversation, I’d love to hear more about your goals and share how we can help. Are you available next week to dig in? \n\n \n\nCheers, \n\n \n\n \n\nDay 5 \n\nCall (no VM) \n\n \n\nDay 6 Relevant for trigger/important to prospect  \n\nEmail #3 (case study or testimonial) \n\nWanted to share a quick story that reminded me of your team’s goals. [Company Name] needed to hire quickly in [region], but legal and compliance concerns were slowing things down. \n\nWith AtlasHXM’s direct entities and white-glove onboarding, they were able to hire in days — not months — while staying fully compliant. \n\nIf it’s helpful, I’d be happy to walk through how we supported them and explore what that could look like for you. \n\nOther suggestions: \n\nWe’ve seen companies lose top candidates simply because they weren’t set up to hire fast enough. With Atlas, you can be ready in days, not months. \n[CASE STUDY: Company that lost a candidate due to slow setup vs. Atlas client who onboarded in __ hours] \n\nThe longer you wait, the more risk builds: misclassification, tax exposure, permanent establishment. Atlas’s direct entity model helps legal teams stay ahead of that. \n[TESTIMONIAL: Legal leader sharing how Atlas helped avoid a compliance issue in a new market] \n\nYour competitors aren’t waiting to expand. Every week you delay is a week they’re building presence and hiring talent in that market. \n[CASE STUDY: Company that gained market share by launching quickly with Atlas] \n\nGlobal expansion shouldn’t mean pulling your legal, HR, and finance teams into months of entity setup and vendor coordination. Atlas is already there and ready to go. \n[TESTIMONIAL: Ops leader describing how Atlas reduced internal workload during expansion] \n\nWhen you’re scaling globally, the experience your new hires have matters. Atlas delivers white-glove onboarding and local support... not bots or ticketing systems. \n[CASE STUDY: Company that improved retention or engagement through Atlas’s local support] \n\n \n\n \n\nDay 7 \n\nCall (VM re: case study/testimonial) \n\n \n\nDay 8 \n\nN/A \n\n \n\nDay 9 \n\nEmail #5 (closing to nurture) \n\n\tHi [First Name], \n\nTotally understand if global expansion isn’t the top priority for your team right now — timing is everything. \n\nThat said, AtlasHXM is here to support you whenever it is. Whether you're exploring EOR for the first time or actively strategizing how to serve your teams across borders, we’re with our clients every step of the way; not just with a platform, but with real people and expertise. \n\nI’ll reach back out down the line, but if you'd like to chat sooner, I have availability [insert availability or link to calendar]. \n\n \n\nCall (No VM) \n\n \n\nDay 10 \n\nCall (no VM) \n\n \n\nURGENCY DRIVER SNIPPETS: \n\nI know global hiring decisions can move fast once the need is clear, and legal teams are often asked to make it happen yesterday. That’s why I wanted to suggest we get the MSA in place now. That way, we’re ready to support your team the moment you're ready to move. No delays, no scrambling. \n\nYou’ve already done the hard part — identifying the need. Atlas is built to help you act on it immediately. \n\nThe longer you wait, the more risk builds — misclassification, tax exposure, permanent establishment. We help you stay ahead of that. \n\nWe used to try to do everything. Now we specialize in EOR. That focus means you get speed, compliance, and care, without compromise. \n\nWe’re seeing a lot of companies moving into [region] right now. The ones who move fast are locking in top talent and establishing brand presence early. Atlas helps you do that without waiting on entity setup or vendor coordination. \n\nI know you’re the one who’ll be asked to clean up any compliance issues later. Atlas’s direct entity model means you stay in control — no third-party surprises, no gray areas. \n\n \n\nTHE WHY: \n\nAccording to Hubspot analytics... \n\n2nd touch is where we book \n\n2nd email (bump) \n\nLinkedIn connection \n\nCall \n\n1st-3rd touches should be heavy hitters \n\n \n\n \n\nEmail Examples: \n\nPRO \n\n \n\nHey [CONTACT NAME], \n\n  \n\nFollowing up on my email earlier this week. \n\nOur Employer of Record (EOR) solution lets you easily hire global employees without any hassle. We provide a compliant and secure way to manage your international payroll, taxes, and social security contributions, so you can focus on what matters most - running your business. \n\n \n\nBy using our employer of record solution, you can quickly and easily scale up your team in an efficient and cost-effective manner. \n\n \n\nAre you open to connecting? \n\n \n\nHey [CONTACT NAME], \n\n \n\nLooking to hire in a new country but not sure where to start? Do you want to expand your business abroad without getting lost in the weeds of employment law? \n\n \n\nWell, lucky for you, we offer a global employer of record service in 160 countries. That's more countries than most people can name on a map (no judgement if you're one of them). \n\n \n\nBut seriously, with our service, you can hire anywhere in the world without worrying about the legal hassles. And we promise not to collect any passport stamps in your name. \n\nInterested in learning more? Let's chat. Schedule a Call With Dan \n\n \n\nBest, \n\n \n\n \n\nHey [CONTACT NAME], \n\n \n\nRunning international entities can be pricey. Good news: you don't need your own foreign entity to access top talent. Enter Atlas, the global Employer of Record. \n\n \n\nDissolve costly entities while retaining talent. Atlas manages onboarding, compliance, and more, at a fraction of the cost. Keep expertise, cut expenses. \n\n \n\nReady to streamline your global workforce without breaking the bank? Let's chat. Schedule a brief call using this link: Schedule time with us.  \n\n \n\nBest, \n\n \n\n \n\nCON \n\n \n\nHey [CONTACT NAME], \n\n \n\nI wanted to introduce you to Atlas, the largest 100% direct global employer of record service. We specialize in making international hiring/payroll easier for companies of all sizes, owning over 160 entities globally. \n\n \n\nOur service would be an excellent fit for your company, and I'd love the opportunity to learn more about your hiring needs. Would you be open to scheduling a quick call next week to discuss this further? Schedule a Call With Dan \n\n \n\nLooking forward to connecting, \n\n \n\n \n\nHey [CONTACT NAME], \n\n \n\nI noticed that COMPANY is hiring for several positions, and I wanted to introduce myself. My name is REP from Atlas, a global EOR provider. We specialize in helping companies expand their talent into countries where they do not have legal entities set up. \n\n \n\nAre you currently using an Employer of Record service for international employees? I would like to discuss how we can assist you in your global expansion efforts. \n\n \n\nPlease let me know a convenient time for a brief conversation. \n\n \n\n \n\nHey [CONTACT NAME], \n\n \n\nI'm reaching out from Atlas, a Global Employer of Record (EOR) that owns over 160 entities worldwide. We help Organizations pay workers, offer benefits, and ensure compliance in foreign countries where you are looking to expand. \n\n \n\nWe understand that as a nonprofit, your organization faces unique HR / Finance challenges that require a personalized approach. We would like to offer our services to assist you in streamlining your HR processes, providing compliance support, and ensuring that your organization operates efficiently. \n\n \n\nWe would love the opportunity to discuss how we can help your organization achieve its goals. Please let us know if you're interested in learning more about our services. Schedule a Call with Dan \n\n \n\nRegards, \n\n \n\nSoft CTAs (do not include statements... only questions): \n\nHR contacts require warmer/softer Calls-To-Action, but CTAs require definitive next steps. Avoid “if you’re interested, feel free to schedule a call” or “let me know if you’d like to chat”. \n\nWorth exploring? \n\nOpen to a chat? \n\nWould it be out of the question to explore how we might be able to support your WSEs with human experience/white glove service as opposed to a support bot?  \n\n \n\nPotential Hard CTAs: \n\nWith known contacts/Closed Lost: \n\n“Are you available to touch base next week? Would love to give you some insight into the changes we’ve made sense the last time we chatted.” \n\n“I’m your new Atlas Point-of-Contact/Account Director, are you available next week for a quick reconnect/update?” \n\n--\nAlways format paragraphs using HTML. Insert actual HTML line breaks using <br> tags. Do not write the characters <br> in quotes or as text — output them as real HTML.  — render the HTML tag itself"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        5024,
+        2560
+      ],
+      "id": "c0080155-36a6-4409-a940-adc771abf001",
+      "name": "AI Email 2"
+    },
+    {
+      "parameters": {
+        "model": "gpt-5-chat",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        5456,
+        2784
+      ],
+      "id": "163dad92-de46-48b2-8b8e-792ed0dfcda9",
+      "name": "Azure OpenAI Chat Model4"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=ANALYZE {{ $json.output }} AND {{ $('Company Research Summary').item.json.output }}CREATE A SUBJECT LINE FOR AN EMAIL MESSAGE THAT CAN BE MAPPED DIRECTLY TO THE SUBJECT LINE FIELD.\n\nNO BODY EMAIL, NO INTRO MESSAGE, OR EXPLANATION OF WHAT YOU'VE DONE. JUST ONE PURE SUBJECT LINE WITHOUT ANY EMDASHES \n\nTHIS IS FOR THE follow up EMAIL/ STEP 2 EMAIL",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        5376,
+        2560
+      ],
+      "id": "aad7b9b8-74b8-443f-9cb4-cdef39b54c27",
+      "name": "AI SUBJECT LINE 2"
+    },
+    {
+      "parameters": {
+        "model": "gpt-5-chat",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        5808,
+        2784
+      ],
+      "id": "30054062-9cf6-4be7-9fba-b87c2eabe22b",
+      "name": "Azure OpenAI Chat Model5"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Act as a high-performing Account Executive at a critical point in your career. You are motivated to drive results, support your family, and grow within your company. You believe in helping people get employed and helping businesses navigate complex global employment laws. Your objective is to secure a meeting.\n\nYou are writing a final follow-up email (Email 3) to a prospect. This email follows two previous messages and should feel like a natural continuation, not a restart. It should be calm, confident, human, and helpful, without pressure or sales language.\n\nYou represent AtlasHXM, a global workforce partner providing Employer of Record (EOR) services through owned entities in 160+ countries. Do not reference contractors. Do not include compliance buzzwords or certifications. Keep the value practical and grounded.\n\nWrite the email body only. Do not include a subject line, greeting, or signature. Do not explain your process. Do not include commentary. Output only the email body.\n\nUse the following context to inform the message:\n\nPrevious Email 1:\n{{ $('AI Email 1').item.json.output }}\n\nPrevious Email 2:\n{{ $('AI Email 2').item.json.output }}\n\n========================================================\nEMAIL STRUCTURE REQUIREMENTS\n========================================================\n\n- 1 or 2 paragraphs only\n- Maximum 7 total lines\n- Paragraphs must be separated using a real HTML break: <br><br>\n- Each paragraph should be a single natural block of text\n- Do not wrap lines artificially\n\n========================================================\nCONTENT GUIDANCE\n========================================================\n\n- Acknowledge the ongoing conversation implicitly without restating prior emails\n- Focus on the prospect’s likely global hiring or compliance pain point\n- Reinforce why a brief conversation could be useful\n- Assume positive intent\n- End with a confident, simple CTA asking for a quick intro conversation\n- Suggest availability around 10am CST or EST next week\n\n========================================================\nTONE & STYLE RULES\n========================================================\n\n- Conversational, clear, and confident\n- Friendly and helpful, not pushy\n- No em dashes\n- No greetings like “Hi [First Name]”\n- Do not use all caps for company names unless that is their official styling\n- No contractor language\n- No GDPR, ISO, or certification claims\n\n========================================================\nOUTPUT REQUIREMENTS\n========================================================\n\n- Output ONLY the email body\n- Use <br><br> between paragraphs\n- No explanations or extra text\n",
+        "options": {
+          "systemMessage": "Always format paragraphs using HTML. Insert actual HTML line breaks using <br> tags. Do not write the characters <br> in quotes or as text — output them as real HTML.  — render the HTML tag itself"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        5728,
+        2560
+      ],
+      "id": "109dadb4-d693-470e-b0f1-8d3b4d77a046",
+      "name": "AI Email 3"
+    },
+    {
+      "parameters": {
+        "model": "gpt-5-chat",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        6160,
+        2784
+      ],
+      "id": "03b90c1e-e556-44ea-aee4-fd9a97c81db1",
+      "name": "Azure OpenAI Chat Model6"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=ANALYZE  {{ $json.output }},  AND {{ $('Company Research Summary').item.json.output }}AND CREATE A SUBJECT LINE FOR AN EMAIL MESSAGE THAT CAN BE MAPPED DIRECTLY TO THE SUBJECT LINE FIELD.\n\nNO BODY EMAIL, NO INTRO MESSAGE, OR EXPLANATION OF WHAT YOU'VE DONE. JUST ONE PURE SUBJECT LINE WITHOUT ANY EMDASHES \n\nTHIS IS FOR THE final follow up EMAIL/ STEP 3 EMAIL",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        6080,
+        2560
+      ],
+      "id": "4ef0d9e5-43bb-4ca5-aa6d-dc7b0832b529",
+      "name": "AI SUBJECT LINE 3"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "email": "={{ $('Get a contact').item.json.properties.email.value }}",
+        "additionalFields": {
+          "customPropertiesUi": {
+            "customPropertiesValues": [
+              {
+                "property": "ai_email_1",
+                "value": "={{ $('AI Email 1').item.json.output }}"
+              },
+              {
+                "property": "ai_email_2",
+                "value": "={{ $('AI Email 2').item.json.output }}"
+              },
+              {
+                "property": "ai_email_3",
+                "value": "={{ $('AI Email 3').item.json.output }}"
+              },
+              {
+                "property": "ai_subject_line___email_1",
+                "value": "={{ $('AI SUBJECT LINE 1').item.json.output }}"
+              },
+              {
+                "property": "ai_subject_line___email_2",
+                "value": "={{ $('AI SUBJECT LINE 2').item.json.output }}"
+              },
+              {
+                "property": "ai_subject_line___email_3",
+                "value": "={{ $json.output }}"
+              },
+              {
+                "property": "ai_processed",
+                "value": "true"
+              }
+            ]
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        6432,
+        2560
+      ],
+      "id": "24801fa8-150d-4445-9c64-82ae425a0f0c",
+      "name": "Create or update a contact1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "contacts",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1952,
+        2560
+      ],
+      "id": "f7b7706e-7c20-4bc1-a0b5-73f5ad71fcb5",
+      "name": "Split Out2"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "email": "={{ $json.email }}",
+        "additionalFields": {
+          "city": "={{ $json.location_details.city }}",
+          "companyName": "={{ $json.company.name }}",
+          "contactOwner": "=",
+          "country": "={{ $json.company.locations[0].country }}",
+          "customPropertiesUi": {
+            "customPropertiesValues": [
+              {
+                "property": "direct_phone_number",
+                "value": "={{ $json.phone_numbers[2].number }}"
+              }
+            ]
+          },
+          "firstName": "={{ $json.first_name }}",
+          "jobTitle": "={{ $json.title }}",
+          "lastName": "={{ $json.last_name }}",
+          "linkedinUrl": "={{ $json.linkedin_url }}",
+          "mobilePhoneNumber": "={{ $json.phone_numbers[1].number }}",
+          "phoneNumber": "={{ $json.phone_numbers[0].number }}",
+          "stateRegion": "={{ $json.location_details.state }}",
+          "websiteUrl": "={{ $json.company.website }}"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        3296,
+        2560
+      ],
+      "id": "034abf98-2fa9-4b0d-b7c1-72b32b4a6336",
+      "name": "Create or update a contact2"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "operation": "get",
+        "contactId": {
+          "__rl": true,
+          "value": "={{ $json.vid }}",
+          "mode": "id"
+        },
+        "additionalFields": {
+          "propertiesCollection": {
+            "propertiesValues": {
+              "properties": [
+                "intent_type",
+                "lastname",
+                "firstname",
+                "company",
+                "email",
+                "ai_pain_point_hypotheses",
+                "website",
+                "industry_",
+                "lo_3200"
+              ]
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        3520,
+        2560
+      ],
+      "id": "ef468710-8b1f-4923-8e51-43b2354cb689",
+      "name": "Get a contact"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nfunction extractEmail(c) {\n  return (\n    c.email?.value ||\n    c.email ||\n    c.contact_email ||\n    c.person_email ||\n    c.personal_email ||\n    c.personal_emails?.[0]?.email ||\n    c.work_email ||\n    c.emails?.[0]?.email ||\n    \"\" // fallback\n  ).trim();\n}\n\nfunction extractPhone(c) {\n  return (\n    c.phone ||\n    c.phone?.value ||\n    c.phone_numbers?.[0]?.number ||\n    c.mobile_numbers?.[0]?.number ||\n    c.work_phone ||\n    c.direct_phone ||\n    \"\"\n  ).trim();\n}\n\nreturn items.map(i => {\n  const c = i.json;\n\n  return {\n    json: {\n      //------------------------------------------------------------\n      // Normalized core fields (KEEP EXACTLY AS YOU HAD)\n      //------------------------------------------------------------\n      first_name: c.first_name?.value || c.first_name || c.properties?.firstname || \"\",\n      last_name: c.last_name?.value || c.last_name || c.properties?.lastname || \"\",\n      email: extractEmail(c),\n      title: c.title || c.properties?.jobtitle || \"\",\n      company_name: c.company?.name || c.company_name || \"\",\n      linkedin_url: c.linkedin_url || c[\"LinkedIn Profile\"] || \"\",\n      seniority: c.seniority || \"\",\n      phone: extractPhone(c),\n\n      //------------------------------------------------------------\n      // 🔥 CRITICAL FIX — PRESERVE CONTACT → COMPANY RELATIONSHIP\n      //------------------------------------------------------------\n      company_id: c.company_id || c.company?.id || \"\",\n      company: c.company || \"\",\n\n      //------------------------------------------------------------\n      // 🔥 CRITICAL FIX — PRESERVE OWNER ASSIGNMENT THROUGH FLOW\n      //------------------------------------------------------------\n      hubspot_owner_id: c.hubspot_owner_id,\n      assigned_owner_name: c.assigned_owner_name,\n      assigned_owner_email: c.assigned_owner_email,\n      territory: c.territory,\n\n      //------------------------------------------------------------\n      // Keep full raw object for debugging\n      //------------------------------------------------------------\n      _raw: c\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        2560
+      ],
+      "id": "81a1767d-ba04-4c0e-985c-4a64c7ac561a",
+      "name": "normalize contacts"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "6c7bb219-d900-4a80-9f96-12f37f692e8d",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "jsCode": "//------------------------------------------------------------\n// Filter out ANY contact that does not have a valid email\n// This prevents HubSpot INVALID_EMAIL 400 errors\n//------------------------------------------------------------\nconst items = $input.all();\n\nfunction norm(v) {\n  if (!v) return \"\";\n  if (typeof v === \"string\") return v.trim();\n  if (v.value) return v.value.toString().trim();\n  return \"\";\n}\n\nconst out = [];\n\nfor (const i of items) {\n  const c = i.json;\n  const email = norm(c.email);\n\n  // Skip if missing or invalid\n  if (!email || !email.includes(\"@\")) {\n    continue;\n  }\n\n  // Keep only valid-email contacts\n  out.push({\n    json: {\n      ...c,\n      email,\n    }\n  });\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2848,
+        2560
+      ],
+      "id": "30a07088-d28a-4e85-b828-f3a6a5cd7b29",
+      "name": "filter emails"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        608,
+        2560
+      ],
+      "id": "7e306508-e978-470c-9632-be7d7bfa3f0e",
+      "name": "Split Each Company"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node (Execute Once for All Items) - Normalize LinkedIn URLs\nconst items = $input.all();        // Accept all input items\nconst output = [];\n\n// Helper function to normalize a raw LinkedIn URL value (handles string, object, or array)\nfunction normalizeLinkedIn(raw) {\n  if (raw == null) return \"\";\n  let url = raw;\n  // Unwrap value if it's an array or object (e.g., { value: \"...\", url: \"...\" } or [\"...\"])\n  let attempts = 0;\n  while (attempts < 5 && (Array.isArray(url) || (url && typeof url === \"object\"))) {\n    if (Array.isArray(url)) {\n      url = url.length ? url[0] : \"\";\n    } else if (url && typeof url === \"object\") {\n      url = url.url || url.value || \"\";\n    }\n    attempts++;\n  }\n  if (typeof url !== \"string\") return \"\";\n  // Trim whitespace\n  let cleaned = url.trim();\n  if (!cleaned) return \"\";\n  // Ensure the URL has \"https://\" prefix (force HTTPS)\n  if (!/^https?:\\/\\//i.test(cleaned)) {\n    cleaned = \"https://\" + cleaned;\n  } else {\n    cleaned = cleaned.replace(/^http:\\/\\//i, \"https://\");\n  }\n  // Remove any subdomain (e.g., \"www.\") for consistency\n  cleaned = cleaned.replace(/:\\/\\/[^\\/]*linkedin\\.com\\//i, \"://linkedin.com/\");\n  // Strip query params or fragments (remove tracking tags like ?trk= etc.)\n  cleaned = cleaned.split(\"?\")[0].split(\"#\")[0];\n  // Only accept personal profile URLs containing \"/in/\"\n  const match = cleaned.match(/linkedin\\.com\\/in\\/([^\\/\\?\\#]+)/i);\n  if (!match) return \"\";\n  const username = match[1];\n  // Construct normalized profile URL with trailing slash\n  return `https://linkedin.com/in/${username}/`;\n}\n\n// Process each contact item\nfor (const item of items) {\n  const c = item.json;\n  // Try multiple possible LinkedIn fields in order\n  const fields = [\"linkedin_url\", \"LinkedIn Profile\", \"linkedin\", \"linkedin_profile\", \"person_linkedin\"];\n  let normalizedLink = \"\";\n  for (const field of fields) {\n    if (c[field]) {\n      normalizedLink = normalizeLinkedIn(c[field]);\n      if (normalizedLink) break;  // stop when a valid link is found\n    }\n  }\n  if (!normalizedLink) {\n    // Skip this item if no valid LinkedIn URL was found\n    continue;\n  }\n  // Build output item with original fields and the normalized linkedin_url\n  const newJson = { ...c, linkedin_url: normalizedLink };\n  // (Optional) Remove other LinkedIn fields to avoid duplicates, keeping only normalized linkedin_url\n  for (const field of fields) {\n    if (field !== \"linkedin_url\" && newJson[field] !== undefined) {\n      delete newJson[field];\n    }\n  }\n  // Add to output array in n8n format (each item as an object with a 'json' property)\n  output.push({ json: newJson });\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        2560
+      ],
+      "id": "89b68c4c-03b9-4d2c-a851-3aaf5228441d",
+      "name": "Normalize Linkedin"
+    },
+    {
+      "parameters": {
+        "jsCode": "//------------------------------------------------------------\n// Attach company owner to each contact using a lookup table\n// Company → owner table is taken from node \"Edit Fields1\"\n// (1 row per company with company_id + owner fields)\n//------------------------------------------------------------\n\nconst contacts = $input.all();\n\n// 1) Get all company-owner rows from your earlier node\n//    ⚠️ Make sure this node name matches the one in your workflow\nconst companyItems = $items(\"Edit Fields1\", 0, 0) || [];\n\n// 2) Build lookup: company_id → { owner info }\nconst companyMap = {};\nfor (const item of companyItems) {\n  const c = item.json || {};\n  const id = c.company_id;\n  if (!id) continue;\n\n  companyMap[id] = {\n    hubspot_owner_id: c.hubspot_owner_id,\n    assigned_owner_name: c.assigned_owner_name,\n    assigned_owner_email: c.assigned_owner_email,\n    territory: c.territory,\n  };\n}\n\n// 3) For each contact, attach the matching owner (if any)\nconst out = [];\n\nfor (const item of contacts) {\n  const c = item.json || {};\n  const id = c.company_id;\n\n  const owner = id ? companyMap[id] : null;\n\n  out.push({\n    json: {\n      ...c,\n      // keep existing owner fields if already set, otherwise pull from table\n      hubspot_owner_id: c.hubspot_owner_id ?? owner?.hubspot_owner_id ?? null,\n      assigned_owner_name: c.assigned_owner_name ?? owner?.assigned_owner_name ?? null,\n      assigned_owner_email: c.assigned_owner_email ?? owner?.assigned_owner_email ?? null,\n      territory: c.territory ?? owner?.territory ?? null,\n    },\n  });\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3072,
+        2560
+      ],
+      "id": "7df947d3-56c9-40ac-a1c9-542b4df6e45e",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "model": "gpt-5-chat",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        3760,
+        2784
+      ],
+      "id": "eb2f3d7f-a5aa-4396-8190-96978446df62",
+      "name": "Azure OpenAI Chat Model7"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the Atlas Intent & Pain Point Research Engine.\n\nYour task is to produce a concise, sales-ready company summary that helps a sales representative understand why this account may be worth calling.\n\nYou have access to a web research tool.\nYou MUST use this tool to gather external, up-to-date information about the company before producing your analysis.\nIf limited information is available, proceed using widely known public information and clearly reflect uncertainty.\n\nUse ALL inputs below:\n\nCompany Name:  {{ $json.properties.company.value }}\nCompany Domain: {{ $json.properties.website.value }}\nJob Title: {{ $json.properties.jobtitle.value }}\nIntent Type:{{ $json.properties.intent_type.value }}\n\n\n\n========================================================\nOUTPUT FORMAT (STRICT)\n========================================================\n\n🔹 Company Overview (2–3 Sentences)\nProvide a concise overview of the company, including what it does, its operating context, and any notable growth, hiring, or expansion signals. Where relevant, naturally connect the company’s profile to potential needs for AtlasHXM’s products and services, particularly Employment of Record (EOR).\n\n🔹 Key Business & Hiring Signals (Bullet Points)\nProvide 2-3 factual bullet points that help a sales rep quickly understand why this account may be worth engaging. Focus on:\n- Industry, size, and geographic footprint\n- Hiring activity, workforce growth, or organizational change\n- Distributed, remote, or international employment patterns\n- Global expansion or operational complexity\n- Compliance, payroll, or employment-law considerations\n- Products or services offered\n- Clear signals that suggest potential EOR relevance\n\n🔹 Role-Specific Pain Point Hypothesis (2–3 Sentences)\nBased on the job title and company context, describe the most likely people, compliance, payroll, or global employment challenges this role may own. Explain why AtlasHXM’s EOR or global employment solutions could be relevant to those challenges.\n\n========================================================\nHARD REQUIREMENTS\n========================================================\n- Provide ONLY the company analysis\n- Do not explain your reasoning\n- Do not repeat the instructions\n- Do not mention research methods, tools, or sources\n- No emojis, no HTML, no sales language\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        3744,
+        2560
+      ],
+      "id": "8bb16cf0-ef92-47ca-8a03-167fc0a12f6d",
+      "name": "Company Research Summary"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.firecrawl.dev/v2/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"{{ $json.properties.website.value }},{{ $json.properties.intent_type.value }} {{ $json.properties.company.value }}{{ $json.properties.jobtitle.value }}\",\n  \"limit\": 10\n}\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -64,
+        2224
+      ],
+      "id": "bc02a185-13e2-4432-813f-73560ad83d60",
+      "name": "Search Firecrawl"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.firecrawl.dev/v2/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"{{ $json.properties.company.value }} {{ $json.properties.website.value }} overview hiring trends financial performance compliance regulatory risks global expansion EOR employer of record\",\n  \"limit\": 10\n}\n\n",
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        3888,
+        2784
+      ],
+      "id": "901e0361-a48d-40c1-9b9c-cf34185118d4",
+      "name": "firecrawl",
+      "notes": "“Use this tool to search the public web for company information including hiring trends, global expansion, compliance risks, and signals related to Employer of Record (EOR) needs. This tool should be used whenever verified or up-to-date company information is required.”"
+    },
+    {
+      "parameters": {
+        "jsCode": "//------------------------------------------------------------\n// FILTER OUT contacts without a valid linkedin.com/in/ URL\n// Guarantees Amplemarket never receives undefined or invalid URLs\n//------------------------------------------------------------\nconst items = $input.all();\n\nfunction extractLinkedIn(c) {\n  const possible = [\n    c.linkedin_url,\n    c[\"LinkedIn Profile\"],\n    c.linkedin,\n    c.person_linkedin,\n    c.linkedin_profile,\n    c.linkedin_url?.value,\n  ];\n\n  for (const v of possible) {\n    if (!v) continue;\n    const url = v.toString().trim();\n    if (url.startsWith(\"http\") && url.includes(\"linkedin.com/\")) {\n      return url;\n    }\n  }\n\n  return \"\";\n}\n\nconst output = [];\n\nfor (const i of items) {\n  const c = i.json;\n  const linkedin = extractLinkedIn(c);\n\n  // Skip if missing LinkedIn\n  if (!linkedin) continue;\n\n  output.push({\n    json: {\n      ...c,\n      linkedin_url: linkedin,  // normalized LinkedIn URL\n    },\n  });\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2176,
+        2560
+      ],
+      "id": "6de643fc-06de-4a2e-8e86-a032050dea5c",
+      "name": "Filter Linkedin URLs"
+    },
+    {
+      "parameters": {
+        "jsCode": "//------------------------------------------------------------\n// Build Amplemarket \"find by LinkedIn\" URL for each contact\n// Only keeps contacts with a valid person LinkedIn URL\n//------------------------------------------------------------\nconst items = $input.all();\nconst out = [];\n\nfunction cleanLinkedIn(url) {\n  if (!url) return \"\";\n\n  // Trim & strip tracking params\n  url = url.trim().split(\"?\")[0];\n\n  // Must be a person profile, not company\n  if (!url.includes(\"linkedin.com/in/\")) return \"\";\n\n  // Ensure trailing slash\n  if (!url.endsWith(\"/\")) url += \"/\";\n\n  return url;\n}\n\nfor (const item of items) {\n  const c = item.json;\n\n  // Try multiple possible fields, then fall back\n  const rawUrl =\n    c.linkedin_url ||\n    c[\"LinkedIn Profile\"] ||\n    c.linkedin ||\n    c.linkedin_profile ||\n    \"\";\n\n  const li = cleanLinkedIn(rawUrl);\n  if (!li) {\n    // No valid LinkedIn → skip this contact (don't send to Amplemarket)\n    continue;\n  }\n\n  const ampleUrl =\n    \"https://api.amplemarket.com/people/find\" +\n    \"?linkedin_url=\" +\n    encodeURIComponent(li) +\n    \"&reveal_email=true&reveal_phone_numbers=true\";\n\n  out.push({\n    json: {\n      ...c,\n      linkedin_url: li,   // normalized\n      ample_url: ampleUrl // used by HTTP Request node\n    },\n  });\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        2560
+      ],
+      "id": "5aefd0af-1bb5-4463-94af-4adc85524e87",
+      "name": "Build Amplemarket"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get HubSpot Companies - Intent": {
+      "main": [
+        [
+          {
+            "node": "Split Each Company",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - AmpleMarket API": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Yesterday Range",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Amplemarket - Get Email": {
+      "main": [
+        [
+          {
+            "node": "filter emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Yesterday Range": {
+      "main": [
+        [
+          {
+            "node": "Get HubSpot Companies - Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - AmpleMarket API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Normalize Linkedin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Email 1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update pain point hypothesis": {
+      "main": [
+        [
+          {
+            "node": "AI Email 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Email 1": {
+      "main": [
+        [
+          {
+            "node": "AI SUBJECT LINE 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI SUBJECT LINE 1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI SUBJECT LINE 1": {
+      "main": [
+        [
+          {
+            "node": "AI Email 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Email 2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Email 2": {
+      "main": [
+        [
+          {
+            "node": "AI SUBJECT LINE 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI SUBJECT LINE 2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI SUBJECT LINE 2": {
+      "main": [
+        [
+          {
+            "node": "AI Email 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure OpenAI Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Email 3",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Email 3": {
+      "main": [
+        [
+          {
+            "node": "AI SUBJECT LINE 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure OpenAI Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI SUBJECT LINE 3",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI SUBJECT LINE 3": {
+      "main": [
+        [
+          {
+            "node": "Create or update a contact1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out2": {
+      "main": [
+        [
+          {
+            "node": "Filter Linkedin URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create or update a contact2": {
+      "main": [
+        [
+          {
+            "node": "Get a contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a contact": {
+      "main": [
+        [
+          {
+            "node": "Company Research Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create or update a contact1": {
+      "main": [
+        [
+          {
+            "node": "Add a contact to a list1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normalize contacts": {
+      "main": [
+        [
+          {
+            "node": "Split Out2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filter emails": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Each Company": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Linkedin": {
+      "main": [
+        [
+          {
+            "node": "normalize contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Create or update a contact2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure OpenAI Chat Model7": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Company Research Summary",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Company Research Summary": {
+      "main": [
+        [
+          {
+            "node": "update pain point hypothesis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "firecrawl": {
+      "ai_tool": [
+        [
+          {
+            "node": "Company Research Summary",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Linkedin URLs": {
+      "main": [
+        [
+          {
+            "node": "Build Amplemarket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Amplemarket": {
+      "main": [
+        [
+          {
+            "node": "Amplemarket - Get Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "88890b87-76bf-4c4b-a38f-4d1f85ce0b51",
+  "meta": {
+    "instanceId": "c871b26825152f1621a4887a2a56d76012b4438c7e262d9d2d3376e32591b937"
+  },
+  "nodeGroups": [],
+  "id": "s0S51MUZNXXZBk9q",
+  "tags": [
+    {
+      "updatedAt": "2026-08-15T03:10:24.015Z",
+      "createdAt": "2026-08-15T03:10:24.015Z",
+      "id": "4tisiGTH6NuVsHZX",
+      "name": "test workflow"
+    }
+  ]
+}

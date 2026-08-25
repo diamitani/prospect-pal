@@ -96,12 +96,12 @@ export default function LandingPage() {
             textDecoration: "none", padding: "7px 14px",
             border: "1px solid #e5e5e0", borderRadius: 8, background: "white",
           }}>Sign in</Link>
-          <a onClick={() => window.location.href = "/signup"} style={{
+          <Link href="/signup" style={{
             fontSize: 13, fontWeight: 700, color: "white",
             background: "#1c5a1c", textDecoration: "none",
             padding: "8px 16px", borderRadius: 8,
             boxShadow: "0 2px 8px rgba(28,90,28,0.25)", cursor: "pointer",
-          }}>Get started free →</a>
+          }}>Get started free →</Link>
         </div>
       </nav>
 
@@ -128,13 +128,13 @@ export default function LandingPage() {
         </p>
 
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <a onClick={() => window.location.href = "/signup"} style={{
+          <Link href="/signup" style={{
             display: "inline-flex", alignItems: "center", gap: 8,
             padding: "14px 28px", fontSize: 15, fontWeight: 700,
             color: "white", background: "#1c5a1c", textDecoration: "none",
             borderRadius: 12, boxShadow: "0 4px 20px rgba(28,90,28,0.3)",
             transition: "transform 0.2s", cursor: "pointer",
-          }}>⚡ Build your first workflow — free</a>
+          }}>⚡ Build your first workflow — free</Link>
           <a href="#how-it-works" style={{
             display: "inline-flex", alignItems: "center", gap: 8,
             padding: "14px 24px", fontSize: 15, fontWeight: 600,
@@ -392,13 +392,13 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <a onClick={() => window.location.href = "/signup"} style={{
+                <Link href="/signup" style={{
                   display: "block", textAlign: "center", padding: "11px",
                   fontSize: 13, fontWeight: 700, borderRadius: 10, textDecoration: "none",
                   background: plan.highlight ? "white" : "#1c5a1c",
                   color: plan.highlight ? "#1c5a1c" : "white",
                   transition: "all 0.2s", cursor: "pointer",
-                }}>{plan.cta}</a>
+                }}>{plan.cta}</Link>
               </div>
             ))}
           </div>
@@ -415,12 +415,12 @@ export default function LandingPage() {
             Build your first automated outbound workflow in the next 5 minutes.
             No code. No consultants. Just results.
           </p>
-          <a onClick={() => window.location.href = "/signup"} style={{
+          <Link href="/signup" style={{
             display: "inline-flex", alignItems: "center", gap: 10,
             padding: "16px 36px", fontSize: 16, fontWeight: 800,
             color: "#1c5a1c", background: "white", textDecoration: "none",
             borderRadius: 12, boxShadow: "0 4px 20px rgba(255,255,255,0.15)", cursor: "pointer",
-          }}>⚡ Build for free — no card needed</a>
+          }}>⚡ Build for free — no card needed</Link>
         </div>
       </section>
 

@@ -8,6 +8,7 @@ const VIEW_META: Record<View, { title: string; crumb: string }> = {
   home:     { title: "Dashboard",        crumb: "Welcome back" },
   builder:  { title: "Workflow Builder", crumb: "Tools → ICP → Generate" },
   outputs:  { title: "Outputs",          crumb: "Download your workflow package" },
+  analyst:  { title: "Execution Analyst",crumb: "Diagnose and repair n8n failures" },
   projects: { title: "My Campaigns",     crumb: "All generated workflows" },
   settings: { title: "Integrations",     crumb: "Connect your tools" },
 };

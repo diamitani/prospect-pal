@@ -3,17 +3,18 @@
 import { View } from "@/types/app";
 
 interface SidebarProps {
-  currentView:  View;
+  currentView: View;
   onViewChange: (view: View) => void;
-  projectName:  string | null;
+  projectName: string | null;
 }
 
 const NAV = [
-  { id: "home"     as View, label: "Home",          icon: "⊞" },
-  { id: "builder"  as View, label: "Build Workflow", icon: "⚡", highlight: true },
-  { id: "outputs"  as View, label: "Outputs",        icon: "↓" },
-  { id: "projects" as View, label: "My Campaigns",   icon: "◫" },
-  { id: "settings" as View, label: "Integrations",   icon: "◎" },
+  { id: "home" as View, label: "Home", icon: "⊞" },
+  { id: "builder" as View, label: "Build Workflow", icon: "⚡", highlight: true },
+  { id: "outputs" as View, label: "Outputs & Deploy", icon: "↓" },
+  { id: "analyst" as View, label: "Execution Analyst", icon: "🔬" },
+  { id: "projects" as View, label: "My Campaigns", icon: "◫" },
+  { id: "settings" as View, label: "Integrations", icon: "◎" },
 ];
 
 export default function Sidebar({ currentView, onViewChange, projectName }: SidebarProps) {
