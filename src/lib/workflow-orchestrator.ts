@@ -5,6 +5,7 @@
 
 import { v4 as uuidv4 } from "uuid";
 import { STEP_NAMES, TOTAL_STEPS } from "./step-prompts";
+import { supabase } from "./supabase";
 
 // ===========================================================================
 // TYPES
@@ -132,13 +133,7 @@ export interface AutomationWorkflow {
 }
 
 // ===========================================================================
-// IN-MEMORY STORE (Replace with DynamoDB in production)
-// ===========================================================================
-
-const workflowStore = new Map<string, AutomationWorkflow>();
-
-// ===========================================================================
-// ORCHESTRATION FUNCTIONS
+// SUPABASE PERSISTENCE
 // ===========================================================================
 
 /**
@@ -166,8 +161,28 @@ export async function initializeWorkflow(
     updatedAt: now,
   };
 
-  // Store workflow
-  workflowStore.set(workflowId, workflow);
+  // Store workflow in Supabase
+  const { data, error } = await supabase
+    .from('automation_workflows')
+    .insert({
+      id: workflow.id,
+      user_id: workflow.userId,
+      project_id: workflow.projectId,
+      status: workflow.status,
+      current_step: workflow.currentStep,
+      total_steps: workflow.totalSteps,
+      inputs: workflow.inputs,
+      artifacts: workflow.artifacts,
+      step_results: workflow.stepResults,
+      created_at: workflow.createdAt,
+      updated_at: workflow.updatedAt,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to initialize workflow: ${error.message}`);
+  }
 
   return workflow;
 }
@@ -176,7 +191,35 @@ export async function initializeWorkflow(
  * Get workflow status
  */
 export async function getWorkflowStatus(workflowId: string): Promise<AutomationWorkflow | null> {
-  return workflowStore.get(workflowId) || null;
+  const { data, error } = await supabase
+    .from('automation_workflows')
+    .select('*')
+    .eq('id', workflowId)
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('Failed to fetch workflow:', error);
+    return null;
+  }
+
+  if (!data) return null;
+
+  // Map database fields to AutomationWorkflow interface
+  return {
+    id: data.id,
+    projectId: data.project_id,
+    userId: data.user_id,
+    currentStep: data.current_step,
+    totalSteps: data.total_steps,
+    status: data.status as WorkflowStatus,
+    inputs: data.inputs as WorkflowInputs,
+    stepResults: (data.step_results as StepResult[]) || [],
+    artifacts: (data.artifacts as WorkflowArtifacts) || {},
+    webhookUrl: data.webhook_url,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+    completedAt: data.completed_at,
+  };
 }
 
 /**
@@ -187,7 +230,7 @@ export async function updateWorkflowStep(
   stepResult: StepResult,
   artifacts?: Partial<WorkflowArtifacts>
 ): Promise<AutomationWorkflow> {
-  const workflow = workflowStore.get(workflowId);
+  const workflow = await getWorkflowStatus(workflowId);
   if (!workflow) {
     throw new Error(`Workflow not found: ${workflowId}`);
   }
@@ -206,11 +249,12 @@ export async function updateWorkflowStep(
   }
 
   // Update current step and status
+  let completedAt = workflow.completedAt;
   if (stepResult.status === 'success') {
     workflow.currentStep = stepResult.step;
     if (stepResult.step >= TOTAL_STEPS) {
       workflow.status = 'completed';
-      workflow.completedAt = new Date().toISOString();
+      completedAt = new Date().toISOString();
     } else {
       workflow.status = 'running';
     }
@@ -219,7 +263,23 @@ export async function updateWorkflowStep(
   }
 
   workflow.updatedAt = new Date().toISOString();
-  workflowStore.set(workflowId, workflow);
+
+  // Update in Supabase
+  const { error } = await supabase
+    .from('automation_workflows')
+    .update({
+      current_step: workflow.currentStep,
+      status: workflow.status,
+      step_results: workflow.stepResults,
+      artifacts: workflow.artifacts,
+      updated_at: workflow.updatedAt,
+      completed_at: completedAt,
+    })
+    .eq('id', workflowId);
+
+  if (error) {
+    throw new Error(`Failed to update workflow: ${error.message}`);
+  }
 
   return workflow;
 }
@@ -228,7 +288,7 @@ export async function updateWorkflowStep(
  * Resume workflow from last successful step
  */
 export async function resumeWorkflow(workflowId: string): Promise<AutomationWorkflow> {
-  const workflow = workflowStore.get(workflowId);
+  const workflow = await getWorkflowStatus(workflowId);
   if (!workflow) {
     throw new Error(`Workflow not found: ${workflowId}`);
   }
@@ -239,7 +299,19 @@ export async function resumeWorkflow(workflowId: string): Promise<AutomationWork
 
   workflow.status = 'running';
   workflow.updatedAt = new Date().toISOString();
-  workflowStore.set(workflowId, workflow);
+
+  // Update in Supabase
+  const { error } = await supabase
+    .from('automation_workflows')
+    .update({
+      status: workflow.status,
+      updated_at: workflow.updatedAt,
+    })
+    .eq('id', workflowId);
+
+  if (error) {
+    throw new Error(`Failed to resume workflow: ${error.message}`);
+  }
 
   return workflow;
 }

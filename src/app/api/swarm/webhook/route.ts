@@ -8,7 +8,7 @@ import { compilePAL } from "@/lib/rostr/pal-compiler";
 import { classifyPhase, calculatePriority } from "@/lib/rostr/npao-classifier";
 import { agentSwarm } from "@/lib/rostr/agent-swarm";
 import { routeTask, routeHybrid, buildN8NPayload, sendToN8N } from "@/lib/rostr/integration-router";
-import { saveArtifact } from "@/lib/dynamodb";
+import { saveArtifact } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   try {

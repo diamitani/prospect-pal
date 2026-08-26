@@ -1,11 +1,11 @@
 /**
- * Projects API — CRUD via DynamoDB
+ * Projects API — CRUD via Supabase
  * GET  /api/projects        → list user projects
  * POST /api/projects        → create project
  * GET  /api/projects/[id]   → get single project
  */
 import { NextRequest, NextResponse } from "next/server";
-import { createProject, getProjectsByUser } from "@/lib/dynamodb";
+import { createProject, getProjectsByUser } from "@/lib/supabase";
 
 export async function GET(req: NextRequest) {
   const userId = req.headers.get("x-user-id") || "demo-user";

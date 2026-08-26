@@ -4,7 +4,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { runPalPipeline, PalInput } from "@/lib/pal-pipeline";
-import { createProject, updateProject, saveArtifact } from "@/lib/dynamodb";
+import { createProject, updateProject, saveArtifact } from "@/lib/supabase";
 import { uploadArtifact } from "@/lib/s3";
 
 export const runtime = "nodejs";
@@ -64,9 +64,9 @@ export async function POST(req: NextRequest) {
 
     // Update project with output
     await updateProject(projectId, {
-      icpConfig: output.icpProfile as unknown as Record<string, unknown>,
-      toolStack: output.toolStack as unknown as Record<string, unknown>,
-      palOutput: output as unknown as Record<string, unknown>,
+      icp_config: output.icpProfile as unknown as Record<string, unknown>,
+      tool_stack: output.toolStack as unknown as Record<string, unknown>,
+      pal_output: output as unknown as Record<string, unknown>,
       status: "configured",
     });
 
