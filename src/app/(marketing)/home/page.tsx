@@ -17,6 +17,7 @@ import {
   PricingCard,
   PipelineRail,
   PipelineNode,
+  WorkflowDiagram,
 } from "@/components/ds";
 
 const NINE_NODES: PipelineNode[] = [
@@ -362,6 +363,254 @@ export default function HomePage() {
             {INTEGRATIONS.map((tool) => (
               <IntegrationCard key={tool.name} {...tool} />
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* n8n Workflow Visual Section */}
+      <section style={{ padding: "72px 32px 0", maxWidth: "var(--layout-max)", margin: "0 auto" }}>
+        <SectionHeading
+          eyebrow="Under the hood"
+          title="The automation engine"
+          description="A production-ready n8n workflow with connected nodes that runs your prospecting on autopilot. Each node handles one step of the pipeline."
+        />
+        <div style={{ marginTop: 36 }}>
+          <WorkflowDiagram />
+        </div>
+      </section>
+
+      {/* 6-Step Core Engine Process */}
+      <section style={{ padding: "72px 32px", maxWidth: "var(--layout-max)", margin: "0 auto" }}>
+        <SectionHeading
+          eyebrow="Core engine process"
+          title="6 Universal Steps"
+          description="From raw account trigger to multi-channel outreach dispatch. Every prospect flows through the same battle-tested pipeline."
+        />
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: 20,
+            marginTop: 40,
+          }}
+        >
+          {[
+            {
+              step: "01",
+              icon: "Zap" as const,
+              title: "Lead Intake & Trigger",
+              description: "Multiple entry points — spreadsheet upload, intent webhooks (RB2B, Clearbit), daily cron batches.",
+              color: "var(--signal-warning)",
+            },
+            {
+              step: "02",
+              icon: "Users" as const,
+              title: "Discover Decision Makers",
+              description: "ICP-filtered contact reveal via Apollo, Clay, or ZoomInfo with target job titles and verified emails.",
+              color: "var(--cobalt-500)",
+            },
+            {
+              step: "03",
+              icon: "Search" as const,
+              title: "Automated Account Research",
+              description: "Live context gathering — website scraping, hiring signals, tech stack detection, company announcements.",
+              color: "var(--signal-info)",
+            },
+            {
+              step: "04",
+              icon: "Lightbulb" as const,
+              title: "Pain Point Hypothesis",
+              description: "AI synthesis identifies friction areas and bridges the prospect's situation to your solution.",
+              color: "var(--champagne-500)",
+            },
+            {
+              step: "05",
+              icon: "Sparkles" as const,
+              title: "Custom AI Copywriting",
+              description: "Claude-generated PAS outreach — 3-sentence cold email, LinkedIn message, SDR call script.",
+              color: "var(--signal-verified)",
+            },
+            {
+              step: "06",
+              icon: "Send" as const,
+              title: "Sync to CRM & Sequences",
+              description: "Protected delivery with CRM dedupe shield and sequence enrollment from rep's mailbox.",
+              color: "var(--signal-active)",
+            },
+          ].map((item) => (
+            <div
+              key={item.step}
+              style={{
+                padding: "28px 24px",
+                background: "var(--surface-card)",
+                borderRadius: "var(--radius-xl)",
+                border: "1px solid var(--border-hairline)",
+                position: "relative",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  top: 16,
+                  right: 16,
+                  fontFamily: "var(--font-data)",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "var(--text-muted)",
+                  letterSpacing: 1,
+                }}
+              >
+                {item.step}
+              </div>
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: "var(--radius-lg)",
+                  background: `${item.color}15`,
+                  border: `1.5px solid ${item.color}40`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 16,
+                }}
+              >
+                <Icon name={item.icon} size={22} color={item.color} />
+              </div>
+              <h3
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "var(--text-body)",
+                  fontWeight: 600,
+                  color: "var(--text-primary)",
+                  marginBottom: 8,
+                }}
+              >
+                {item.title}
+              </h3>
+              <p
+                style={{
+                  fontSize: "var(--text-body-sm)",
+                  color: "var(--text-secondary)",
+                  lineHeight: "var(--leading-relaxed)",
+                  margin: 0,
+                }}
+              >
+                {item.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Architecture Overview */}
+      <section
+        style={{
+          padding: "56px 32px",
+          background: "var(--surface-sunken)",
+          borderTop: "1px solid var(--border-hairline)",
+          borderBottom: "1px solid var(--border-hairline)",
+        }}
+      >
+        <div style={{ maxWidth: "var(--layout-max)", margin: "0 auto" }}>
+          <SectionHeading
+            eyebrow="Architecture"
+            title="Four-layer data flow"
+            description="Modular components that snap together. Swap providers without rewiring the whole engine."
+          />
+          <div
+            style={{
+              marginTop: 36,
+              background: "var(--surface-deep)",
+              borderRadius: "var(--radius-xl)",
+              border: "1px solid var(--border-deep)",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+              }}
+            >
+              {[
+                {
+                  layer: "INPUT LAYER",
+                  items: ["CSV uploads", "Webhooks", "RB2B / Clearbit", "Cron batches"],
+                  color: "#FF9500",
+                },
+                {
+                  layer: "ENRICHMENT ADAPTER",
+                  items: ["Apollo.io", "Clay", "ZoomInfo", "Clearbit"],
+                  color: "#8B5CF6",
+                },
+                {
+                  layer: "AI REASONING NODE",
+                  items: ["Claude Sonnet", "Research synthesis", "PAS copywriting", "Pain point ID"],
+                  color: "#3B82F6",
+                },
+                {
+                  layer: "OUTPUT DISPATCH",
+                  items: ["HubSpot", "Salesforce", "Smartlead", "Instantly"],
+                  color: "#10B981",
+                },
+              ].map((col, i) => (
+                <div
+                  key={col.layer}
+                  style={{
+                    padding: "24px 20px",
+                    borderRight: i < 3 ? "1px solid var(--border-deep)" : "none",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      letterSpacing: 1.2,
+                      color: col.color,
+                      marginBottom: 14,
+                      fontFamily: "var(--font-data)",
+                    }}
+                  >
+                    {col.layer}
+                  </div>
+                  <ul
+                    style={{
+                      listStyle: "none",
+                      margin: 0,
+                      padding: 0,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 8,
+                    }}
+                  >
+                    {col.items.map((item) => (
+                      <li
+                        key={item}
+                        style={{
+                          fontSize: 13,
+                          color: "var(--ink-200)",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 5,
+                            height: 5,
+                            borderRadius: "50%",
+                            background: col.color,
+                            flexShrink: 0,
+                          }}
+                        />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

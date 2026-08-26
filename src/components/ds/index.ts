@@ -40,3 +40,5 @@ export type { NodeCardProps } from "./pipeline/NodeCard";
 
 export { PipelineRail } from "./pipeline/PipelineRail";
 export type { PipelineRailProps, PipelineNode } from "./pipeline/PipelineRail";
+
+export { WorkflowDiagram } from "./marketing/WorkflowDiagram";
