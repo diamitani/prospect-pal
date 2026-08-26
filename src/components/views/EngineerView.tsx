@@ -21,7 +21,7 @@ const AssistantChat = dynamic(
   }
 );
 
-export default function AnalystView() {
+export default function EngineerView() {
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <AssistantChat />

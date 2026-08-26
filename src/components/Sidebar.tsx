@@ -17,6 +17,8 @@ interface SidebarProps {
   currentView: View;
   onViewChange: (view: View) => void;
   projectName: string | null;
+  userName: string;
+  userEmail: string;
 }
 
 const NAV: { id: View; label: string; icon: typeof LayoutDashboard }[] = [
@@ -28,11 +30,14 @@ const NAV: { id: View; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
-export default function Sidebar({ currentView, onViewChange, projectName }: SidebarProps) {
+export default function Sidebar({ currentView, onViewChange, projectName, userName, userEmail }: SidebarProps) {
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     window.location.href = "/home";
   };
+
+  // Get user initial from name
+  const userInitial = userName.charAt(0).toUpperCase();
 
   return (
     <aside
@@ -176,11 +181,11 @@ export default function Sidebar({ currentView, onViewChange, projectName }: Side
               flexShrink: 0,
             }}
           >
-            A
+            {userInitial}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: "var(--text-caption)", fontWeight: "var(--weight-semibold)", color: "var(--paper-0)" }}>
-              Alex Rivera
+              {userName}
             </div>
             <div style={{ fontSize: "var(--text-micro)", color: "var(--champagne-300)", fontWeight: "var(--weight-semibold)" }}>
               Pro Plan

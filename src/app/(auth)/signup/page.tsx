@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import Link from "next/link";
+import { Logo } from "@/components/ds/brand/Logo";
 
 export default function SignupPage() {
   const [name,     setName]     = useState("");
@@ -26,8 +27,8 @@ export default function SignupPage() {
         setLoading(false);
         return;
       }
-      // Cookie is now stored — navigate
-      window.location.replace("/dashboard");
+      // Cookie is now stored — navigate to onboarding
+      window.location.replace("/onboarding");
     } catch {
       setError("Connection error — please try again");
       setLoading(false);
@@ -55,8 +56,7 @@ export default function SignupPage() {
         <div style={{ position: "absolute", bottom: -60, left: -40, width: 240, height: 240, borderRadius: "50%", background: "#3A56E4", opacity: 0.2 }} />
 
         <Link href="/home" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", position: "relative", zIndex: 1 }}>
-          <div style={{ width: 32, height: 32, background: "#2A41C9", border: "2px solid #B8C6FE44", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800, fontSize: 14 }}>P</div>
-          <span style={{ fontWeight: 800, fontSize: 16, color: "white" }}>Prospect PAL</span>
+          <Logo variant="lockup" size={32} onDeep={true} />
         </Link>
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", zIndex: 1 }}>

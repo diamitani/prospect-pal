@@ -113,9 +113,11 @@ export default function HomePage() {
           <Link href="/login">
             <Button variant="outline" size="md">Sign in</Button>
           </Link>
-          <Button variant="accent" size="md" icon="Zap" onClick={() => handleOpenCheckout("pro")}>
-            Build my engine
-          </Button>
+          <Link href="/signup">
+            <Button variant="accent" size="md" icon="Zap">
+              Build my engine
+            </Button>
+          </Link>
         </div>
       </nav>
 
@@ -161,9 +163,11 @@ export default function HomePage() {
             </p>
 
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 36 }}>
-              <Button variant="accent" size="lg" icon="Zap" onClick={() => handleOpenCheckout("pro")}>
-                Build my engine — $99/mo
-              </Button>
+              <Link href="/signup">
+                <Button variant="accent" size="lg" icon="Zap">
+                  Build my engine — $99/mo
+                </Button>
+              </Link>
               <Button variant="outline" size="lg" icon="Play">
                 See a compile, 2 min
               </Button>
@@ -425,82 +429,90 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 6-Step Core Engine Process */}
+      {/* 7-Step Compile Process */}
       <section style={{ padding: "72px 32px", maxWidth: "var(--layout-max)", margin: "0 auto" }}>
         <SectionHeading
-          eyebrow="Core engine process"
-          title="6 Universal Steps"
-          description="From raw account trigger to multi-channel outreach dispatch. Every prospect flows through the same battle-tested pipeline."
+          eyebrow="PAE compile process"
+          title="7 Steps to a Working Engine"
+          description="From user input to running workflow. Two compilers — prompt compiler for AI nodes, graph compiler for n8n JSON."
         />
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: 20,
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: 16,
             marginTop: 40,
           }}
         >
           {[
             {
               step: "01",
-              icon: "Zap" as const,
-              title: "Lead Intake & Trigger",
-              description: "Multiple entry points — spreadsheet upload, intent webhooks (RB2B, Clearbit), daily cron batches.",
+              icon: "ClipboardList" as const,
+              title: "Gather User Input",
+              description: "Company, product, ICP criteria, persona titles, and stack bindings (CRM, data tool, LLM, outreach).",
               color: "var(--signal-warning)",
             },
             {
               step: "02",
-              icon: "Users" as const,
-              title: "Discover Decision Makers",
-              description: "ICP-filtered contact reveal via Apollo, Clay, or ZoomInfo with target job titles and verified emails.",
+              icon: "Zap" as const,
+              title: "Create Trigger Node",
+              description: "Daily schedule search or CSV webhook. CRM stage filter excludes existing deals.",
               color: "var(--cobalt-500)",
             },
             {
               step: "03",
               icon: "Search" as const,
-              title: "Automated Account Research",
-              description: "Live context gathering — website scraping, hiring signals, tech stack detection, company announcements.",
+              title: "Configure Data Node",
+              description: "Company enrich + people search via HTTP. Filter by departments, titles, and signals.",
               color: "var(--signal-info)",
             },
             {
               step: "04",
-              icon: "Lightbulb" as const,
-              title: "Pain Point Hypothesis",
-              description: "AI synthesis identifies friction areas and bridges the prospect's situation to your solution.",
+              icon: "Database" as const,
+              title: "Configure CRM Node",
+              description: "Batch create-or-update contacts. Match on email or domain, never duplicate.",
               color: "var(--champagne-500)",
             },
             {
               step: "05",
               icon: "Sparkles" as const,
-              title: "Custom AI Copywriting",
-              description: "Claude-generated PAS outreach — 3-sentence cold email, LinkedIn message, SDR call script.",
+              title: "Configure Research",
+              description: "AI + web search generates pain-point hypothesis and value proposition.",
               color: "var(--signal-verified)",
             },
             {
               step: "06",
-              icon: "Send" as const,
-              title: "Sync to CRM & Sequences",
-              description: "Protected delivery with CRM dedupe shield and sequence enrollment from rep's mailbox.",
+              icon: "Mail" as const,
+              title: "Configure Messaging",
+              description: "AI drafts emails 1–7 plus LinkedIn copy using PAS framework.",
               color: "var(--signal-active)",
             },
-          ].map((item) => (
+            {
+              step: "07",
+              icon: "Send" as const,
+              title: "Configure Sequence",
+              description: "Enroll in sequence or mailbox send. Map contact + email to outreach tool.",
+              color: "#10B981",
+            },
+          ].map((item, index) => (
             <div
               key={item.step}
               style={{
-                padding: "28px 24px",
+                padding: "24px 20px",
                 background: "var(--surface-card)",
                 borderRadius: "var(--radius-xl)",
                 border: "1px solid var(--border-hairline)",
                 position: "relative",
+                gridColumn: index === 6 ? "2 / 4" : undefined,
               }}
             >
               <div
                 style={{
                   position: "absolute",
-                  top: 16,
-                  right: 16,
+                  top: 14,
+                  right: 14,
                   fontFamily: "var(--font-data)",
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: 700,
                   color: "var(--text-muted)",
                   letterSpacing: 1,
@@ -510,33 +522,33 @@ export default function HomePage() {
               </div>
               <div
                 style={{
-                  width: 48,
-                  height: 48,
+                  width: 44,
+                  height: 44,
                   borderRadius: "var(--radius-lg)",
                   background: `${item.color}15`,
                   border: `1.5px solid ${item.color}40`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  marginBottom: 16,
+                  marginBottom: 14,
                 }}
               >
-                <Icon name={item.icon} size={22} color={item.color} />
+                <Icon name={item.icon} size={20} color={item.color} />
               </div>
               <h3
                 style={{
                   fontFamily: "var(--font-display)",
-                  fontSize: "var(--text-body)",
+                  fontSize: "var(--text-body-sm)",
                   fontWeight: 600,
                   color: "var(--text-primary)",
-                  marginBottom: 8,
+                  marginBottom: 6,
                 }}
               >
                 {item.title}
               </h3>
               <p
                 style={{
-                  fontSize: "var(--text-body-sm)",
+                  fontSize: 13,
                   color: "var(--text-secondary)",
                   lineHeight: "var(--leading-relaxed)",
                   margin: 0,
@@ -918,9 +930,11 @@ export default function HomePage() {
           >
             Upload your company data. Connect your tools. Deploy a custom prospect automation engine in minutes.
           </p>
-          <Button variant="accent" size="lg" icon="Zap" onClick={() => handleOpenCheckout("pro")}>
-            Build my engine — $99/mo
-          </Button>
+          <Link href="/signup">
+            <Button variant="accent" size="lg" icon="Zap">
+              Build my engine — $99/mo
+            </Button>
+          </Link>
         </div>
       </section>
 
