@@ -158,8 +158,7 @@ export default function HomePage() {
                 color: "var(--text-secondary)",
               }}
             >
-              Generate leads. Connect to CRM. Research prospects. Craft messaging. Enroll in sequences.
-              One platform that builds your complete outbound automation.
+              Build a custom prospect automation workflow.
             </p>
 
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 36 }}>
@@ -204,31 +203,23 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Right: Video Overview */}
+          {/* Right: System Architecture Diagram */}
           <div
             style={{
               background: "var(--surface-deep)",
               borderRadius: "var(--radius-2xl)",
               border: "1px solid var(--border-deep)",
               overflow: "hidden",
-              aspectRatio: "16/10",
-              position: "relative",
+              padding: 24,
             }}
           >
-            {/* Video Header */}
+            {/* Diagram Header */}
             <div
               style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                padding: "12px 16px",
-                background: "rgba(0,0,0,0.4)",
-                backdropFilter: "blur(8px)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                zIndex: 2,
+                marginBottom: 20,
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -237,68 +228,132 @@ export default function HomePage() {
                   <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ffbd2e" }} />
                   <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#27ca40" }} />
                 </div>
-                <span
-                  style={{
-                    fontFamily: "var(--font-data)",
-                    fontSize: 11,
-                    color: "var(--ink-300)",
-                    marginLeft: 8,
-                  }}
-                >
-                  prospect-pal-overview.mp4
+                <span style={{ fontFamily: "var(--font-data)", fontSize: 11, color: "var(--ink-300)", marginLeft: 8 }}>
+                  PAE System Architecture
                 </span>
               </div>
-              <Badge tone="deep">2:14</Badge>
+              <Badge tone="verified">9 nodes</Badge>
             </div>
 
-            {/* Video Placeholder */}
-            <div
-              style={{
-                width: "100%",
-                height: "100%",
-                background: "linear-gradient(135deg, var(--ink-800) 0%, var(--ink-900) 100%)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 16,
-              }}
-            >
-              <div
-                style={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: "50%",
-                  background: "var(--cobalt-600)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  boxShadow: "0 8px 32px rgba(42, 65, 201, 0.4)",
-                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "scale(1.08)";
-                  e.currentTarget.style.boxShadow = "0 12px 40px rgba(42, 65, 201, 0.5)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "scale(1)";
-                  e.currentTarget.style.boxShadow = "0 8px 32px rgba(42, 65, 201, 0.4)";
-                }}
-              >
-                <Icon name="Play" size={32} color="white" style={{ marginLeft: 4 }} />
+            {/* Architecture Flow */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {/* Row 1 */}
+              <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                {[
+                  { icon: "Zap", label: "Intake", color: "#FF9500" },
+                  { icon: "FileBraces", label: "Normalize", color: "#6B7280" },
+                  { icon: "ShieldCheck", label: "Dedupe", color: "#FF7A59" },
+                ].map((node, i) => (
+                  <div key={node.label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 10,
+                      background: `${node.color}20`,
+                      border: `1.5px solid ${node.color}50`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexDirection: "column",
+                    }}>
+                      <Icon name={node.icon as "Zap" | "FileBraces" | "ShieldCheck"} size={18} color={node.color} />
+                    </div>
+                    {i < 2 && <Icon name="ArrowRight" size={14} color="var(--ink-400)" />}
+                  </div>
+                ))}
               </div>
-              <span
-                style={{
-                  fontSize: "var(--text-body-sm)",
-                  color: "var(--ink-300)",
-                  fontWeight: 500,
-                }}
-              >
-                Watch how it works
-              </span>
+
+              {/* Connector */}
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <Icon name="ArrowDown" size={16} color="var(--ink-400)" />
+              </div>
+
+              {/* Row 2 */}
+              <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                {[
+                  { icon: "Search", label: "Enrich", color: "#8B5CF6" },
+                  { icon: "Sparkles", label: "AI Research", color: "#3B82F6" },
+                  { icon: "Scale", label: "Approval", color: "#6B7280" },
+                ].map((node, i) => (
+                  <div key={node.label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 10,
+                      background: `${node.color}20`,
+                      border: `1.5px solid ${node.color}50`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}>
+                      <Icon name={node.icon as "Search" | "Sparkles" | "Scale"} size={18} color={node.color} />
+                    </div>
+                    {i < 2 && <Icon name="ArrowRight" size={14} color="var(--ink-400)" />}
+                  </div>
+                ))}
+              </div>
+
+              {/* Connector */}
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <Icon name="ArrowDown" size={16} color="var(--ink-400)" />
+              </div>
+
+              {/* Row 3 */}
+              <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                {[
+                  { icon: "Database", label: "CRM Sync", color: "#FF7A59" },
+                  { icon: "Send", label: "Sequence", color: "#10B981" },
+                  { icon: "Bell", label: "Alert", color: "#6B7280" },
+                ].map((node, i) => (
+                  <div key={node.label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 10,
+                      background: `${node.color}20`,
+                      border: `1.5px solid ${node.color}50`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}>
+                      <Icon name={node.icon as "Database" | "Send" | "Bell"} size={18} color={node.color} />
+                    </div>
+                    {i < 2 && <Icon name="ArrowRight" size={14} color="var(--ink-400)" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Labels */}
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--border-deep)" }}>
+              <span style={{ fontSize: 11, color: "var(--ink-400)", fontFamily: "var(--font-data)" }}>INPUT</span>
+              <span style={{ fontSize: 11, color: "var(--ink-400)", fontFamily: "var(--font-data)" }}>PROCESS</span>
+              <span style={{ fontSize: 11, color: "var(--ink-400)", fontFamily: "var(--font-data)" }}>OUTPUT</span>
             </div>
           </div>
+        </div>
+
+        {/* Description Section - Below Hero */}
+        <div
+          style={{
+            marginTop: 48,
+            padding: "32px 0",
+            borderTop: "1px solid var(--border-hairline)",
+            textAlign: "center",
+          }}
+        >
+          <p
+            style={{
+              fontSize: 17,
+              lineHeight: "var(--leading-relaxed)",
+              color: "var(--text-secondary)",
+              maxWidth: 720,
+              margin: "0 auto",
+            }}
+          >
+            Generate leads. Connect to CRM. Research prospects. Craft messaging. Enroll in sequences.
+            One platform that builds your complete outbound automation.
+          </p>
         </div>
 
         {/* Live Canvas */}
