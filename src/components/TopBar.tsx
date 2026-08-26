@@ -14,7 +14,7 @@ const VIEW_META: Record<View, { title: string; crumb: string }> = {
   campaigns: { title: "Campaigns", crumb: "Manage your lead generation campaigns" },
   workflows: { title: "Workflows", crumb: "Templates and activated skills" },
   canvas: { title: "Canvas", crumb: "Edit your automation workflow" },
-  analyst: { title: "Analyst", crumb: "Chat with your GTM automation assistant" },
+  engineer: { title: "n8n Engineer", crumb: "Build and configure your prospect automation workflows" },
   settings: { title: "Settings", crumb: "API keys and configuration" },
 };
 

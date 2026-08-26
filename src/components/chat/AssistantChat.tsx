@@ -112,10 +112,10 @@ export default function AssistantChat() {
   }, [messages, sendMessage]);
 
   const suggestions = [
-    "Help me define my ICP",
-    "Set up Apollo lead search",
-    "Create a cold email sequence",
-    "Connect my HubSpot CRM",
+    "Build a prospect automation workflow",
+    "Set up CRM duplicate checking",
+    "Create an approval gate flow",
+    "Generate email sequence nodes",
   ];
 
   return (
@@ -126,9 +126,9 @@ export default function AssistantChat() {
             <div className="welcome-icon">
               <Sparkles size={28} color="white" strokeWidth={1.75} />
             </div>
-            <h2 className="welcome-title">How can I help you today?</h2>
+            <h2 className="welcome-title">n8n Workflow Engineer</h2>
             <p className="welcome-subtitle">
-              I can help you configure your GTM automation engine, from lead generation to personalized outreach.
+              I help you build prospect automation workflows for n8n — from lead intake to sequence enrollment.
             </p>
             <div className="welcome-suggestions">
               {suggestions.map((text) => (
@@ -181,7 +181,7 @@ export default function AssistantChat() {
             </button>
           </div>
           <p className="composer-hint">
-            PAL uses Claude to help you build your prospect automation engine
+            Powered by Claude — describe your workflow needs to generate n8n JSON
           </p>
         </div>
       </form>
@@ -542,7 +542,7 @@ function MessageBubble({ role, content, onReload, isStreaming }: MessageBubblePr
       </div>
       <div className="message-content">
         <div className="message-header">
-          <span className="message-sender">{isUser ? "You" : "PAL"}</span>
+          <span className="message-sender">{isUser ? "You" : "Engineer"}</span>
         </div>
         <div className="message-text">
           {content || (isStreaming && (

@@ -12,7 +12,7 @@ import {
 import { executeStep, executeAllSteps } from "@/lib/step-executor";
 
 export const runtime = "nodejs";
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 interface ResumeRequest {
   runAllRemaining?: boolean;

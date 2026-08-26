@@ -7,7 +7,7 @@ import DashboardHome from "@/components/views/DashboardHome";
 import CampaignsView from "@/components/views/CampaignsView";
 import WorkflowsView from "@/components/views/WorkflowsView";
 import CanvasView from "@/components/views/CanvasView";
-import AnalystView from "@/components/views/AnalystView";
+import EngineerView from "@/components/views/EngineerView";
 import SettingsView from "@/components/views/SettingsView";
 import { View } from "@/types/app";
 
@@ -40,7 +40,7 @@ export default function DashboardPage() {
           )}
           {view === "workflows" && <WorkflowsView />}
           {view === "canvas" && <CanvasView projectId={projectId} projectName={projectName} />}
-          {view === "analyst" && <AnalystView />}
+          {view === "engineer" && <EngineerView />}
           {view === "settings" && <SettingsView />}
         </main>
       </div>

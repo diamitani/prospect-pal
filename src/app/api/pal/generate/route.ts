@@ -8,7 +8,7 @@ import { createProject, updateProject, saveArtifact } from "@/lib/dynamodb";
 import { uploadArtifact } from "@/lib/s3";
 
 export const runtime = "nodejs";
-export const maxDuration = 120; // 2 min for full pipeline
+export const maxDuration = 60; // 2 min for full pipeline
 
 export async function POST(req: NextRequest) {
   try {

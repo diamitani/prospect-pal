@@ -12,7 +12,7 @@ import {
 import { executeAllSteps } from "@/lib/step-executor";
 
 export const runtime = "nodejs";
-export const maxDuration = 300; // 5 minutes for full workflow
+export const maxDuration = 60; // 5 minutes for full workflow
 
 interface WebhookPayload {
   company_name: string;

@@ -12,7 +12,7 @@ import {
 import { executeStep } from "@/lib/step-executor";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 60;
 
 interface StartRequest {
   companyName: string;

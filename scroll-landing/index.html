@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prospect PAL — Automate Your GTM Engine</title>
+  <link rel="stylesheet" href="scrollcraft.css">
+  <style>
+    /* Brand tokens */
+    :root {
+      --sc-canvas: #0A0806;
+      --sc-surface: #16110E;
+      --sc-ink: #F5EBDD;
+      --sc-ink-soft: #A2968A;
+      --sc-accent: #D4AF37;
+      --sc-accent-ink: #0A0806;
+      --sc-font-display: "Inter", -apple-system, system-ui, sans-serif;
+      --sc-font-text: "Inter", -apple-system, system-ui, sans-serif;
+    }
+
+    body {
+      background: var(--sc-canvas);
+      color: var(--sc-ink);
+      font-family: var(--sc-font-text);
+      -webkit-font-smoothing: antialiased;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Navigation */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      height: 66px;
+      padding: 0 32px;
+      background: rgba(10, 8, 6, 0.86);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(245, 235, 221, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--sc-ink);
+    }
+
+    .cta-button {
+      padding: 10px 20px;
+      background: var(--sc-accent);
+      color: var(--sc-accent-ink);
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-1px);
+    }
+
+    /* Act 1: Recognition */
+    #act-recognition h1 {
+      font-family: var(--sc-font-display);
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin: 0;
+      color: var(--sc-ink);
+    }
+
+    /* Act 2: Promise */
+    #act-promise {
+      background: linear-gradient(180deg, var(--sc-canvas) 0%, #FDF8F3 100%);
+    }
+
+    #act-promise h2 {
+      font-family: var(--sc-font-display);
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+      margin: 0;
+      color: #0A0806;
+    }
+
+    /* Act 3: Build (PEAK) - Workflow Canvas */
+    .workflow-canvas {
+      position: relative;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      aspect-ratio: 16 / 9;
+      background: #0D0B09;
+      border-radius: 12px;
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      overflow: hidden;
+    }
+
+    .canvas-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(212, 175, 55, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(212, 175, 55, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.4;
+    }
+
+    .canvas-status {
+      position: absolute;
+      top: 16px;
+      left: 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: var(--sc-accent);
+      letter-spacing: 0.05em;
+    }
+
+    .workflow-node {
+      position: absolute;
+      width: 140px;
+      padding: 16px;
+      background: rgba(22, 17, 14, 0.95);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      border-radius: 8px;
+      opacity: 0;
+      transform: scale(0.8);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .workflow-node.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .node-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--sc-accent);
+      border-radius: 6px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .node-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--sc-ink);
+      margin-bottom: 4px;
+    }
+
+    .node-subtitle {
+      font-size: 11px;
+      color: var(--sc-ink-soft);
+    }
+
+    .node-connection {
+      position: absolute;
+      stroke: var(--sc-accent);
+      stroke-width: 2;
+      fill: none;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .node-connection.active {
+      opacity: 0.6;
+      stroke-dasharray: 500;
+      stroke-dashoffset: 500;
+      animation: draw-line 0.6s ease forwards;
+    }
+
+    @keyframes draw-line {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    .workflow-complete-badge {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      padding: 8px 16px;
+      background: rgba(212, 175, 55, 0.15);
+      border: 1px solid var(--sc-accent);
+      border-radius: 6px;
+      color: var(--sc-accent);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .workflow-complete-badge.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Act 4: Power */
+    .power-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .power-card {
+      padding: 32px 24px;
+      background: var(--sc-surface);
+      border: 1px solid rgba(245, 235, 221, 0.1);
+      border-radius: 12px;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    .power-card h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+      color: var(--sc-accent);
+    }
+
+    .power-card p {
+      font-size: 15px;
+      line-height: 1.6;
+      margin: 0;
+      color: var(--sc-ink-soft);
+    }
+
+    /* Act 5: Proof */
+    .proof-rail {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding: 20px 40px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .lead-card {
+      min-width: 320px;
+      padding: 24px;
+      background: var(--sc-surface);
+      border: 1px solid rgba(245, 235, 221, 0.1);
+      border-radius: 12px;
+      scroll-snap-align: center;
+      transition: transform 0.2s ease;
+    }
+
+    .lead-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .lead-company {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--sc-ink);
+      margin-bottom: 8px;
+    }
+
+    .lead-round {
+      font-size: 13px;
+      color: var(--sc-accent);
+      margin-bottom: 12px;
+    }
+
+    .lead-trigger {
+      font-size: 14px;
+      color: var(--sc-ink-soft);
+      margin-bottom: 8px;
+    }
+
+    .lead-contact {
+      font-size: 13px;
+      color: var(--sc-ink-soft);
+    }
+
+    /* Act 6: Commitment (Pricing) */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      max-width: 1000px;
+      margin: 0 auto 40px auto;
+    }
+
+    .pricing-tier {
+      padding: 32px 24px;
+      background: var(--sc-surface);
+      border: 1px solid rgba(245, 235, 221, 0.1);
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .pricing-tier.featured {
+      border-color: var(--sc-accent);
+      position: relative;
+    }
+
+    .pricing-tier.featured::before {
+      content: "RECOMMENDED";
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 4px 12px;
+      background: var(--sc-accent);
+      color: var(--sc-accent-ink);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      border-radius: 4px;
+    }
+
+    .tier-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--sc-ink-soft);
+      margin-bottom: 12px;
+    }
+
+    .tier-price {
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--sc-ink);
+      margin-bottom: 4px;
+    }
+
+    .tier-cadence {
+      font-size: 14px;
+      color: var(--sc-ink-soft);
+      margin-bottom: 20px;
+    }
+
+    .tier-features {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 24px 0;
+      text-align: left;
+    }
+
+    .tier-features li {
+      font-size: 14px;
+      color: var(--sc-ink-soft);
+      margin-bottom: 12px;
+      padding-left: 24px;
+      position: relative;
+    }
+
+    .tier-features li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--sc-accent);
+      font-weight: 700;
+    }
+
+    .tier-cta {
+      width: 100%;
+      padding: 14px 24px;
+      background: transparent;
+      border: 1px solid rgba(245, 235, 221, 0.2);
+      color: var(--sc-ink);
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tier-cta.accent {
+      background: var(--sc-accent);
+      border-color: var(--sc-accent);
+      color: var(--sc-accent-ink);
+    }
+
+    .tier-cta:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Utilities */
+    [data-sc-stage] {
+      padding: 80px 32px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .section-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--sc-accent);
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <div class="logo">PROSPECT PAL</div>
+  <button class="cta-button" onclick="window.location.hash='#pricing'">Build my engine</button>
+</nav>
+
+<!-- Act 1: Recognition -->
+<section data-sc-act="pin" data-sc-span="1.2" id="act-recognition">
+  <div data-sc-stage>
+    <h1 data-sc-kinetic="lines" data-sc-greet>
+      Research. Write.<br>
+      Check for dupes.<br>
+      Every day, hours lost.
+    </h1>
+  </div>
+</section>
+
+<!-- Act 2: Promise -->
+<section data-sc-act="drift" data-sc-span="0.8" id="act-promise" data-sc-color="1:var(--sc-canvas)" data-sc-color="2:#FDF8F3">
+  <div data-sc-stage>
+    <h2 data-sc-reveal="line">
+      One engine.<br>
+      Everything automated.
+    </h2>
+  </div>
+</section>
+
+<!-- Act 3: Build (PEAK) - Scroll-to-Wire Workflow -->
+<section data-sc-act="pin" data-sc-span="3.5" id="act-build">
+  <div data-sc-stage>
+    <div class="section-label">YOUR AUTOMATION ENGINE</div>
+    <div class="workflow-canvas">
+      <div class="canvas-grid"></div>
+      <div class="canvas-status" id="canvas-status">INITIALIZING...</div>
+
+      <!-- SVG for connections -->
+      <svg style="position: absolute; inset: 0; pointer-events: none;">
+        <path id="conn-1-2" class="node-connection" d="M 180 60 Q 220 60, 260 80" />
+        <path id="conn-2-3" class="node-connection" d="M 400 80 Q 440 80, 480 100" />
+        <path id="conn-3-4" class="node-connection" d="M 620 100 Q 660 100, 700 120" />
+        <path id="conn-4-5" class="node-connection" d="M 840 120 Q 880 120, 920 140" />
+        <path id="conn-5-6" class="node-connection" d="M 1060 140 Q 1100 140, 180 220" />
+        <path id="conn-6-7" class="node-connection" d="M 320 220 Q 360 220, 400 240" />
+        <path id="conn-7-8" class="node-connection" d="M 540 240 Q 580 240, 620 260" />
+        <path id="conn-8-9" class="node-connection" d="M 760 260 Q 800 260, 840 280" />
+      </svg>
+
+      <!-- Workflow Nodes -->
+      <div class="workflow-node" data-node="1" style="top: 40px; left: 40px;">
+        <div class="node-icon">⚡</div>
+        <div class="node-title">Intake & cron</div>
+        <div class="node-subtitle">Trigger source</div>
+      </div>
+
+      <div class="workflow-node" data-node="2" style="top: 60px; left: 260px;">
+        <div class="node-icon">📋</div>
+        <div class="node-title">Data normalizer</div>
+        <div class="node-subtitle">Schema transform</div>
+      </div>
+
+      <div class="workflow-node" data-node="3" style="top: 80px; left: 480px;">
+        <div class="node-icon">🛡️</div>
+        <div class="node-title">CRM dedupe</div>
+        <div class="node-subtitle">Deal protection</div>
+      </div>
+
+      <div class="workflow-node" data-node="4" style="top: 100px; left: 700px;">
+        <div class="node-icon">🔍</div>
+        <div class="node-title">Data adapter</div>
+        <div class="node-subtitle">Contact reveal</div>
+      </div>
+
+      <div class="workflow-node" data-node="5" style="top: 120px; left: 920px;">
+        <div class="node-icon">✨</div>
+        <div class="node-title">AI research</div>
+        <div class="node-subtitle">Email copy</div>
+      </div>
+
+      <div class="workflow-node" data-node="6" style="top: 200px; left: 40px;">
+        <div class="node-icon">⚖️</div>
+        <div class="node-title">Approval gate</div>
+        <div class="node-subtitle">Human review</div>
+      </div>
+
+      <div class="workflow-node" data-node="7" style="top: 220px; left: 260px;">
+        <div class="node-icon">💾</div>
+        <div class="node-title">CRM sync</div>
+        <div class="node-subtitle">Lead upsert</div>
+      </div>
+
+      <div class="workflow-node" data-node="8" style="top: 240px; left: 480px;">
+        <div class="node-icon">📧</div>
+        <div class="node-title">Sequence start</div>
+        <div class="node-subtitle">Outreach begin</div>
+      </div>
+
+      <div class="workflow-node" data-node="9" style="top: 260px; left: 700px;">
+        <div class="node-icon">🔔</div>
+        <div class="node-title">Alert</div>
+        <div class="node-subtitle">Slack notify</div>
+      </div>
+
+      <div class="workflow-complete-badge" id="complete-badge">WORKFLOW COMPILED ✓</div>
+    </div>
+    <p style="margin-top: 32px; font-size: 17px; color: var(--sc-ink-soft); max-width: 600px;">
+      Scroll to build your 9-node automation engine.
+    </p>
+  </div>
+</section>
+
+<!-- Act 4: Power -->
+<section data-sc-act="flow" data-sc-span="1.4" id="act-power">
+  <div data-sc-stage>
+    <div class="section-label">WHAT THIS UNLOCKS</div>
+    <div class="power-grid" data-sc-in="0.2" data-sc-stagger="0.15">
+      <div class="power-card">
+        <h3>Time back</h3>
+        <p>While you sleep, it runs. Prospect research, CRM hygiene, email drafting — automated.</p>
+      </div>
+      <div class="power-card">
+        <h3>Pipeline growth</h3>
+        <p>More qualified conversations, faster. Your engine never stops prospecting.</p>
+      </div>
+      <div class="power-card">
+        <h3>Precision at scale</h3>
+        <p>Every lead enriched, deduped, personalized. Manual chaos becomes engineered process.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Act 5: Proof -->
+<section data-sc-act="pan" data-sc-span="1.6" id="act-proof">
+  <div data-sc-stage>
+    <div class="section-label">LIVE SIGNAL INTELLIGENCE</div>
+    <h2 style="font-size: clamp(28px, 4vw, 42px); font-weight: 700; margin: 0 0 32px 0;">
+      Leads that already run n8n
+    </h2>
+    <div class="proof-rail" data-sc-rail>
+      <div class="lead-card" data-sc-tilt="6">
+        <div class="lead-company">NexusFlow Data</div>
+        <div class="lead-round">Series A · $12M</div>
+        <div class="lead-trigger">Hiring GTM Automation Engineer</div>
+        <div class="lead-contact">Marcus Vance, VP RevOps</div>
+      </div>
+      <div class="lead-card" data-sc-tilt="6">
+        <div class="lead-company">HyperScale AI</div>
+        <div class="lead-round">Series B · $28M</div>
+        <div class="lead-trigger">Hiring Head of Outbound Growth</div>
+        <div class="lead-contact">Elena Rostova, Head of Growth</div>
+      </div>
+      <div class="lead-card" data-sc-tilt="6">
+        <div class="lead-company">CloudPulse Systems</div>
+        <div class="lead-round">Seed · $4.5M</div>
+        <div class="lead-trigger">Hiring Founding GTM Specialist</div>
+        <div class="lead-contact">Devon Chen, Co-founder</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Act 6: Commitment (Pricing) -->
+<section data-sc-act="pin" data-sc-span="1.8" id="pricing" data-sc-spotlight>
+  <div data-sc-stage>
+    <div class="section-label">CHOOSE YOUR PLAN</div>
+    <h2 style="font-size: clamp(32px, 5vw, 52px); font-weight: 700; margin: 0 0 48px 0;">
+      Your engine is ready
+    </h2>
+    <div class="pricing-grid">
+      <div class="pricing-tier">
+        <div class="tier-name">DIY Build</div>
+        <div class="tier-price">$19.99</div>
+        <div class="tier-cadence">One-time</div>
+        <ul class="tier-features">
+          <li>9-node workflow JSON</li>
+          <li>Full prompt suite</li>
+          <li>Docker self-host guide</li>
+          <li>PAS email templates</li>
+        </ul>
+        <button class="tier-cta">Get the package</button>
+      </div>
+
+      <div class="pricing-tier featured">
+        <div class="tier-name">Pro Unlimited</div>
+        <div class="tier-price">$99</div>
+        <div class="tier-cadence">/ month</div>
+        <ul class="tier-features">
+          <li>Unlimited compiles</li>
+          <li>Live node canvas</li>
+          <li>Deploy to your n8n</li>
+          <li>Error triage</li>
+          <li>A/B PAS scripts</li>
+          <li>Signal intelligence</li>
+        </ul>
+        <button class="tier-cta accent" data-sc-magnet="0.26">Build my engine</button>
+      </div>
+
+      <div class="pricing-tier">
+        <div class="tier-name">Custom Build</div>
+        <div class="tier-price">$999+</div>
+        <div class="tier-cadence">White-glove</div>
+        <ul class="tier-features">
+          <li>Dedicated engineer</li>
+          <li>Custom waterfalls</li>
+          <li>CRM dedupe audit</li>
+          <li>Sub-workflows</li>
+          <li>Private support</li>
+        </ul>
+        <button class="tier-cta">Request build</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="scrollcraft.js"></script>
+<script>
+  // Scroll-to-wire workflow assembly
+  const workflowSection = document.querySelector('#act-build');
+  const statusEl = document.getElementById('canvas-status');
+  const completeBadge = document.getElementById('complete-badge');
+  const nodes = document.querySelectorAll('.workflow-node');
+  const connections = document.querySelectorAll('.node-connection');
+
+  let lastProgress = 0;
+
+  function updateWorkflow() {
+    if (!workflowSection) return;
+
+    const progress = parseFloat(getComputedStyle(workflowSection).getPropertyValue('--sc-p') || 0);
+
+    // Update status text
+    if (progress < 0.1) {
+      statusEl.textContent = 'INITIALIZING...';
+    } else if (progress < 0.95) {
+      const nodeCount = Math.floor(progress * 9);
+      statusEl.textContent = `COMPILING... ${nodeCount}/9 NODES`;
+    } else {
+      statusEl.textContent = 'COMPILATION COMPLETE';
+    }
+
+    // Activate nodes progressively
+    nodes.forEach((node, index) => {
+      const threshold = (index + 1) / 9;
+      if (progress >= threshold && !node.classList.contains('active')) {
+        node.classList.add('active');
+      }
+    });
+
+    // Activate connections
+    connections.forEach((conn, index) => {
+      const threshold = (index + 2) / 9; // Connection appears after both nodes
+      if (progress >= threshold && !conn.classList.contains('active')) {
+        conn.classList.add('active');
+      }
+    });
+
+    // Show complete badge
+    if (progress >= 0.95 && !completeBadge.classList.contains('active')) {
+      completeBadge.classList.add('active');
+    }
+
+    lastProgress = progress;
+  }
+
+  // Update on scroll
+  let ticking = false;
+  function onScroll() {
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        updateWorkflow();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }
+
+  window.addEventListener('scroll', onScroll);
+
+  // Initial check
+  setTimeout(updateWorkflow, 100);
+
+  // Animate power cards on scroll into view
+  const powerCards = document.querySelectorAll('.power-card');
+  const observerOptions = {
+    threshold: 0.2
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, index) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }, index * 150);
+      }
+    });
+  }, observerOptions);
+
+  powerCards.forEach(card => observer.observe(card));
+</script>
+
+</body>
+</html>
