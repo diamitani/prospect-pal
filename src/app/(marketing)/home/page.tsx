@@ -147,7 +147,7 @@ export default function HomePage() {
                 lineHeight: "var(--leading-tight)",
               }}
             >
-              Build your GTM prospecting engine.
+              Build a custom n8n prospecting workflow.
             </h1>
 
             <p
@@ -158,7 +158,7 @@ export default function HomePage() {
                 color: "var(--text-secondary)",
               }}
             >
-              Automate lead generation, contact research, personalized messaging, and outbound sequences — all in one custom n8n workflow.
+              Automate your Go-to-Market engine. Input your ICP and User Persona, connect your Data Enrichment, CRM and Outreach tools, and generate a custom workflow in your n8n instance or download a JSON file to import and edit.
             </p>
 
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 36 }}>
