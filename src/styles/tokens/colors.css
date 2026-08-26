@@ -1,0 +1,86 @@
+:root{
+  /* ── Ink: near-black cool neutrals, the voice of the brand ── */
+  --ink-900:#0B0F16;
+  --ink-800:#101B2D; /* Prospect Navy — the brand core */
+  --ink-700:#1B2942;
+  --ink-600:#2B3A55;
+  --ink-500:#4A5872;
+  --ink-400:#6E7B93;
+  --ink-300:#98A2B3;
+  --ink-200:#C4CBD8;
+  --ink-100:#E2E6EE;
+
+  /* ── Paper: warm-white surfaces ── */
+  --paper-0:#FFFFFF;
+  --paper-50:#FBFAF8;
+  --paper-100:#F5F4F0;
+  --paper-200:#EDEBE5;
+  --paper-300:#DFDCD4;
+
+  /* ── Cobalt: the interactive / trust primary ── */
+  --cobalt-50:#EEF2FF;
+  --cobalt-100:#DBE3FF;
+  --cobalt-200:#B8C6FE;
+  --cobalt-300:#8DA2FB;
+  --cobalt-400:#5B77F5;
+  --cobalt-500:#3A56E4;
+  --cobalt-600:#2A41C9;
+  --cobalt-700:#2033A2;
+  --cobalt-800:#1B2A80;
+  --cobalt-900:#16215E;
+
+  /* ── Champagne: the premium accent, used sparingly ── */
+  --champagne-50:#FBF6EA;
+  --champagne-100:#F5EACC;
+  --champagne-200:#E9D49B;
+  --champagne-300:#D9B968;
+  --champagne-400:#C79E3E;
+  --champagne-500:#A87F27;
+
+  /* ── Semantic status ── */
+  --signal-verified:#0E7C66;
+  --signal-verified-bg:#E6F4F0;
+  --signal-attention:#B4690E;
+  --signal-attention-bg:#FCF3E4;
+  --signal-blocked:#B3261E;
+  --signal-blocked-bg:#FCEDEC;
+  --signal-info:#2033A2;
+  --signal-info-bg:#EEF2FF;
+
+  /* ── Pipeline stage hues (the 5 pillars / 9 nodes) ── */
+  --stage-trigger:#3A56E4;
+  --stage-shield:#0E7C66;
+  --stage-data:#5B77F5;
+  --stage-ai:#7A4BD8;
+  --stage-sequence:#C79E3E;
+  --stage-logic:#6E7B93;
+
+  /* ── Semantic aliases: use these in product code ── */
+  --text-primary:var(--ink-900);
+  --text-secondary:var(--ink-500);
+  --text-muted:var(--ink-400);
+  --text-subtle:var(--ink-300);
+  --text-inverse:var(--paper-0);
+  --text-brand:var(--cobalt-700);
+  --text-link:var(--cobalt-600);
+  --text-link-hover:var(--cobalt-800);
+
+  --surface-page:var(--paper-50);
+  --surface-card:var(--paper-0);
+  --surface-sunken:var(--paper-100);
+  --surface-inset:var(--paper-200);
+  --surface-deep:var(--ink-800);
+  --surface-deep-raised:var(--ink-700);
+  --surface-brand-tint:var(--cobalt-50);
+
+  --border-hairline:var(--paper-200);
+  --border-strong:var(--paper-300);
+  --border-deep:var(--ink-700);
+  --border-focus:var(--cobalt-400);
+
+  --action-primary:var(--ink-800);
+  --action-primary-hover:var(--ink-900);
+  --action-accent:var(--cobalt-600);
+  --action-accent-hover:var(--cobalt-700);
+  --focus-ring:0 0 0 3px rgba(58,86,228,0.18);
+}
