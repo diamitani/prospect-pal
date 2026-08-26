@@ -1,5 +1,9 @@
+/**
+ * GET /api/auth/session
+ * Get current user session with workspace info
+ */
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getSession } from "@/lib/auth-supabase";
 
 export async function GET() {
   try {
@@ -15,6 +19,9 @@ export async function GET() {
         email: session.email,
         name: session.name,
         plan: session.plan,
+        workspaceId: session.workspaceId,
+        workspaceName: session.workspaceName,
+        onboardingCompleted: session.onboardingCompleted,
       },
     });
   } catch (error) {

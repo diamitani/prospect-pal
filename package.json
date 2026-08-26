@@ -22,6 +22,7 @@
     "@aws-sdk/client-secrets-manager": "^3.1111.0",
     "@aws-sdk/lib-dynamodb": "^3.1111.0",
     "@aws-sdk/s3-request-presigner": "^3.1111.0",
+    "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.112.4",
     "@xyflow/react": "^12.11.5",
     "ai": "^7.0.79",

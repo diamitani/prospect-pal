@@ -1,10 +1,9 @@
 /**
  * POST /api/auth/login
- * Returns a redirect response WITH the session cookie already set,
- * so the browser stores the cookie before the new page loads.
+ * Supabase Auth login with email/password
  */
 import { NextRequest, NextResponse } from "next/server";
-import { loginUser, setCookieHeaders } from "@/lib/auth";
+import { createClient } from "@/lib/supabase-server";
 
 export const runtime = "nodejs";
 
@@ -19,21 +18,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email and password required" }, { status: 400 });
     }
 
-    const result = await loginUser(email, password);
+    const supabase = await createClient();
 
-    if ("error" in result) {
-      console.error("[login] Auth error:", result.error);
-      return NextResponse.json({ error: result.error }, { status: 401 });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      console.error("[login] Auth error:", error.message);
+      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
-    // Return the session cookie + a redirect in one response
-    // This guarantees the cookie is committed before the next page load
-    const res = NextResponse.json(
-      { ok: true, user: result.user, redirectTo },
+    // Session cookie is automatically set by Supabase
+    return NextResponse.json(
+      { ok: true, user: { email: data.user.email }, redirectTo },
       { status: 200 }
     );
-    res.headers.set("Set-Cookie", setCookieHeaders(result.token)["Set-Cookie"]);
-    return res;
   } catch (err) {
     console.error("[login] Unexpected error:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });

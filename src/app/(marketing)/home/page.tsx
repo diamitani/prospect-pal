@@ -147,7 +147,7 @@ export default function HomePage() {
                 lineHeight: "var(--leading-tight)",
               }}
             >
-              Build a custom n8n prospecting workflow.
+              Build a custom prospecting workflow<br />in n8n.
             </h1>
 
             <p
@@ -203,156 +203,47 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Right: System Architecture Diagram */}
-          <div
-            style={{
-              background: "var(--surface-deep)",
-              borderRadius: "var(--radius-2xl)",
-              border: "1px solid var(--border-deep)",
-              overflow: "hidden",
-              padding: 24,
-            }}
-          >
-            {/* Diagram Header */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: 20,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ display: "flex", gap: 5 }}>
-                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ff5f56" }} />
-                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ffbd2e" }} />
-                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#27ca40" }} />
+          {/* Right: Workflow Steps Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            {[
+              { icon: "Users" as const, title: "Define Your ICP", desc: "Target companies by size, industry, signals", color: "#FF9500" },
+              { icon: "Search" as const, title: "Enrich Contacts", desc: "Apollo, Clay, ZoomInfo integration", color: "#8B5CF6" },
+              { icon: "Sparkles" as const, title: "AI Research", desc: "Pain points and personalized copy", color: "#3B82F6" },
+              { icon: "Send" as const, title: "Deploy Sequences", desc: "Smartlead, Instantly, or direct send", color: "#10B981" },
+            ].map((step) => (
+              <div
+                key={step.title}
+                style={{
+                  padding: 20,
+                  background: "var(--surface-card)",
+                  borderRadius: "var(--radius-xl)",
+                  border: "1px solid var(--border-hairline)",
+                }}
+              >
+                <div
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: "var(--radius-lg)",
+                    background: `${step.color}15`,
+                    border: `1.5px solid ${step.color}40`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 14,
+                  }}
+                >
+                  <Icon name={step.icon} size={20} color={step.color} />
                 </div>
-                <span style={{ fontFamily: "var(--font-data)", fontSize: 11, color: "var(--ink-300)", marginLeft: 8 }}>
-                  PAE System Architecture
-                </span>
+                <h3 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", marginBottom: 4 }}>
+                  {step.title}
+                </h3>
+                <p style={{ fontSize: 13, color: "var(--text-secondary)", margin: 0, lineHeight: 1.4 }}>
+                  {step.desc}
+                </p>
               </div>
-              <Badge tone="verified">9 nodes</Badge>
-            </div>
-
-            {/* Architecture Flow */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {/* Row 1 */}
-              <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-                {[
-                  { icon: "Zap", label: "Intake", color: "#FF9500" },
-                  { icon: "FileBraces", label: "Normalize", color: "#6B7280" },
-                  { icon: "ShieldCheck", label: "Dedupe", color: "#FF7A59" },
-                ].map((node, i) => (
-                  <div key={node.label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 10,
-                      background: `${node.color}20`,
-                      border: `1.5px solid ${node.color}50`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexDirection: "column",
-                    }}>
-                      <Icon name={node.icon as "Zap" | "FileBraces" | "ShieldCheck"} size={18} color={node.color} />
-                    </div>
-                    {i < 2 && <Icon name="ArrowRight" size={14} color="var(--ink-400)" />}
-                  </div>
-                ))}
-              </div>
-
-              {/* Connector */}
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <Icon name="ArrowDown" size={16} color="var(--ink-400)" />
-              </div>
-
-              {/* Row 2 */}
-              <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-                {[
-                  { icon: "Search", label: "Enrich", color: "#8B5CF6" },
-                  { icon: "Sparkles", label: "AI Research", color: "#3B82F6" },
-                  { icon: "Scale", label: "Approval", color: "#6B7280" },
-                ].map((node, i) => (
-                  <div key={node.label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 10,
-                      background: `${node.color}20`,
-                      border: `1.5px solid ${node.color}50`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}>
-                      <Icon name={node.icon as "Search" | "Sparkles" | "Scale"} size={18} color={node.color} />
-                    </div>
-                    {i < 2 && <Icon name="ArrowRight" size={14} color="var(--ink-400)" />}
-                  </div>
-                ))}
-              </div>
-
-              {/* Connector */}
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                <Icon name="ArrowDown" size={16} color="var(--ink-400)" />
-              </div>
-
-              {/* Row 3 */}
-              <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-                {[
-                  { icon: "Database", label: "CRM Sync", color: "#FF7A59" },
-                  { icon: "Send", label: "Sequence", color: "#10B981" },
-                  { icon: "Bell", label: "Alert", color: "#6B7280" },
-                ].map((node, i) => (
-                  <div key={node.label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 10,
-                      background: `${node.color}20`,
-                      border: `1.5px solid ${node.color}50`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}>
-                      <Icon name={node.icon as "Database" | "Send" | "Bell"} size={18} color={node.color} />
-                    </div>
-                    {i < 2 && <Icon name="ArrowRight" size={14} color="var(--ink-400)" />}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Labels */}
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--border-deep)" }}>
-              <span style={{ fontSize: 11, color: "var(--ink-400)", fontFamily: "var(--font-data)" }}>INPUT</span>
-              <span style={{ fontSize: 11, color: "var(--ink-400)", fontFamily: "var(--font-data)" }}>PROCESS</span>
-              <span style={{ fontSize: 11, color: "var(--ink-400)", fontFamily: "var(--font-data)" }}>OUTPUT</span>
-            </div>
+            ))}
           </div>
-        </div>
-
-        {/* Description Section - Below Hero */}
-        <div
-          style={{
-            marginTop: 48,
-            padding: "32px 0",
-            borderTop: "1px solid var(--border-hairline)",
-            textAlign: "center",
-          }}
-        >
-          <p
-            style={{
-              fontSize: 17,
-              lineHeight: "var(--leading-relaxed)",
-              color: "var(--text-secondary)",
-              maxWidth: 720,
-              margin: "0 auto",
-            }}
-          >
-            One platform. Your own workflow. Complete ownership.
-          </p>
         </div>
 
         {/* Live Canvas */}

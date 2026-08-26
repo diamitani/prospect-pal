@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/ds/brand/Logo";
+import { OAuthButtons } from "@/components/auth/OAuthButtons";
 
 export default function SignupPage() {
   const [name,     setName]     = useState("");
@@ -85,7 +86,7 @@ export default function SignupPage() {
         </div>
 
         <div style={{ fontSize: 11, color: "#2033A2", position: "relative", zIndex: 1 }}>
-          🔒 AWS Cognito · TLS 1.3 · No credit card required
+          🔒 Supabase Auth · TLS 1.3 · No credit card required
         </div>
       </div>
 
@@ -96,6 +97,14 @@ export default function SignupPage() {
           <div style={{ marginBottom: 28 }}>
             <h1 style={{ fontSize: 26, fontWeight: 900, color: "#111", letterSpacing: "-0.5px", margin: "0 0 6px" }}>Create your workspace</h1>
             <p style={{ fontSize: 14, color: "#6B7280", margin: 0 }}>Free forever · No credit card needed</p>
+          </div>
+
+          <OAuthButtons redirectTo="/onboarding" />
+
+          <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "8px 0 16px" }}>
+            <div style={{ flex: 1, height: 1, background: "#f0f0ec" }} />
+            <span style={{ fontSize: 12, color: "#9CA3AF" }}>or continue with email</span>
+            <div style={{ flex: 1, height: 1, background: "#f0f0ec" }} />
           </div>
 
           <form onSubmit={handleSignup} style={{ display: "flex", flexDirection: "column", gap: 13 }}>

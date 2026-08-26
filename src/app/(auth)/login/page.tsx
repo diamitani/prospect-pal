@@ -4,6 +4,7 @@ import { useState, FormEvent, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/ds/brand/Logo";
+import { OAuthButtons } from "@/components/auth/OAuthButtons";
 
 function LoginForm() {
   const router       = useRouter();
@@ -97,7 +98,7 @@ function LoginForm() {
         </div>
 
         <div style={{ fontSize: 11, color: "#2033A2", position: "relative", zIndex: 1 }}>
-          🔒 AWS Cognito · TLS 1.3 · Encrypted
+          🔒 Supabase Auth · TLS 1.3 · Encrypted
         </div>
       </div>
 
@@ -108,6 +109,14 @@ function LoginForm() {
           <div style={{ marginBottom: 32 }}>
             <h1 style={{ fontSize: 26, fontWeight: 900, color: "#111", letterSpacing: "-0.5px", margin: "0 0 6px" }}>Welcome back</h1>
             <p style={{ fontSize: 14, color: "#6B7280", margin: 0 }}>Sign in to your Prospect PAL workspace</p>
+          </div>
+
+          <OAuthButtons redirectTo={redirectTo} />
+
+          <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "8px 0 16px" }}>
+            <div style={{ flex: 1, height: 1, background: "#f0f0ec" }} />
+            <span style={{ fontSize: 12, color: "#9CA3AF" }}>or continue with email</span>
+            <div style={{ flex: 1, height: 1, background: "#f0f0ec" }} />
           </div>
 
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -160,7 +169,7 @@ function LoginForm() {
           }}>Create free workspace →</Link>
 
           <p style={{ textAlign: "center", fontSize: 11, color: "#D1D5DB", marginTop: 20 }}>
-            🔒 Secured with AWS Cognito · Encrypted at rest
+            🔒 Secured with Supabase Auth · Encrypted at rest
           </p>
         </div>
       </div>
