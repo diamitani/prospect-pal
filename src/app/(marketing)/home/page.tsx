@@ -121,99 +121,179 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section style={{ padding: "64px 32px 0", maxWidth: "var(--layout-max)", margin: "0 auto" }}>
-        <div style={{ textAlign: "center" }}>
-          <Badge tone="brand" icon="Workflow" style={{ marginBottom: 22 }}>
-            GTM automation agent
-          </Badge>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 48,
+            alignItems: "center",
+          }}
+        >
+          {/* Left: Text Content */}
+          <div>
+            <Badge tone="brand" icon="Workflow" style={{ marginBottom: 22 }}>
+              GTM automation agent
+            </Badge>
 
-          <h1
-            style={{
-              margin: "0 0 18px",
-              fontFamily: "var(--font-display)",
-              fontWeight: "var(--weight-bold)",
-              fontSize: "var(--text-display-1)",
-              letterSpacing: "var(--tracking-display)",
-              lineHeight: "var(--leading-tight)",
-            }}
-          >
-            Automate your GTM engine.
-          </h1>
+            <h1
+              style={{
+                margin: "0 0 18px",
+                fontFamily: "var(--font-display)",
+                fontWeight: "var(--weight-bold)",
+                fontSize: "var(--text-display-1)",
+                letterSpacing: "var(--tracking-display)",
+                lineHeight: "var(--leading-tight)",
+              }}
+            >
+              Automate your GTM engine.
+            </h1>
 
-          <p
-            style={{
-              margin: "0 auto 30px",
-              maxWidth: 700,
-              fontSize: 19,
-              lineHeight: "var(--leading-relaxed)",
-              color: "var(--text-secondary)",
-            }}
-          >
-            Generate leads. Connect to CRM. Research prospects. Craft messaging. Enroll in sequences.
-            One platform that builds your complete outbound automation.
-          </p>
+            <p
+              style={{
+                margin: "0 0 30px",
+                fontSize: 19,
+                lineHeight: "var(--leading-relaxed)",
+                color: "var(--text-secondary)",
+              }}
+            >
+              Generate leads. Connect to CRM. Research prospects. Craft messaging. Enroll in sequences.
+              One platform that builds your complete outbound automation.
+            </p>
 
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 36 }}>
-            <Button variant="accent" size="lg" icon="Zap" onClick={() => handleOpenCheckout("pro")}>
-              Build my engine — $99/mo
-            </Button>
-            <Button variant="outline" size="lg" icon="Play">
-              See a compile, 2 min
-            </Button>
-          </div>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 36 }}>
+              <Button variant="accent" size="lg" icon="Zap" onClick={() => handleOpenCheckout("pro")}>
+                Build my engine — $99/mo
+              </Button>
+              <Button variant="outline" size="lg" icon="Play">
+                See a compile, 2 min
+              </Button>
+            </div>
 
-          {/* 5 Value Props */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 14, marginBottom: 44 }}>
-            {[
-              { icon: "Users" as const, label: "Generate leads", description: "Surface high-intent prospects" },
-              { icon: "Database" as const, label: "Connect to CRM", description: "Dedupe and sync contacts" },
-              { icon: "Search" as const, label: "Research prospects", description: "Enrich with company intel" },
-              { icon: "Sparkles" as const, label: "Craft messaging", description: "AI-written PAS emails" },
-              { icon: "Send" as const, label: "Enroll in sequences", description: "Automated outreach cadences" },
-            ].map((prop) => (
-              <div
-                key={prop.label}
-                style={{
-                  padding: "20px 16px",
-                  background: "var(--surface-card)",
-                  borderRadius: "var(--radius-lg)",
-                  border: "1px solid var(--border-hairline)",
-                  textAlign: "center",
-                }}
-              >
+            {/* Value Props - Compact */}
+            <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+              {[
+                { icon: "Users" as const, label: "Generate leads" },
+                { icon: "Database" as const, label: "Connect to CRM" },
+                { icon: "Sparkles" as const, label: "AI copywriting" },
+                { icon: "Send" as const, label: "Auto sequences" },
+              ].map((prop) => (
                 <div
+                  key={prop.label}
                   style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: "var(--radius-md)",
-                    background: "var(--cobalt-50)",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    margin: "0 auto 12px",
+                    gap: 8,
                   }}
                 >
-                  <Icon name={prop.icon} size={20} color="var(--cobalt-600)" />
+                  <Icon name={prop.icon} size={16} color="var(--cobalt-500)" />
+                  <span
+                    style={{
+                      fontSize: "var(--text-body-sm)",
+                      color: "var(--text-secondary)",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {prop.label}
+                  </span>
                 </div>
-                <div
+              ))}
+            </div>
+          </div>
+
+          {/* Right: Video Overview */}
+          <div
+            style={{
+              background: "var(--surface-deep)",
+              borderRadius: "var(--radius-2xl)",
+              border: "1px solid var(--border-deep)",
+              overflow: "hidden",
+              aspectRatio: "16/10",
+              position: "relative",
+            }}
+          >
+            {/* Video Header */}
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                padding: "12px 16px",
+                background: "rgba(0,0,0,0.4)",
+                backdropFilter: "blur(8px)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                zIndex: 2,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ display: "flex", gap: 5 }}>
+                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ff5f56" }} />
+                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ffbd2e" }} />
+                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#27ca40" }} />
+                </div>
+                <span
                   style={{
-                    fontWeight: 600,
-                    fontSize: "var(--text-body-sm)",
-                    color: "var(--text-primary)",
-                    marginBottom: 4,
+                    fontFamily: "var(--font-data)",
+                    fontSize: 11,
+                    color: "var(--ink-300)",
+                    marginLeft: 8,
                   }}
                 >
-                  {prop.label}
-                </div>
-                <div
-                  style={{
-                    fontSize: "var(--text-caption)",
-                    color: "var(--text-secondary)",
-                  }}
-                >
-                  {prop.description}
-                </div>
+                  prospect-pal-overview.mp4
+                </span>
               </div>
-            ))}
+              <Badge tone="deep">2:14</Badge>
+            </div>
+
+            {/* Video Placeholder */}
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                background: "linear-gradient(135deg, var(--ink-800) 0%, var(--ink-900) 100%)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 16,
+              }}
+            >
+              <div
+                style={{
+                  width: 72,
+                  height: 72,
+                  borderRadius: "50%",
+                  background: "var(--cobalt-600)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  boxShadow: "0 8px 32px rgba(42, 65, 201, 0.4)",
+                  transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "scale(1.08)";
+                  e.currentTarget.style.boxShadow = "0 12px 40px rgba(42, 65, 201, 0.5)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "scale(1)";
+                  e.currentTarget.style.boxShadow = "0 8px 32px rgba(42, 65, 201, 0.4)";
+                }}
+              >
+                <Icon name="Play" size={32} color="white" style={{ marginLeft: 4 }} />
+              </div>
+              <span
+                style={{
+                  fontSize: "var(--text-body-sm)",
+                  color: "var(--ink-300)",
+                  fontWeight: 500,
+                }}
+              >
+                Watch how it works
+              </span>
+            </div>
           </div>
         </div>
 
