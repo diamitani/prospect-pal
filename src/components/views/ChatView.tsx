@@ -8,6 +8,7 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   palStage?: string;
+  agentType?: string;
   timestamp: Date;
 }
 
@@ -16,11 +17,21 @@ interface ChatViewProps {
   onOutputReady: (output: Record<string, unknown>) => void;
 }
 
+type AgentType = "orchestrator" | "analyst" | "copywriter" | "researcher" | "architect";
+
+const AGENT_OPTIONS: { value: AgentType; label: string; icon: string; description: string }[] = [
+  { value: "architect", label: "Architect", icon: "🏗️", description: "Design systems & workflows" },
+  { value: "orchestrator", label: "Orchestrator", icon: "🎼", description: "Multi-step automation" },
+  { value: "analyst", label: "Analyst", icon: "📊", description: "Debug & diagnose issues" },
+  { value: "copywriter", label: "Copywriter", icon: "✍️", description: "Email & content generation" },
+  { value: "researcher", label: "Researcher", icon: "🔬", description: "Data research & analysis" },
+];
+
 const SUGGESTIONS = [
-  "I sell an AI sales tool to VP Sales at mid-market SaaS companies",
-  "I'm an agency looking to generate leads for e-commerce brands",
-  "What tools do I need for my outbound stack?",
-  "Show me the 6-step automation pipeline",
+  "Design a lead generation workflow architecture",
+  "Research top 10 B2B SaaS companies in marketing automation",
+  "Write 3 cold email variations for VP of Sales",
+  "Analyze why my Apollo node keeps failing with 429 errors",
   "Build my workflow for B2B fintech prospects",
 ];
 
@@ -37,7 +48,7 @@ export default function ChatView({ projectId, onOutputReady }: ChatViewProps) {
     {
       id: "welcome",
       role: "assistant",
-      content: `Hi! I'm your **PAL Agent** — the Prompt Abstraction Layer that turns your description into a complete outbound automation engine.\n\nTell me:\n1. What do you sell?\n2. Who is your ideal customer?\n\nI'll handle the rest — extracting your ICP, categorizing your buyer, writing the AI agent prompt, and compiling your n8n workflow. All in one conversation.`,
+      content: `Hi! I'm your **Agent Swarm** — powered by ROSTR framework with intelligent routing.\n\nI can help you with:\n• **Architecture & Design** — System planning\n• **Automation** — Multi-step workflows\n• **Analysis** — Debug & diagnose\n• **Content** — Email & copywriting\n• **Research** — Data & competitive intel\n\nSelect an agent type above or just ask naturally, and I'll route to the right specialist.`,
       timestamp: new Date(),
     },
   ]);
@@ -46,6 +57,8 @@ export default function ChatView({ projectId, onOutputReady }: ChatViewProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeStage, setActiveStage] = useState<string | null>(null);
   const [sessionId] = useState(() => uuidv4());
+  const [selectedAgent, setSelectedAgent] = useState<AgentType>("architect");
+  const [routingMode, setRoutingMode] = useState<"auto" | "agent-only">("auto");
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -85,44 +98,53 @@ export default function ChatView({ projectId, onOutputReady }: ChatViewProps) {
       return;
     }
 
-    // Stream regular chat response
+    // Stream response via Agent Swarm
     const assistantMsgId = uuidv4();
     setMessages((prev) => [...prev, {
       id: assistantMsgId,
       role: "assistant",
       content: "",
+      agentType: selectedAgent,
       timestamp: new Date(),
     }]);
 
     try {
-      const resp = await fetch("/api/pal/chat", {
+      // Call agent swarm webhook
+      const resp = await fetch("/api/swarm/webhook", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: apiMessages,
-          projectId,
-          sessionId,
+          user_input: text,
+          project_id: projectId,
+          user_id: "demo-user",
+          routing_preference: routingMode,
+          agent_type_hint: selectedAgent, // Hint for agent selection
         }),
       });
 
       if (!resp.ok) throw new Error(await resp.text());
 
-      const reader = resp.body!.getReader();
-      const decoder = new TextDecoder();
+      const data = await resp.json();
+
+      // Extract result from agent swarm response
       let fullText = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        fullText += chunk;
-
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantMsgId ? { ...m, content: fullText } : m
-          )
-        );
+      if (data.result?.result?.output) {
+        fullText = data.result.result.output;
+      } else if (data.result?.response) {
+        fullText = JSON.stringify(data.result.response, null, 2);
+      } else {
+        fullText = "Task submitted. Check status for results.";
       }
+
+      // Add routing info
+      const routingInfo = `\n\n*Routed to: ${data.routing?.destination || "agent-swarm"} (${data.phase || "N/A"} phase, priority: ${data.priority?.score?.toFixed(1) || "N/A"})*`;
+      fullText = fullText + routingInfo;
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantMsgId ? { ...m, content: fullText } : m
+        )
+      );
 
       // Check if the AI response suggests generating a workflow
       if (/ready to generate|build your workflow|shall i compile|generate now/i.test(fullText)) {
@@ -221,6 +243,45 @@ export default function ChatView({ projectId, onOutputReady }: ChatViewProps) {
 
   return (
     <div className="flex flex-col h-full bg-surface-50">
+      {/* Agent Selection Bar */}
+      <div className="bg-white border-b border-surface-200 px-6 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold text-ink-muted uppercase tracking-wide">Agent Type:</span>
+            <div className="flex gap-2">
+              {AGENT_OPTIONS.map((agent) => (
+                <button
+                  key={agent.value}
+                  onClick={() => setSelectedAgent(agent.value)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    selectedAgent === agent.value
+                      ? "bg-brand-700 text-white shadow-md"
+                      : "bg-surface-100 text-ink-secondary hover:bg-surface-200"
+                  }`}
+                  title={agent.description}
+                >
+                  <span>{agent.icon}</span>
+                  {agent.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-ink-muted">Routing:</span>
+            <button
+              onClick={() => setRoutingMode(routingMode === "auto" ? "agent-only" : "auto")}
+              className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${
+                routingMode === "auto"
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  : "bg-brand-50 text-brand-700 border border-brand-200"
+              }`}
+            >
+              {routingMode === "auto" ? "⚡ Auto" : "🤖 Agent-Only"}
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* PAL Stage Progress (shown during generation) */}
       {isGenerating && (
         <div className="bg-white border-b border-surface-200 px-6 py-3">
@@ -257,7 +318,9 @@ export default function ChatView({ projectId, onOutputReady }: ChatViewProps) {
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
             {msg.role === "assistant" && (
-              <div className="w-7 h-7 rounded-full bg-brand-700 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 mr-2.5">P</div>
+              <div className="w-7 h-7 rounded-full bg-brand-700 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 mr-2.5">
+                {msg.agentType ? AGENT_OPTIONS.find(a => a.value === msg.agentType)?.icon || "A" : "A"}
+              </div>
             )}
             <div className={`${msg.role === "user" ? "bubble-user" : "bubble-ai"} relative`}>
               <div className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: formatMarkdown(msg.content) }} />
@@ -288,7 +351,9 @@ export default function ChatView({ projectId, onOutputReady }: ChatViewProps) {
         {/* Streaming indicator */}
         {isStreaming && !isGenerating && (
           <div className="flex justify-start">
-            <div className="w-7 h-7 rounded-full bg-brand-700 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 mr-2.5">P</div>
+            <div className="w-7 h-7 rounded-full bg-brand-700 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 mr-2.5">
+              {AGENT_OPTIONS.find(a => a.value === selectedAgent)?.icon || "A"}
+            </div>
             <div className="bubble-ai flex items-center gap-1.5">
               <div className="typing-dot"></div>
               <div className="typing-dot"></div>
@@ -354,7 +419,7 @@ export default function ChatView({ projectId, onOutputReady }: ChatViewProps) {
           </div>
         </div>
         <p className="text-xs text-ink-muted mt-2 text-center">
-          Powered by Claude 3.5 Sonnet · AWS Bedrock · us-east-1
+          Powered by Agent Swarm (ROSTR) · Claude via AWS Bedrock · {selectedAgent} agent
         </p>
       </div>
     </div>
