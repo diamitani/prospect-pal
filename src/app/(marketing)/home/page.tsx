@@ -72,40 +72,6 @@ export default function HomePage() {
 
   return (
     <>
-      {/* Announcement Bar */}
-      <div
-        style={{
-          background: "var(--surface-deep)",
-          color: "var(--ink-200)",
-          padding: "9px 24px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 10,
-          fontSize: "var(--text-caption)",
-          borderBottom: "1px solid var(--border-deep)",
-        }}
-      >
-        <Badge tone="deep">New</Badge>
-        <span>
-          <strong style={{ color: "var(--paper-0)", fontWeight: 600 }}>Tech signals live:</strong>{" "}
-          1,400+ companies running n8n and hiring GTM engineers.
-        </span>
-        <a
-          href="#signals"
-          style={{
-            color: "var(--champagne-200)",
-            fontWeight: 600,
-            textDecoration: "none",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-          }}
-        >
-          Explore signals <Icon name="ArrowRight" size={13} color="var(--champagne-200)" />
-        </a>
-      </div>
-
       {/* Sticky Navigation */}
       <nav
         style={{
