@@ -147,7 +147,7 @@ export default function HomePage() {
                 lineHeight: "var(--leading-tight)",
               }}
             >
-              Automate your GTM engine.
+              Build your GTM prospecting engine.
             </h1>
 
             <p
@@ -158,7 +158,7 @@ export default function HomePage() {
                 color: "var(--text-secondary)",
               }}
             >
-              Build a custom prospect automation workflow.
+              Automate lead generation, contact research, personalized messaging, and outbound sequences — all in one custom n8n workflow.
             </p>
 
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 36 }}>
@@ -175,10 +175,10 @@ export default function HomePage() {
             {/* Value Props - Compact */}
             <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
               {[
-                { icon: "Users" as const, label: "Generate leads" },
-                { icon: "Database" as const, label: "Connect to CRM" },
-                { icon: "Sparkles" as const, label: "AI copywriting" },
-                { icon: "Send" as const, label: "Auto sequences" },
+                { icon: "Users" as const, label: "Find ideal prospects" },
+                { icon: "Search" as const, label: "Research automatically" },
+                { icon: "Sparkles" as const, label: "AI-written outreach" },
+                { icon: "Send" as const, label: "Deploy to sequences" },
               ].map((prop) => (
                 <div
                   key={prop.label}
@@ -351,8 +351,7 @@ export default function HomePage() {
               margin: "0 auto",
             }}
           >
-            Generate leads. Connect to CRM. Research prospects. Craft messaging. Enroll in sequences.
-            One platform that builds your complete outbound automation.
+            One platform. Your own workflow. Complete ownership.
           </p>
         </div>
 
