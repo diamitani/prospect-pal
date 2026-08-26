@@ -24,12 +24,65 @@ function getSupabase(): SupabaseClient {
 export const supabase = { get client() { return getSupabase(); } };
 
 // ===========================================================================
+// WORKSPACE OPERATIONS
+// ===========================================================================
+
+export interface Workspace {
+  id: string;
+  name: string;
+  slug: string;
+  owner_id: string;
+  plan: 'free' | 'pro' | 'agency';
+  settings: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getWorkspacesByUser(userId: string): Promise<Workspace[]> {
+  const { data, error} = await supabase.client
+    .from('workspaces')
+    .select('*')
+    .eq('owner_id', userId)
+    .order('created_at', { ascending: true });
+
+  if (error) throw new Error(`Failed to fetch workspaces: ${error.message}`);
+  return (data as Workspace[]) || [];
+}
+
+export async function getUserWorkspace(userId: string): Promise<Workspace | null> {
+  const { data, error } = await supabase.client
+    .from('workspaces')
+    .select('*')
+    .eq('owner_id', userId)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    throw new Error(`Failed to fetch workspace: ${error.message}`);
+  }
+  return data as Workspace | null;
+}
+
+export async function getProjectsByWorkspace(workspaceId: string): Promise<Project[]> {
+  const { data, error } = await supabase.client
+    .from('projects')
+    .select('*')
+    .eq('workspace_id', workspaceId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(`Failed to fetch projects: ${error.message}`);
+  return (data as Project[]) || [];
+}
+
+// ===========================================================================
 // PROJECT OPERATIONS
 // ===========================================================================
 
 export interface Project {
   id: string;
   user_id: string;
+  workspace_id?: string;
   name: string;
   description?: string;
   icp_config: Record<string, unknown>;
