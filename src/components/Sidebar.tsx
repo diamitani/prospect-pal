@@ -1,6 +1,16 @@
 "use client";
 
 import { View } from "@/types/app";
+import { Logo, Icon } from "@/components/ds";
+import {
+  LayoutDashboard,
+  Target,
+  Workflow,
+  PenTool,
+  Settings,
+  LogOut,
+  Plus,
+} from "lucide-react";
 
 interface SidebarProps {
   currentView: View;
@@ -8,17 +18,12 @@ interface SidebarProps {
   projectName: string | null;
 }
 
-const NAV = [
-  { id: "home" as View, label: "Home", icon: "⊞" },
-  { id: "builder" as View, label: "Workflow Builder", icon: "⚡", highlight: true },
-  { id: "wizard" as View, label: "Intake Wizard", icon: "🪄" },
-  { id: "outputs" as View, label: "Outputs & Deploy", icon: "↓" },
-  { id: "scripts" as View, label: "Scripts Studio", icon: "✍️" },
-  { id: "signals" as View, label: "Tech Signals Leads", icon: "📡" },
-  { id: "analyst" as View, label: "Execution Analyst", icon: "🔬" },
-  { id: "academy" as View, label: "Sales Academy", icon: "🎓" },
-  { id: "projects" as View, label: "My Campaigns", icon: "◫" },
-  { id: "settings" as View, label: "Integrations & Keys", icon: "◎" },
+const NAV: { id: View; label: string; icon: typeof LayoutDashboard }[] = [
+  { id: "home", label: "Dashboard", icon: LayoutDashboard },
+  { id: "campaigns", label: "Campaigns", icon: Target },
+  { id: "workflows", label: "Workflows", icon: Workflow },
+  { id: "canvas", label: "Canvas", icon: PenTool },
+  { id: "settings", label: "Settings", icon: Settings },
 ];
 
 export default function Sidebar({ currentView, onViewChange, projectName }: SidebarProps) {
@@ -28,44 +33,47 @@ export default function Sidebar({ currentView, onViewChange, projectName }: Side
   };
 
   return (
-    <aside style={{
-      width: 236, flexShrink: 0,
-      background: "#0f172a",
-      display: "flex", flexDirection: "column",
-      height: "100vh",
-      borderRight: "1px solid #1e293b",
-    }}>
+    <aside
+      style={{
+        width: "var(--layout-app-sidebar, 236px)",
+        flexShrink: 0,
+        background: "var(--surface-deep)",
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
+        borderRight: "1px solid var(--border-deep)",
+      }}
+    >
       {/* Brand */}
-      <div style={{ padding: "20px 18px 16px", borderBottom: "1px solid #1e293b" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 8, background: "#16a34a",
-            border: "2px solid rgba(74,222,128,0.2)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "white", fontWeight: 900, fontSize: 14, flexShrink: 0,
-          }}>P</div>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: 13, color: "white", letterSpacing: "-0.3px" }}>Prospect PAL</div>
-            <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 1 }}>5-Pillar Engine Architect</div>
-          </div>
-        </div>
+      <div style={{ padding: "20px 18px 16px", borderBottom: "1px solid var(--border-deep)" }}>
+        <Logo size={32} onDeep />
       </div>
 
-      {/* Build CTA */}
+      {/* New Campaign CTA */}
       <div style={{ padding: "12px 12px 6px" }}>
         <button
-          onClick={() => onViewChange("builder")}
+          onClick={() => onViewChange("campaigns")}
           style={{
-            width: "100%", padding: "10px", fontSize: 13, fontWeight: 700,
-            color: "white", background: "#16a34a", border: "none",
-            borderRadius: 8, cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+            width: "100%",
+            padding: "10px",
+            fontSize: "var(--text-body-sm)",
+            fontWeight: "var(--weight-semibold)",
+            color: "var(--text-inverse)",
+            background: "var(--action-accent)",
+            border: "none",
+            borderRadius: "var(--radius-md)",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
             fontFamily: "inherit",
-            boxShadow: "0 2px 8px rgba(22,163,74,0.4)",
-            transition: "background 0.15s",
+            boxShadow: "var(--shadow-action-accent)",
+            transition: "var(--transition-control)",
           }}
         >
-          <span style={{ fontSize: 15 }}>⚡</span> Build Workflow
+          <Plus size={16} strokeWidth={2} />
+          New campaign
         </button>
       </div>
 
@@ -73,65 +81,125 @@ export default function Sidebar({ currentView, onViewChange, projectName }: Side
       <nav style={{ flex: 1, padding: "4px 8px", overflowY: "auto" }}>
         {NAV.map((item) => {
           const active = currentView === item.id;
+          const IconComponent = item.icon;
           return (
             <button
               key={item.id}
               onClick={() => onViewChange(item.id)}
               style={{
-                width: "100%", display: "flex", alignItems: "center", gap: 10,
-                padding: "8px 12px", borderRadius: 8, border: "none",
-                cursor: "pointer", textAlign: "left", fontFamily: "inherit",
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "8px 12px",
+                borderRadius: "var(--radius-md)",
+                border: "none",
+                cursor: "pointer",
+                textAlign: "left",
+                fontFamily: "inherit",
                 marginBottom: 2,
-                background: active ? "#1e293b" : "transparent",
-                color: active ? "#ffffff" : "#94a3b8",
-                fontWeight: active ? 700 : 500, fontSize: 12.5,
-                transition: "all 0.15s",
-                borderLeft: active ? "3px solid #22c55e" : "3px solid transparent",
+                background: active ? "var(--surface-deep-raised)" : "transparent",
+                color: active ? "var(--paper-0)" : "var(--ink-300)",
+                fontWeight: active ? "var(--weight-semibold)" : "var(--weight-medium)",
+                fontSize: "var(--text-body-sm)",
+                transition: "var(--transition-control)",
+                borderLeft: active ? "3px solid var(--cobalt-400)" : "3px solid transparent",
               }}
             >
-              <span style={{ fontSize: 14, width: 18, textAlign: "center" }}>{item.icon}</span>
+              <IconComponent size={16} strokeWidth={1.75} />
               <span style={{ flex: 1 }}>{item.label}</span>
-              {active && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e" }} />}
+              {active && (
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: "var(--cobalt-400)",
+                  }}
+                />
+              )}
             </button>
           );
         })}
       </nav>
 
-      {/* Active workflow chip */}
+      {/* Active campaign chip */}
       {projectName && (
         <div style={{ padding: "0 12px 10px" }}>
-          <div style={{ fontSize: 10, color: "#64748b", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Active Engine</div>
-          <div style={{
-            fontSize: 11, padding: "6px 10px",
-            background: "#1e293b", borderRadius: 6, color: "#cbd5e1",
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            border: "1px solid #334155",
-          }}>{projectName}</div>
+          <div
+            style={{
+              fontSize: "var(--text-micro)",
+              color: "var(--ink-400)",
+              fontWeight: "var(--weight-semibold)",
+              textTransform: "uppercase",
+              letterSpacing: "var(--tracking-eyebrow)",
+              marginBottom: 4,
+            }}
+          >
+            Active campaign
+          </div>
+          <div
+            style={{
+              fontSize: "var(--text-micro)",
+              padding: "6px 10px",
+              background: "var(--surface-deep-raised)",
+              borderRadius: "var(--radius-sm)",
+              color: "var(--ink-200)",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              border: "1px solid var(--border-deep)",
+            }}
+          >
+            {projectName}
+          </div>
         </div>
       )}
 
       {/* User */}
-      <div style={{ padding: "12px 14px", borderTop: "1px solid #1e293b" }}>
+      <div style={{ padding: "12px 14px", borderTop: "1px solid var(--border-deep)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{
-            width: 30, height: 30, borderRadius: "50%",
-            background: "#16a34a", color: "white",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontWeight: 800, fontSize: 12, flexShrink: 0,
-          }}>A</div>
+          <div
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: "50%",
+              background: "var(--action-accent)",
+              color: "var(--text-inverse)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: "var(--weight-bold)",
+              fontSize: "var(--text-caption)",
+              flexShrink: 0,
+            }}
+          >
+            A
+          </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "white" }}>Alex Rivera</div>
-            <div style={{ fontSize: 10, color: "#4ade80", fontWeight: 600 }}>Pro Plan (BYOK)</div>
+            <div style={{ fontSize: "var(--text-caption)", fontWeight: "var(--weight-semibold)", color: "var(--paper-0)" }}>
+              Alex Rivera
+            </div>
+            <div style={{ fontSize: "var(--text-micro)", color: "var(--champagne-300)", fontWeight: "var(--weight-semibold)" }}>
+              Pro Plan
+            </div>
           </div>
           <button
             onClick={handleLogout}
             title="Sign out"
             style={{
-              background: "none", border: "none", cursor: "pointer",
-              color: "#64748b", fontSize: 14, padding: 4, borderRadius: 6,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "var(--ink-400)",
+              padding: 4,
+              borderRadius: "var(--radius-sm)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            ⊙
+            <LogOut size={16} strokeWidth={1.75} />
           </button>
         </div>
       </div>

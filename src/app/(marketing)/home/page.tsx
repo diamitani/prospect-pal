@@ -155,8 +155,8 @@ export default function HomePage() {
       {/* Hero Section */}
       <section style={{ padding: "64px 32px 0", maxWidth: "var(--layout-max)", margin: "0 auto" }}>
         <div style={{ textAlign: "center" }}>
-          <Badge tone="brand" icon="ShieldCheck" style={{ marginBottom: 22 }}>
-            Approval-gated by default
+          <Badge tone="brand" icon="Workflow" style={{ marginBottom: 22 }}>
+            GTM automation agent
           </Badge>
 
           <h1
@@ -169,24 +169,20 @@ export default function HomePage() {
               lineHeight: "var(--leading-tight)",
             }}
           >
-            Answer eight questions.
-            <br />
-            <span style={{ color: "var(--cobalt-600)" }}>Get a workflow you own.</span>
+            Automate your GTM engine.
           </h1>
 
           <p
             style={{
               margin: "0 auto 30px",
-              maxWidth: 660,
+              maxWidth: 700,
               fontSize: 19,
               lineHeight: "var(--leading-relaxed)",
               color: "var(--text-secondary)",
             }}
           >
-            Prospect PAL gates your intake, resolves every tool to a concrete n8n node, and compiles
-            a nine-node outbound engine that deploys to{" "}
-            <em style={{ fontStyle: "normal", color: "var(--text-primary)", fontWeight: 500 }}>your</em>{" "}
-            instance. Nothing sends without a human approval switch.
+            Generate leads. Connect to CRM. Research prospects. Craft messaging. Enroll in sequences.
+            One platform that builds your complete outbound automation.
           </p>
 
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 36 }}>
@@ -198,12 +194,59 @@ export default function HomePage() {
             </Button>
           </div>
 
-          {/* Stats */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 44 }}>
-            <StatTile value="9-node" label="Canonical graph" />
-            <StatTile value="0" unit="deal collisions" label="CRM dedupe shield" tone="verified" />
-            <StatTile value="3" unit="sentences" label="PAS email framework" tone="brand" />
-            <StatTile value="100" unit="% BYOK" label="Your keys, your instance" tone="premium" />
+          {/* 5 Value Props */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 14, marginBottom: 44 }}>
+            {[
+              { icon: "Users" as const, label: "Generate leads", description: "Surface high-intent prospects" },
+              { icon: "Database" as const, label: "Connect to CRM", description: "Dedupe and sync contacts" },
+              { icon: "Search" as const, label: "Research prospects", description: "Enrich with company intel" },
+              { icon: "Sparkles" as const, label: "Craft messaging", description: "AI-written PAS emails" },
+              { icon: "Send" as const, label: "Enroll in sequences", description: "Automated outreach cadences" },
+            ].map((prop) => (
+              <div
+                key={prop.label}
+                style={{
+                  padding: "20px 16px",
+                  background: "var(--surface-card)",
+                  borderRadius: "var(--radius-lg)",
+                  border: "1px solid var(--border-hairline)",
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: "var(--radius-md)",
+                    background: "var(--cobalt-50)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "0 auto 12px",
+                  }}
+                >
+                  <Icon name={prop.icon} size={20} color="var(--cobalt-600)" />
+                </div>
+                <div
+                  style={{
+                    fontWeight: 600,
+                    fontSize: "var(--text-body-sm)",
+                    color: "var(--text-primary)",
+                    marginBottom: 4,
+                  }}
+                >
+                  {prop.label}
+                </div>
+                <div
+                  style={{
+                    fontSize: "var(--text-caption)",
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  {prop.description}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -304,9 +347,9 @@ export default function HomePage() {
       >
         <div style={{ maxWidth: "var(--layout-max)", margin: "0 auto" }}>
           <SectionHeading
-            eyebrow="Resolved bindings"
-            title="Every capability maps to a real node"
-            description="You pick the provider. The compiler resolves the capability to a concrete n8n node and tells you exactly which credentials remain."
+            eyebrow="Your GTM stack"
+            title="Connect your tools, we wire the automation"
+            description="CRM, data enrichment, sequence automation. Pick your providers and we resolve each to a production-ready n8n node."
           />
           <div
             style={{
@@ -323,8 +366,90 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Deliverables Section */}
+      {/* How It Works Section */}
       <section id="how-it-works" style={{ padding: "80px 32px", maxWidth: "var(--layout-max)", margin: "0 auto" }}>
+        <SectionHeading
+          eyebrow="Simple setup"
+          title="How it works"
+          description="Upload your company data (product, messaging, ICP, user persona), GTM tools (CRM, data enrichment, sequence automation) and n8n instance (OAuth connection via Composio) — we generate a custom prospect automation engine based on your campaign details."
+        />
+
+        {/* Target Audiences */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: 20,
+            marginTop: 40,
+            marginBottom: 56,
+          }}
+        >
+          {[
+            {
+              icon: "Rocket" as const,
+              title: "Startups",
+              description: "Creating GTM outreach from scratch? Build a scalable prospecting engine that grows with your pipeline.",
+            },
+            {
+              icon: "User" as const,
+              title: "Solopreneurs",
+              description: "Looking for new clients? Automate the research and outreach you do not have time to do manually.",
+            },
+            {
+              icon: "UsersRound" as const,
+              title: "Sales teams",
+              description: "Restructuring your approach? Add SDR support with AI-powered research and personalized sequences.",
+            },
+          ].map((audience) => (
+            <div
+              key={audience.title}
+              style={{
+                padding: "28px 24px",
+                background: "var(--surface-card)",
+                borderRadius: "var(--radius-xl)",
+                border: "1px solid var(--border-hairline)",
+              }}
+            >
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: "var(--radius-lg)",
+                  background: "var(--champagne-100)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 16,
+                }}
+              >
+                <Icon name={audience.icon} size={24} color="var(--champagne-600)" />
+              </div>
+              <h3
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "var(--text-body-lg)",
+                  fontWeight: 600,
+                  color: "var(--text-primary)",
+                  marginBottom: 8,
+                }}
+              >
+                {audience.title}
+              </h3>
+              <p
+                style={{
+                  fontSize: "var(--text-body-sm)",
+                  color: "var(--text-secondary)",
+                  lineHeight: "var(--leading-relaxed)",
+                  margin: 0,
+                }}
+              >
+                {audience.description}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Deliverables */}
         <SectionHeading
           eyebrow="Production artifacts"
           title="What a compile hands you"
@@ -475,7 +600,7 @@ export default function HomePage() {
           textAlign: "center",
         }}
       >
-        <div style={{ maxWidth: 600, margin: "0 auto" }}>
+        <div style={{ maxWidth: 640, margin: "0 auto" }}>
           <h2
             style={{
               fontFamily: "var(--font-display)",
@@ -486,7 +611,7 @@ export default function HomePage() {
               marginBottom: 16,
             }}
           >
-            Your outbound engine, compiled in 5 minutes.
+            Automate your GTM engine today.
           </h2>
           <p
             style={{
@@ -496,7 +621,7 @@ export default function HomePage() {
               lineHeight: "var(--leading-relaxed)",
             }}
           >
-            No code. No consultants. Just your tools, your keys, and a workflow you own.
+            Upload your company data. Connect your tools. Deploy a custom prospect automation engine in minutes.
           </p>
           <Button variant="accent" size="lg" icon="Zap" onClick={() => handleOpenCheckout("pro")}>
             Build my engine — $99/mo
