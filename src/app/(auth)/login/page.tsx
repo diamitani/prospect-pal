@@ -52,24 +52,24 @@ function LoginForm() {
 
       {/* ── LEFT: Brand panel ── */}
       <div style={{
-        width: 480, flexShrink: 0, background: "#0f2d0f",
+        width: 480, flexShrink: 0, background: "#0f172a",
         display: "flex", flexDirection: "column", padding: "48px",
         position: "relative", overflow: "hidden",
       }} className="auth-left-panel">
-        <div style={{ position: "absolute", top: -80, right: -80, width: 320, height: 320, borderRadius: "50%", background: "#1c5a1c", opacity: 0.3 }} />
-        <div style={{ position: "absolute", bottom: -100, left: -60, width: 280, height: 280, borderRadius: "50%", background: "#2d762d", opacity: 0.2 }} />
+        <div style={{ position: "absolute", top: -80, right: -80, width: 320, height: 320, borderRadius: "50%", background: "#2A41C9", opacity: 0.3 }} />
+        <div style={{ position: "absolute", bottom: -100, left: -60, width: 280, height: 280, borderRadius: "50%", background: "#3A56E4", opacity: 0.2 }} />
 
         <Link href="/home" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", position: "relative", zIndex: 1 }}>
-          <div style={{ width: 32, height: 32, background: "#1c5a1c", border: "2px solid #4ADE8044", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800, fontSize: 14 }}>P</div>
+          <div style={{ width: 32, height: 32, background: "#2A41C9", border: "2px solid #B8C6FE44", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800, fontSize: 14 }}>P</div>
           <span style={{ fontWeight: 800, fontSize: 16, color: "white" }}>Prospect PAL</span>
         </Link>
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", zIndex: 1 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#4ADE80", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>Outbound Automation</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#B8C6FE", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>Outbound Automation</div>
           <h2 style={{ fontSize: 32, fontWeight: 900, color: "white", letterSpacing: "-1px", lineHeight: 1.15, margin: "0 0 20px" }}>
             Your pipeline,<br />on autopilot.
           </h2>
-          <p style={{ fontSize: 15, color: "#9fce9f", lineHeight: 1.65, margin: 0 }}>
+          <p style={{ fontSize: 15, color: "#9CA3CB", lineHeight: 1.65, margin: 0 }}>
             Describe your ICP, choose your tools, and get a production-ready n8n workflow with AI-written emails — in 5 minutes.
           </p>
 
@@ -83,11 +83,11 @@ function LoginForm() {
           </div>
 
           <div style={{ marginTop: 40, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "16px 20px" }}>
-            <p style={{ fontSize: 13, color: "#dcf0dc", fontStyle: "italic", lineHeight: 1.6, margin: "0 0 12px" }}>
+            <p style={{ fontSize: 13, color: "#DBE3FF", fontStyle: "italic", lineHeight: 1.6, margin: "0 0 12px" }}>
               "Set it up in 20 minutes. 50 qualified leads hitting Smartlead every morning."
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#1c5a1c", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800 }}>SK</div>
+              <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#2A41C9", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800 }}>SK</div>
               <div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: "white" }}>Sarah K.</div>
                 <div style={{ fontSize: 11, color: "#4a7a4a" }}>Head of Revenue, Series A SaaS</div>
@@ -96,7 +96,7 @@ function LoginForm() {
           </div>
         </div>
 
-        <div style={{ fontSize: 11, color: "#2a5a2a", position: "relative", zIndex: 1 }}>
+        <div style={{ fontSize: 11, color: "#2033A2", position: "relative", zIndex: 1 }}>
           🔒 AWS Cognito · TLS 1.3 · Encrypted
         </div>
       </div>
@@ -114,17 +114,17 @@ function LoginForm() {
             <div>
               <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>Email address</label>
               <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" style={inp}
-                onFocus={(e) => e.target.style.borderColor = "#1c5a1c"}
+                onFocus={(e) => e.target.style.borderColor = "#2A41C9"}
                 onBlur={(e)  => e.target.style.borderColor = "#e5e5e0"} />
             </div>
 
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                 <label style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>Password</label>
-                <Link href="/forgot-password" style={{ fontSize: 12, color: "#1c5a1c", textDecoration: "none" }}>Forgot password?</Link>
+                <Link href="/forgot-password" style={{ fontSize: 12, color: "#2A41C9", textDecoration: "none" }}>Forgot password?</Link>
               </div>
               <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" style={inp}
-                onFocus={(e) => e.target.style.borderColor = "#1c5a1c"}
+                onFocus={(e) => e.target.style.borderColor = "#2A41C9"}
                 onBlur={(e)  => e.target.style.borderColor = "#e5e5e0"} />
             </div>
 
@@ -136,11 +136,11 @@ function LoginForm() {
 
             <button type="submit" disabled={loading} style={{
               width: "100%", padding: "13px", fontSize: 14, fontWeight: 700,
-              color: "white", background: "#1c5a1c", border: "none", borderRadius: 10,
+              color: "white", background: "#2A41C9", border: "none", borderRadius: 10,
               cursor: loading ? "not-allowed" : "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               opacity: loading ? 0.8 : 1, fontFamily: "inherit", marginTop: 4,
-              boxShadow: "0 2px 8px rgba(28,90,28,0.25)",
+              boxShadow: "0 2px 8px rgba(42,65,201,0.25)",
             }}>
               {loading ? <><Spinner />Signing in...</> : "Sign in →"}
             </button>
@@ -154,8 +154,8 @@ function LoginForm() {
 
           <Link href="/signup" style={{
             display: "block", textAlign: "center", padding: "12px",
-            fontSize: 14, fontWeight: 700, color: "#1c5a1c",
-            border: "1.5px solid #1c5a1c", borderRadius: 10,
+            fontSize: 14, fontWeight: 700, color: "#2A41C9",
+            border: "1.5px solid #2A41C9", borderRadius: 10,
             textDecoration: "none", transition: "all 0.2s",
           }}>Create free workspace →</Link>
 

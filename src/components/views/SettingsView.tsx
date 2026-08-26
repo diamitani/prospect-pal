@@ -158,7 +158,7 @@ export default function SettingsView() {
         </div>
         {composioReady && (
           <span style={{
-            fontSize: 11, fontWeight: 700, color: "#1c5a1c",
+            fontSize: 11, fontWeight: 700, color: "#2033A2",
             background: "#dcf0dc", padding: "3px 10px", borderRadius: 100,
           }}>● Active</span>
         )}
@@ -196,7 +196,7 @@ export default function SettingsView() {
                   </div>
                   {isConnected && (
                     <span style={{
-                      fontSize: 11, fontWeight: 700, color: "#1c5a1c",
+                      fontSize: 11, fontWeight: 700, color: "#2033A2",
                       background: "#f0f9f0", padding: "3px 10px", borderRadius: 100,
                       border: "1px solid #bce3bc",
                     }}>✓ Connected</span>
@@ -211,7 +211,7 @@ export default function SettingsView() {
                   style={{
                     width: "100%", padding: "9px", fontSize: 13, fontWeight: 700,
                     borderRadius: 8, border: "none", cursor: (isConnecting || isConnected) ? "default" : "pointer",
-                    background: isConnected ? "#f4f3ef" : isConnecting ? "#2d762d" : "#1c5a1c",
+                    background: isConnected ? "#f4f3ef" : isConnecting ? "#2A41C9" : "#2033A2",
                     color: isConnected ? "#9CA3AF" : "white",
                     fontFamily: "inherit",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
@@ -250,7 +250,7 @@ export default function SettingsView() {
             </div>
             {n8nTest?.connected && (
               <span style={{
-                marginLeft: "auto", fontSize: 11, fontWeight: 700, color: "#1c5a1c",
+                marginLeft: "auto", fontSize: 11, fontWeight: 700, color: "#2033A2",
                 background: "#f0f9f0", padding: "3px 10px", borderRadius: 100, border: "1px solid #bce3bc",
               }}>✓ {n8nTest.workflowCount} workflows</span>
             )}
@@ -272,7 +272,7 @@ export default function SettingsView() {
                   outline: "none", fontFamily: "monospace", color: "#111",
                   boxSizing: "border-box",
                 }}
-                onFocus={(e) => e.target.style.borderColor = "#1c5a1c"}
+                onFocus={(e) => e.target.style.borderColor = "#2033A2"}
                 onBlur={(e)  => e.target.style.borderColor = "#e5e5e0"}
               />
               <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 4 }}>
@@ -295,7 +295,7 @@ export default function SettingsView() {
                   outline: "none", fontFamily: "monospace", color: "#111",
                   boxSizing: "border-box",
                 }}
-                onFocus={(e) => e.target.style.borderColor = "#1c5a1c"}
+                onFocus={(e) => e.target.style.borderColor = "#2033A2"}
                 onBlur={(e)  => e.target.style.borderColor = "#e5e5e0"}
               />
               <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 4 }}>
@@ -315,8 +315,8 @@ export default function SettingsView() {
                 disabled={n8nTesting || !n8nUrl || !n8nApiKey}
                 style={{
                   padding: "9px 18px", fontSize: 13, fontWeight: 600,
-                  color: "#1c5a1c", background: "white",
-                  border: "1.5px solid #1c5a1c", borderRadius: 8,
+                  color: "#2033A2", background: "white",
+                  border: "1.5px solid #2033A2", borderRadius: 8,
                   cursor: (!n8nUrl || !n8nApiKey || n8nTesting) ? "not-allowed" : "pointer",
                   fontFamily: "inherit", opacity: (!n8nUrl || !n8nApiKey) ? 0.4 : 1,
                 }}
@@ -328,7 +328,7 @@ export default function SettingsView() {
                 disabled={!n8nUrl || !n8nApiKey}
                 style={{
                   padding: "9px 18px", fontSize: 13, fontWeight: 700,
-                  color: "white", background: n8nSaved ? "#2d762d" : "#1c5a1c",
+                  color: "white", background: n8nSaved ? "#2A41C9" : "#2033A2",
                   border: "none", borderRadius: 8,
                   cursor: (!n8nUrl || !n8nApiKey) ? "not-allowed" : "pointer",
                   fontFamily: "inherit", opacity: (!n8nUrl || !n8nApiKey) ? 0.4 : 1,

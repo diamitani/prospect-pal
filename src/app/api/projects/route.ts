@@ -15,9 +15,14 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, description } = await req.json() as { name: string; description?: string };
+    const { name, description, icpConfig, toolStack } = await req.json() as {
+      name: string;
+      description?: string;
+      icpConfig?: Record<string, unknown>;
+      toolStack?: Record<string, unknown>;
+    };
     const userId = req.headers.get("x-user-id") || "demo-user";
-    const project = await createProject(userId, name || "New Campaign", description);
+    const project = await createProject(userId, name || "New Campaign", description, icpConfig, toolStack);
     return NextResponse.json({ project }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });

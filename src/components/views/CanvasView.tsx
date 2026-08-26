@@ -1,29 +1,52 @@
 "use client";
 
-import { useState } from "react";
-import { Button, Badge, Icon, PipelineRail, PipelineNode } from "@/components/ds";
-import { Play, Save, Download, Settings2, ZoomIn, ZoomOut } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Button, Badge, Icon } from "@/components/ds";
+import { Play, Save, Download, ZoomIn, ZoomOut } from "lucide-react";
+import { WorkflowCanvas, NodeEditPanel, type N8nNodeData } from "@/components/canvas";
+import type { N8nNode } from "@/lib/workflow-generator";
 
 interface CanvasViewProps {
   projectId: string | null;
   projectName: string | null;
 }
 
-const NINE_NODES: PipelineNode[] = [
-  { title: "Intake & cron", subtitle: "Trigger source", icon: "Zap", stage: "trigger", binding: "n8n-nodes-base.cron" },
-  { title: "Data normalizer", subtitle: "Schema transform", icon: "FileBraces", stage: "logic", binding: "n8n-nodes-base.set" },
-  { title: "CRM dedupe shield", subtitle: "Deal protection", icon: "ShieldCheck", stage: "shield", binding: "n8n-nodes-base.hubspot" },
-  { title: "Data tool adapter", subtitle: "Contact reveal", icon: "Search", stage: "data", binding: "n8n-nodes-base.apollo" },
-  { title: "AI research & PAS", subtitle: "Email copy", icon: "Sparkles", stage: "ai", binding: "n8n-nodes-base.openai" },
-  { title: "Approval switch", subtitle: "Human gate", icon: "Scale", stage: "logic", binding: "n8n-nodes-base.switch" },
-  { title: "CRM contact create", subtitle: "Lead sync", icon: "Database", stage: "shield", binding: "n8n-nodes-base.hubspot" },
-  { title: "Sequence enrollment", subtitle: "Outreach start", icon: "Send", stage: "sequence", binding: "n8n-nodes-base.smartlead" },
-  { title: "Review alert", subtitle: "Slack notify", icon: "Bell", stage: "logic", binding: "n8n-nodes-base.slack" },
+const NINE_NODES: N8nNode[] = [
+  { id: "1", label: "Intake & Cron", type: "n8n-nodes-base.cron", category: "trigger", icon: "⏰", color: "#FF9500", subtitle: "Trigger source" },
+  { id: "2", label: "Data Normalizer", type: "n8n-nodes-base.set", category: "logic", icon: "🧹", color: "#6B7280", subtitle: "Schema transform" },
+  { id: "3", label: "CRM Dedupe Shield", type: "n8n-nodes-base.hubspot", category: "crm", icon: "🛡️", color: "#FF7A59", subtitle: "Deal protection" },
+  { id: "4", label: "Contact Reveal", type: "n8n-nodes-base.apollo", category: "enrichment", icon: "🔍", color: "#8B5CF6", subtitle: "Data enrichment" },
+  { id: "5", label: "AI Research & PAS", type: "n8n-nodes-base.openai", category: "ai", icon: "🤖", color: "#7C3AED", subtitle: "Email copy" },
+  { id: "6", label: "Approval Switch", type: "n8n-nodes-base.switch", category: "logic", icon: "⚖️", color: "#6B7280", subtitle: "Human gate" },
+  { id: "7", label: "CRM Contact Create", type: "n8n-nodes-base.hubspot", category: "crm", icon: "💾", color: "#FF7A59", subtitle: "Lead sync" },
+  { id: "8", label: "Sequence Enrollment", type: "n8n-nodes-base.smartlead", category: "sequencer", icon: "📬", color: "#06B6D4", subtitle: "Outreach start" },
+  { id: "9", label: "Review Alert", type: "n8n-nodes-base.slack", category: "messaging", icon: "💬", color: "#4ADE80", subtitle: "Slack notify" },
+];
+
+const CONNECTIONS: [string, string][] = [
+  ["1", "2"], ["2", "3"], ["3", "4"], ["4", "5"], ["5", "6"], ["6", "7"], ["7", "8"], ["6", "9"],
 ];
 
 export default function CanvasView({ projectId, projectName }: CanvasViewProps) {
-  const [activeNodeIndex, setActiveNodeIndex] = useState(0);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [nodes, setNodes] = useState<N8nNode[]>(NINE_NODES);
   const [zoom, setZoom] = useState(100);
+
+  const selectedNode = selectedNodeId ? nodes.find((n) => n.id === selectedNodeId) : null;
+
+  const handleNodeSelect = useCallback((nodeId: string | null) => {
+    setSelectedNodeId(nodeId);
+  }, []);
+
+  const handleNodeUpdate = useCallback((nodeId: string, data: Partial<N8nNodeData>) => {
+    setNodes((prev) =>
+      prev.map((node) =>
+        node.id === nodeId
+          ? { ...node, label: data.label ?? node.label, subtitle: data.subtitle ?? node.subtitle }
+          : node
+      )
+    );
+  }, []);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
@@ -99,115 +122,65 @@ export default function CanvasView({ projectId, projectName }: CanvasViewProps) 
         </div>
       </div>
 
-      {/* Canvas Area */}
-      <div
-        style={{
-          flex: 1,
-          background: "var(--surface-deep)",
-          overflow: "auto",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        {/* Pipeline Rail */}
-        <div style={{ padding: "var(--space-10)" }}>
-          <PipelineRail
-            nodes={NINE_NODES}
-            activeIndex={activeNodeIndex}
-            onSelect={setActiveNodeIndex}
-          />
-        </div>
-
-        {/* Node Detail Panel */}
-        <div
-          style={{
-            margin: "0 var(--space-10) var(--space-10)",
-            padding: "var(--space-8)",
-            background: "rgba(255,255,255,0.03)",
-            borderRadius: "var(--radius-xl)",
-            border: "1px solid var(--border-deep)",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "var(--space-8)" }}>
-            <div>
-              <div
+      {/* Canvas Area - White n8n-style */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+        {/* Main Canvas */}
+        <div style={{ flex: 1, background: "#ffffff", position: "relative" }}>
+          {projectId ? (
+            <WorkflowCanvas
+              nodes={nodes}
+              connections={CONNECTIONS}
+              selectedNodeId={selectedNodeId}
+              onNodeSelect={handleNodeSelect}
+            />
+          ) : (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "column",
+                background: "#fafafa",
+              }}
+            >
+              <Icon name="Workflow" size={48} color="var(--text-muted)" />
+              <h3
                 style={{
-                  fontSize: "var(--text-eyebrow)",
+                  fontSize: "var(--text-h3)",
                   fontWeight: "var(--weight-semibold)",
-                  textTransform: "uppercase",
-                  letterSpacing: "var(--tracking-eyebrow)",
-                  color: "var(--champagne-200)",
+                  color: "var(--text-primary)",
+                  marginTop: "var(--space-6)",
                   marginBottom: "var(--space-3)",
                 }}
               >
-                Node {String(activeNodeIndex + 1).padStart(2, "0")}
-              </div>
-              <h3
-                style={{
-                  fontSize: "var(--text-h2)",
-                  fontWeight: "var(--weight-bold)",
-                  color: "var(--paper-0)",
-                  margin: "0 0 var(--space-3)",
-                }}
-              >
-                {NINE_NODES[activeNodeIndex].title}
+                No campaign selected
               </h3>
-              <p
-                style={{
-                  fontSize: "var(--text-body)",
-                  color: "var(--ink-300)",
-                  margin: "0 0 var(--space-6)",
-                }}
-              >
-                {NINE_NODES[activeNodeIndex].subtitle}
+              <p style={{ fontSize: "var(--text-body-sm)", color: "var(--text-muted)" }}>
+                Select a campaign from the Campaigns view to edit its workflow
               </p>
-
-              <div
-                style={{
-                  fontFamily: "var(--font-data)",
-                  fontSize: "var(--text-caption)",
-                  color: "var(--ink-400)",
-                  padding: "var(--space-3) var(--space-4)",
-                  background: "rgba(255,255,255,0.05)",
-                  borderRadius: "var(--radius-sm)",
-                  display: "inline-block",
-                }}
-              >
-                {NINE_NODES[activeNodeIndex].binding}
-              </div>
             </div>
-
-            <Button variant="inverse" icon="Settings2">
-              Configure
-            </Button>
-          </div>
+          )}
         </div>
 
-        {/* Empty state for no project */}
-        {!projectId && (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "var(--space-16)",
-              color: "var(--ink-300)",
+        {/* Node Edit Panel */}
+        {selectedNode && (
+          <NodeEditPanel
+            node={{
+              id: selectedNode.id,
+              data: {
+                label: selectedNode.label,
+                subtitle: selectedNode.subtitle,
+                icon: selectedNode.icon,
+                category: selectedNode.category,
+                type: selectedNode.type,
+                config: selectedNode.config,
+              },
             }}
-          >
-            <Icon name="Workflow" size={48} color="var(--ink-500)" />
-            <h3
-              style={{
-                fontSize: "var(--text-h3)",
-                fontWeight: "var(--weight-semibold)",
-                color: "var(--paper-0)",
-                marginTop: "var(--space-6)",
-                marginBottom: "var(--space-3)",
-              }}
-            >
-              No campaign selected
-            </h3>
-            <p style={{ fontSize: "var(--text-body-sm)", color: "var(--ink-400)" }}>
-              Select a campaign from the Campaigns view to edit its workflow
-            </p>
-          </div>
+            onClose={() => setSelectedNodeId(null)}
+            onUpdate={handleNodeUpdate}
+          />
         )}
       </div>
     </div>

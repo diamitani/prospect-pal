@@ -1,0 +1,49 @@
+<!-- @dsCard group="Workspace app" viewport="1440x900" name="Workspace" subtitle="Dashboard, builder canvas, intake wizard, outputs" -->
+<!-- @startingPoint section="Workspace app" subtitle="Full Prospect PAL workspace shell" viewport="1440x900" -->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Prospect PAL — Workspace</title>
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/lucide@0.544.0/dist/umd/lucide.js"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>html,body,#root{height:100%;margin:0}body{background:var(--surface-page);font-family:var(--font-body);color:var(--text-primary)}a{color:var(--text-link)}a:hover{color:var(--text-link-hover)}</style>
+</head><body><div id="root"></div>
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="AppShell.jsx"></script>
+<script type="text/babel" src="DashboardScreen.jsx"></script>
+<script type="text/babel" src="BuilderScreen.jsx"></script>
+<script type="text/babel" src="WizardScreen.jsx"></script>
+<script type="text/babel" src="OutputsScreen.jsx"></script>
+<script type="text/babel" src="SignalsScreen.jsx"></script>
+<script type="text/babel" src="SettingsScreen.jsx"></script>
+<script type="text/babel">
+const { Modal, Button, Input, Label, Icon, Badge } = window.ProspectPALDesignSystem_b8251d;
+function App(){
+  const [view,setView]=React.useState("home");
+  const [deploy,setDeploy]=React.useState(false);
+  const screen = view==="builder" ? <window.BuilderScreen onCompiled={()=>setView("outputs")} />
+    : view==="wizard" ? <window.WizardScreen onFinish={()=>setView("builder")} />
+    : view==="outputs" ? <window.OutputsScreen onDeploy={()=>setDeploy(true)} />
+    : view==="signals" ? <window.SignalsScreen />
+    : view==="settings" ? <window.SettingsScreen />
+    : <window.DashboardScreen onView={setView} />;
+  return (<React.Fragment>
+    <window.AppShell view={view} onView={setView} project="Series A SaaS · RevOps outbound">{screen}</window.AppShell>
+    {deploy ? (
+      <Modal eyebrow="Connect & deploy" title="Push this workflow to your n8n instance" onClose={()=>setDeploy(false)}
+        footer={<React.Fragment><Button variant="ghost" onClick={()=>setDeploy(false)}>Cancel</Button><Button variant="accent" icon="rocket" onClick={()=>setDeploy(false)}>Import 9 nodes</Button></React.Fragment>}>
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          <div><Label hint="never stored">Instance URL</Label><Input icon="link" mono value="https://acme.n8n.cloud" /></div>
+          <div><Label hint="one-time, session only">n8n API key</Label><Input mono icon="key-round" type="password" value="••••••••••••••••" /></div>
+          <div style={{display:"flex",gap:8,alignItems:"flex-start",fontSize:"var(--text-caption)",color:"var(--text-secondary)",lineHeight:"var(--leading-normal)"}}>
+            <Icon name="shield-check" size={15} color="var(--signal-verified)" />
+            <span>The key is used once, in this browser session, to call your instance's workflow import endpoint. It is never written to our storage. <Badge tone="neutral" mono shape="square">deploy.never_store</Badge></span>
+          </div>
+        </div>
+      </Modal>
+    ) : null}
+  </React.Fragment>);
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script></body></html>

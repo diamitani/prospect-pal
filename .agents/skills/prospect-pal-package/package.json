@@ -1,0 +1,29 @@
+{
+  "name": "prospect-pal-skills",
+  "version": "2.0.1",
+  "description": "Complete multi-agent skill suite for Prospect PAL autonomous prospect automation platform with enhanced n8n API and GTM workflow patterns",
+  "main": "index.ts",
+  "keywords": [
+    "prospect-automation",
+    "n8n",
+    "sales-automation",
+    "outbound",
+    "claude-skills",
+    "ai-agents"
+  ],
+  "author": "Prospect PAL",
+  "license": "MIT",
+  "skills": {
+    "orchestrator": "./../prospect-pal-orchestrator/SKILL.md",
+    "master": "./../prospect-pal-master/SKILL.md",
+    "workflow": "./../prospect-pal-workflow/SKILL.md",
+    "copywriter": "./../prospect-pal-copywriter/SKILL.md",
+    "tools": "./../prospect-pal-tools/SKILL.md",
+    "n8n-engineer": "./../prospect-pal-n8n-engineer/SKILL.md",
+    "analyst": "./../prospect-pal-analyst/SKILL.md"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/prospect-pal"
+  }
+}

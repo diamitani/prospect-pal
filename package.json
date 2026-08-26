@@ -9,9 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/amazon-bedrock": "^5.0.62",
     "@ai-sdk/anthropic": "^4.0.42",
     "@ai-sdk/openai": "^4.0.47",
     "@ai-sdk/react": "^4.0.82",
+    "@assistant-ui/react": "^0.15.16",
+    "@assistant-ui/react-ai-sdk": "^1.4.7",
     "@aws-sdk/client-bedrock-runtime": "^3.1111.0",
     "@aws-sdk/client-cognito-identity-provider": "^3.1111.0",
     "@aws-sdk/client-dynamodb": "^3.1111.0",
@@ -20,6 +23,7 @@
     "@aws-sdk/lib-dynamodb": "^3.1111.0",
     "@aws-sdk/s3-request-presigner": "^3.1111.0",
     "@supabase/supabase-js": "^2.112.4",
+    "@xyflow/react": "^12.11.5",
     "ai": "^7.0.79",
     "clsx": "^2.1.1",
     "composio-core": "^0.5.39",

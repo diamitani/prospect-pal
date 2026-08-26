@@ -1,0 +1,45 @@
+<!-- @dsCard group="Components" viewport="700x400" name="Core controls" subtitle="Buttons, fields, badges, status, cards" -->
+<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/lucide@0.544.0/dist/umd/lucide.js"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;background:var(--surface-page);font-family:var(--font-body);color:var(--text-primary)}#root{padding:20px}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const { Button, IconButton, Input, Select, Textarea, Badge, StatusPill, Card, Label } = window.ProspectPALDesignSystem_b8251d;
+function Demo(){return (<div>
+  <div className="row">
+    <Button variant="accent" icon="zap">Compile engine</Button>
+    <Button variant="primary" icon="workflow">Open builder</Button>
+    <Button variant="outline" icon="play">Watch demo</Button>
+    <Button variant="ghost" icon="download">Download JSON</Button>
+    <Button variant="primary" size="sm">Small</Button>
+    <Button variant="primary" disabled>Disabled</Button>
+    <IconButton icon="circle-help" label="Help" />
+  </div>
+  <div className="row" style={{alignItems:"flex-start"}}>
+    <div style={{width:230}}><Label step={2} hint="hard gate">CRM shield</Label>
+      <Select value="hubspot" options={[{value:"hubspot",label:"HubSpot CRM (OAuth2)"}]} /></div>
+    <div style={{width:230}}><Label>n8n instance URL</Label>
+      <Input icon="link" mono value="https://acme.n8n.cloud" /></div>
+    <div style={{width:170}}><Label>Target ICP</Label><Textarea rows={2} placeholder="VP of Sales, RevOps…" /></div>
+  </div>
+  <div className="row">
+    <Badge tone="brand" icon="sparkles">Automation agent</Badge>
+    <Badge tone="verified" icon="check">Verified contact</Badge>
+    <Badge tone="attention" icon="triangle-alert">Needs clarification</Badge>
+    <Badge tone="blocked" icon="octagon-x">Blocked</Badge>
+    <Badge tone="premium" icon="crown">Pro BYOK</Badge>
+    <Badge tone="neutral" mono shape="square">ENV:CLAY_API_KEY</Badge>
+    <StatusPill label="Engine ready" />
+  </div>
+  <div className="row" style={{alignItems:"stretch"}}>
+    <Card pad={16} style={{width:200}}><div style={{fontSize:"var(--text-h4)",fontWeight:700}}>Paper card</div><div style={{fontSize:"var(--text-caption)",color:"var(--text-secondary)"}}>Hairline + soft shadow</div></Card>
+    <Card tone="sunken" pad={16} interactive style={{width:200}}><div style={{fontSize:"var(--text-h4)",fontWeight:700}}>Interactive</div><div style={{fontSize:"var(--text-caption)",color:"var(--text-secondary)"}}>Lifts 2px on hover</div></Card>
+    <Card tone="deep" pad={16} style={{width:200}}><div style={{fontSize:"var(--text-h4)",fontWeight:700}}>Deep card</div><div style={{fontSize:"var(--text-caption)",color:"var(--ink-300)"}}>For navy canvas</div></Card>
+  </div>
+</div>);}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
+</script></body></html>

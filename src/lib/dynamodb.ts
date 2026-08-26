@@ -50,15 +50,17 @@ export interface Project {
 export async function createProject(
   userId: string,
   name: string,
-  description?: string
+  description?: string,
+  icpConfig?: Record<string, unknown>,
+  toolStack?: Record<string, unknown>
 ): Promise<Project> {
   const project: Project = {
     id: uuidv4(),
     userId,
     name,
     description,
-    icpConfig: {},
-    toolStack: {},
+    icpConfig: icpConfig || {},
+    toolStack: toolStack || {},
     status: "draft",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

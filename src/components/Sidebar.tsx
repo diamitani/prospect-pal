@@ -7,6 +7,7 @@ import {
   Target,
   Workflow,
   PenTool,
+  MessageSquare,
   Settings,
   LogOut,
   Plus,
@@ -23,6 +24,7 @@ const NAV: { id: View; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "campaigns", label: "Campaigns", icon: Target },
   { id: "workflows", label: "Workflows", icon: Workflow },
   { id: "canvas", label: "Canvas", icon: PenTool },
+  { id: "analyst", label: "Analyst", icon: MessageSquare },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 

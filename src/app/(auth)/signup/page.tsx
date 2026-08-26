@@ -47,24 +47,24 @@ export default function SignupPage() {
 
       {/* ── LEFT: Brand panel ── */}
       <div style={{
-        width: 480, flexShrink: 0, background: "#0f2d0f",
+        width: 480, flexShrink: 0, background: "#0f172a",
         display: "flex", flexDirection: "column", padding: "48px",
         position: "relative", overflow: "hidden",
       }} className="auth-left-panel">
-        <div style={{ position: "absolute", top: -80, right: -80, width: 320, height: 320, borderRadius: "50%", background: "#1c5a1c", opacity: 0.3 }} />
-        <div style={{ position: "absolute", bottom: -60, left: -40, width: 240, height: 240, borderRadius: "50%", background: "#2d762d", opacity: 0.2 }} />
+        <div style={{ position: "absolute", top: -80, right: -80, width: 320, height: 320, borderRadius: "50%", background: "#2A41C9", opacity: 0.3 }} />
+        <div style={{ position: "absolute", bottom: -60, left: -40, width: 240, height: 240, borderRadius: "50%", background: "#3A56E4", opacity: 0.2 }} />
 
         <Link href="/home" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", position: "relative", zIndex: 1 }}>
-          <div style={{ width: 32, height: 32, background: "#1c5a1c", border: "2px solid #4ADE8044", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800, fontSize: 14 }}>P</div>
+          <div style={{ width: 32, height: 32, background: "#2A41C9", border: "2px solid #B8C6FE44", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 800, fontSize: 14 }}>P</div>
           <span style={{ fontWeight: 800, fontSize: 16, color: "white" }}>Prospect PAL</span>
         </Link>
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", zIndex: 1 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#4ADE80", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>Free to start</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#B8C6FE", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>Free to start</div>
           <h2 style={{ fontSize: 30, fontWeight: 900, color: "white", letterSpacing: "-1px", lineHeight: 1.2, margin: "0 0 20px" }}>
             Build your first outbound automation in 5 minutes.
           </h2>
-          <p style={{ fontSize: 14, color: "#9fce9f", lineHeight: 1.65, margin: "0 0 32px" }}>
+          <p style={{ fontSize: 14, color: "#9CA3CB", lineHeight: 1.65, margin: "0 0 32px" }}>
             No code. No consultants. Describe your ICP and get a production-ready n8n workflow.
           </p>
 
@@ -76,15 +76,15 @@ export default function SignupPage() {
             "Runs on autopilot every morning",
           ].map((f) => (
             <div key={f} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-              <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#1c5a1c", border: "1px solid #4ADE8044", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <span style={{ color: "#4ADE80", fontSize: 11, fontWeight: 800 }}>✓</span>
+              <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#2A41C9", border: "1px solid #B8C6FE44", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span style={{ color: "#B8C6FE", fontSize: 11, fontWeight: 800 }}>✓</span>
               </div>
-              <span style={{ fontSize: 13, color: "#dcf0dc" }}>{f}</span>
+              <span style={{ fontSize: 13, color: "#DBE3FF" }}>{f}</span>
             </div>
           ))}
         </div>
 
-        <div style={{ fontSize: 11, color: "#2a5a2a", position: "relative", zIndex: 1 }}>
+        <div style={{ fontSize: 11, color: "#2033A2", position: "relative", zIndex: 1 }}>
           🔒 AWS Cognito · TLS 1.3 · No credit card required
         </div>
       </div>
@@ -105,7 +105,7 @@ export default function SignupPage() {
                 type="text" required value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Alex Johnson" style={inp}
-                onFocus={(e) => e.target.style.borderColor = "#1c5a1c"}
+                onFocus={(e) => e.target.style.borderColor = "#2A41C9"}
                 onBlur={(e)  => e.target.style.borderColor = "#e5e5e0"}
               />
             </div>
@@ -115,7 +115,7 @@ export default function SignupPage() {
                 type="email" required value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@company.com" style={inp}
-                onFocus={(e) => e.target.style.borderColor = "#1c5a1c"}
+                onFocus={(e) => e.target.style.borderColor = "#2A41C9"}
                 onBlur={(e)  => e.target.style.borderColor = "#e5e5e0"}
               />
             </div>
@@ -125,7 +125,7 @@ export default function SignupPage() {
                 type="password" required value={password} minLength={8}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="8+ characters" style={inp}
-                onFocus={(e) => e.target.style.borderColor = "#1c5a1c"}
+                onFocus={(e) => e.target.style.borderColor = "#2A41C9"}
                 onBlur={(e)  => e.target.style.borderColor = "#e5e5e0"}
               />
             </div>
@@ -138,11 +138,11 @@ export default function SignupPage() {
 
             <button type="submit" disabled={loading} style={{
               width: "100%", padding: "13px", fontSize: 14, fontWeight: 700,
-              color: "white", background: "#1c5a1c", border: "none", borderRadius: 10,
+              color: "white", background: "#2A41C9", border: "none", borderRadius: 10,
               cursor: loading ? "not-allowed" : "pointer",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               opacity: loading ? 0.8 : 1, fontFamily: "inherit", marginTop: 4,
-              boxShadow: "0 2px 8px rgba(28,90,28,0.25)",
+              boxShadow: "0 2px 8px rgba(42,65,201,0.25)",
             }}>
               {loading ? <><Spinner />Creating workspace...</> : "Create free workspace →"}
             </button>
@@ -150,7 +150,7 @@ export default function SignupPage() {
 
           <p style={{ textAlign: "center", fontSize: 13, color: "#6B7280", marginTop: 20 }}>
             Already have an account?{" "}
-            <Link href="/login?from=/dashboard" style={{ color: "#1c5a1c", fontWeight: 700, textDecoration: "none" }}>Sign in</Link>
+            <Link href="/login?from=/dashboard" style={{ color: "#2A41C9", fontWeight: 700, textDecoration: "none" }}>Sign in</Link>
           </p>
           <p style={{ textAlign: "center", fontSize: 11, color: "#D1D5DB", marginTop: 10 }}>
             By signing up you agree to our Terms &amp; Privacy Policy.

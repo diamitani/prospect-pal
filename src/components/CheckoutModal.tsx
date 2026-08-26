@@ -177,8 +177,8 @@ export default function CheckoutModal({ isOpen, onClose, selectedPlanInitial = "
                       style={{
                         borderRadius: 16,
                         padding: "20px 18px",
-                        border: isSelected ? "2px solid #16a34a" : "1.5px solid #e5e7eb",
-                        background: isSelected ? "#f0fdf4" : "#ffffff",
+                        border: isSelected ? "2px solid #2A41C9" : "1.5px solid #e5e7eb",
+                        background: isSelected ? "#EEF2FF" : "#ffffff",
                         cursor: "pointer",
                         display: "flex",
                         flexDirection: "column",
@@ -191,7 +191,7 @@ export default function CheckoutModal({ isOpen, onClose, selectedPlanInitial = "
                           position: "absolute",
                           top: -10,
                           right: 14,
-                          background: "#16a34a",
+                          background: "#2A41C9",
                           color: "white",
                           fontSize: 10,
                           fontWeight: 800,
@@ -204,7 +204,7 @@ export default function CheckoutModal({ isOpen, onClose, selectedPlanInitial = "
                       <div style={{ fontSize: 15, fontWeight: 700, color: "#111827", marginBottom: 4 }}>
                         {plan.name}
                       </div>
-                      <div style={{ fontSize: 24, fontWeight: 900, color: "#16a34a", marginBottom: 2 }}>
+                      <div style={{ fontSize: 24, fontWeight: 900, color: "#2A41C9", marginBottom: 2 }}>
                         {plan.price}
                       </div>
                       <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 12 }}>
@@ -216,7 +216,7 @@ export default function CheckoutModal({ isOpen, onClose, selectedPlanInitial = "
                       <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: 12 }}>
                         {plan.features.slice(0, 3).map((feat, idx) => (
                           <div key={idx} style={{ fontSize: 11, color: "#374151", marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
-                            <span style={{ color: "#16a34a", fontWeight: 700 }}>✓</span>
+                            <span style={{ color: "#2A41C9", fontWeight: 700 }}>✓</span>
                             <span>{feat}</span>
                           </div>
                         ))}
@@ -248,12 +248,12 @@ export default function CheckoutModal({ isOpen, onClose, selectedPlanInitial = "
                     padding: "10px 24px",
                     borderRadius: 10,
                     border: "none",
-                    background: "#16a34a",
+                    background: "#2A41C9",
                     fontSize: 13,
                     fontWeight: 700,
                     color: "white",
                     cursor: "pointer",
-                    boxShadow: "0 2px 8px rgba(22,163,74,0.3)",
+                    boxShadow: "0 2px 8px rgba(42,65,201,0.3)",
                   }}
                 >
                   Continue with {currentPlanObj.name} →
@@ -267,7 +267,7 @@ export default function CheckoutModal({ isOpen, onClose, selectedPlanInitial = "
               <div style={{ background: "#f9fafb", padding: 18, borderRadius: 12, border: "1px solid #e5e7eb", marginBottom: 20 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                   <span style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>{currentPlanObj.name}</span>
-                  <span style={{ fontSize: 18, fontWeight: 900, color: "#16a34a" }}>{currentPlanObj.price}</span>
+                  <span style={{ fontSize: 18, fontWeight: 900, color: "#2A41C9" }}>{currentPlanObj.price}</span>
                 </div>
                 <div style={{ fontSize: 12, color: "#6B7280" }}>{currentPlanObj.billing}</div>
               </div>
@@ -358,12 +358,12 @@ export default function CheckoutModal({ isOpen, onClose, selectedPlanInitial = "
                     padding: "11px 26px",
                     borderRadius: 8,
                     border: "none",
-                    background: "#16a34a",
+                    background: "#2A41C9",
                     fontSize: 13,
                     fontWeight: 700,
                     color: "white",
                     cursor: isSubmitting ? "not-allowed" : "pointer",
-                    boxShadow: "0 2px 8px rgba(22,163,74,0.3)",
+                    boxShadow: "0 2px 8px rgba(42,65,201,0.3)",
                   }}
                 >
                   {isSubmitting ? "Processing Payment..." : `Confirm & Authorize ${currentPlanObj.price}`}
@@ -377,13 +377,13 @@ export default function CheckoutModal({ isOpen, onClose, selectedPlanInitial = "
               <div style={{
                 width: 64,
                 height: 64,
-                background: "#dcfce7",
+                background: "#EEF2FF",
                 borderRadius: "50%",
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: 32,
-                color: "#16a34a",
+                color: "#2A41C9",
                 marginBottom: 16,
               }}>
                 ✓
@@ -394,7 +394,7 @@ export default function CheckoutModal({ isOpen, onClose, selectedPlanInitial = "
               <p style={{ fontSize: 14, color: "#6B7280", maxWidth: 420, margin: "0 auto 20px" }}>
                 Your workspace and 5-Pillar n8n engine harness have been provisioned. Redirecting to your onboarding wizard...
               </p>
-              <div style={{ fontSize: 12, color: "#16a34a", fontWeight: 700 }}>
+              <div style={{ fontSize: 12, color: "#2A41C9", fontWeight: 700 }}>
                 ⚡ Initializing Canvas...
               </div>
             </div>

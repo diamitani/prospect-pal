@@ -1,0 +1,61 @@
+<!-- @dsCard group="Marketing site" viewport="1440x1000" name="Landing page" subtitle="Hero, compiled graph, bindings, deliverables, signals, pricing" -->
+<!-- @startingPoint section="Marketing site" subtitle="Prospect PAL landing page" viewport="1440x1000" -->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Prospect PAL — GTM automation, compiled</title>
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/lucide@0.544.0/dist/umd/lucide.js"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>html,body{margin:0}body{background:var(--surface-page);font-family:var(--font-body);color:var(--text-primary)}a{color:var(--text-link)}a:hover{color:var(--text-link-hover)}</style>
+</head><body><div id="root"></div>
+<script type="text/babel" src="../app/data.jsx"></script>
+<script type="text/babel" src="SiteChrome.jsx"></script>
+<script type="text/babel" src="Hero.jsx"></script>
+<script type="text/babel" src="Sections.jsx"></script>
+<script type="text/babel">
+const { Modal, Button, Input, Label, Badge, Icon, PricingCard } = window.ProspectPALDesignSystem_b8251d;
+function Site(){
+  const [modal,setModal]=React.useState(null);
+  return (<React.Fragment>
+    <window.TopStrip />
+    <window.SiteNav onCheckout={()=>setModal("checkout")} />
+    <window.Hero onCheckout={()=>setModal("checkout")} onDemo={()=>setModal("demo")} />
+    <window.Integrations />
+    <window.Deliverables />
+    <window.Signals />
+    <window.Pricing onCheckout={()=>setModal("checkout")} />
+    <window.SiteFooter />
+    {modal==="checkout" ? (
+      <Modal eyebrow="Pro unlimited engine" title="Start compiling — $99 / month" onClose={()=>setModal(null)} width={560}
+        footer={<React.Fragment><Button variant="ghost" onClick={()=>setModal(null)}>Not yet</Button><Button variant="accent" icon="zap" onClick={()=>setModal(null)}>Start Pro</Button></React.Fragment>}>
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          <div><Label>Work email</Label><Input icon="mail" placeholder="you@company.com" /></div>
+          <div><Label hint="generated in your instance settings">n8n instance URL</Label><Input icon="link" mono placeholder="https://acme.n8n.cloud" /></div>
+          <div style={{display:"flex",gap:8,alignItems:"flex-start",fontSize:"var(--text-caption)",color:"var(--text-secondary)",lineHeight:"var(--leading-normal)"}}>
+            <Icon name="shield-check" size={15} color="var(--signal-verified)" />
+            <span>Cancel anytime. Bring your own provider keys — <Badge tone="neutral" mono shape="square">no_secrets_stored</Badge></span>
+          </div>
+        </div>
+      </Modal>
+    ) : null}
+    {modal==="demo" ? (
+      <Modal tone="deep" eyebrow="Two-minute walkthrough" title="How a compile actually runs" onClose={()=>setModal(null)} width={720}
+        footer={<Button variant="inverse" icon="zap" onClick={()=>setModal("checkout")}>Build my engine</Button>}>
+        <window.PipelinePreview />
+      </Modal>
+    ) : null}
+  </React.Fragment>);
+}
+function PipelinePreview(){
+  const { PipelineRail } = window.ProspectPALDesignSystem_b8251d;
+  const [i,setI]=React.useState(4);
+  return (<div>
+    <PipelineRail nodes={window.NINE_NODES} activeIndex={i} onSelect={setI} />
+    <p style={{marginTop:16,marginBottom:0,fontSize:"var(--text-body-sm)",color:"var(--ink-300)",lineHeight:"var(--leading-relaxed)"}}>
+      Intake is gated, bindings are resolved, then the graph is written node by node. The approval switch at node 06 is non-negotiable — it is in every compiled engine.
+    </p></div>);
+}
+Object.assign(window,{PipelinePreview});
+ReactDOM.createRoot(document.getElementById("root")).render(<Site/>);
+</script></body></html>
