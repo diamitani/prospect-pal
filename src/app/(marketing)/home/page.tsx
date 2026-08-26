@@ -158,7 +158,7 @@ export default function HomePage() {
                 color: "var(--text-secondary)",
               }}
             >
-              Automate your Go-to-Market engine. Input your ICP and User Persona, connect your Data Enrichment, CRM and Outreach tools, and generate a custom workflow in your n8n instance or download a JSON file to import and edit.
+              Automate your Go-to-Market engine. Define your ICP and persona, connect your tools, and deploy a custom workflow to n8n — or download the JSON to import yourself.
             </p>
 
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 36 }}>
