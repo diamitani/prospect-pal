@@ -162,7 +162,7 @@ export async function initializeWorkflow(
   };
 
   // Store workflow in Supabase
-  const { data, error } = await supabase
+  const { data, error } = await supabase.client
     .from('automation_workflows')
     .insert({
       id: workflow.id,
@@ -191,7 +191,7 @@ export async function initializeWorkflow(
  * Get workflow status
  */
 export async function getWorkflowStatus(workflowId: string): Promise<AutomationWorkflow | null> {
-  const { data, error } = await supabase
+  const { data, error } = await supabase.client
     .from('automation_workflows')
     .select('*')
     .eq('id', workflowId)
@@ -265,7 +265,7 @@ export async function updateWorkflowStep(
   workflow.updatedAt = new Date().toISOString();
 
   // Update in Supabase
-  const { error } = await supabase
+  const { error } = await supabase.client
     .from('automation_workflows')
     .update({
       current_step: workflow.currentStep,
@@ -301,7 +301,7 @@ export async function resumeWorkflow(workflowId: string): Promise<AutomationWork
   workflow.updatedAt = new Date().toISOString();
 
   // Update in Supabase
-  const { error } = await supabase
+  const { error } = await supabase.client
     .from('automation_workflows')
     .update({
       status: workflow.status,

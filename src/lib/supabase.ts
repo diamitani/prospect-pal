@@ -2,14 +2,26 @@
  * Supabase Client & Database Operations
  * Replaces DynamoDB with Supabase PostgreSQL
  */
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+let _supabase: SupabaseClient | null = null;
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+function getSupabase(): SupabaseClient {
+  if (_supabase) return _supabase;
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase environment variables not configured');
+  }
+
+  _supabase = createClient(supabaseUrl, supabaseKey);
+  return _supabase;
+}
+
+export const supabase = { get client() { return getSupabase(); } };
 
 // ===========================================================================
 // PROJECT OPERATIONS
@@ -47,7 +59,7 @@ export async function createProject(
     updated_at: new Date().toISOString(),
   };
 
-  const { data, error } = await supabase
+  const { data, error } = await supabase.client
     .from('projects')
     .insert(project)
     .select()
@@ -58,7 +70,7 @@ export async function createProject(
 }
 
 export async function getProjectsByUser(userId: string): Promise<Project[]> {
-  const { data, error } = await supabase
+  const { data, error } = await supabase.client
     .from('projects')
     .select('*')
     .eq('user_id', userId)
@@ -69,7 +81,7 @@ export async function getProjectsByUser(userId: string): Promise<Project[]> {
 }
 
 export async function getProject(id: string): Promise<Project | null> {
-  const { data, error } = await supabase
+  const { data, error } = await supabase.client
     .from('projects')
     .select('*')
     .eq('id', id)
@@ -85,7 +97,7 @@ export async function updateProject(
   id: string,
   updates: Partial<Omit<Project, 'id' | 'created_at'>>
 ): Promise<void> {
-  const { error } = await supabase
+  const { error } = await supabase.client
     .from('projects')
     .update({
       ...updates,
@@ -97,7 +109,7 @@ export async function updateProject(
 }
 
 export async function deleteProject(id: string): Promise<void> {
-  const { error } = await supabase
+  const { error } = await supabase.client
     .from('projects')
     .delete()
     .eq('id', id);
@@ -138,7 +150,7 @@ export async function saveChatMessage(
     created_at: new Date().toISOString(),
   };
 
-  const { data, error } = await supabase
+  const { data, error } = await supabase.client
     .from('chat_messages')
     .insert(message)
     .select()
@@ -152,7 +164,7 @@ export async function getChatHistory(
   projectId: string,
   sessionId: string
 ): Promise<ChatMessage[]> {
-  const { data, error } = await supabase
+  const { data, error } = await supabase.client
     .from('chat_messages')
     .select('*')
     .eq('session_id', sessionId)
@@ -196,7 +208,7 @@ export async function saveArtifact(
     created_at: new Date().toISOString(),
   };
 
-  const { data, error } = await supabase
+  const { data, error } = await supabase.client
     .from('artifacts')
     .insert(artifact)
     .select()
@@ -207,7 +219,7 @@ export async function saveArtifact(
 }
 
 export async function getArtifactsByProject(projectId: string): Promise<Artifact[]> {
-  const { data, error } = await supabase
+  const { data, error } = await supabase.client
     .from('artifacts')
     .select('*')
     .eq('project_id', projectId)
@@ -218,7 +230,7 @@ export async function getArtifactsByProject(projectId: string): Promise<Artifact
 }
 
 export async function getArtifact(id: string): Promise<Artifact | null> {
-  const { data, error } = await supabase
+  const { data, error } = await supabase.client
     .from('artifacts')
     .select('*')
     .eq('id', id)
