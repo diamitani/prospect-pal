@@ -17,18 +17,82 @@ import {
   PricingCard,
   PipelineRail,
   PipelineNode,
+  NodeCard,
 } from "@/components/ds";
 
 const NINE_NODES: PipelineNode[] = [
-  { title: "Intake & cron", subtitle: "Trigger source", icon: "Zap", stage: "trigger", binding: "n8n-nodes-base.cron" },
-  { title: "Data normalizer", subtitle: "Schema transform", icon: "FileBraces", stage: "logic", binding: "n8n-nodes-base.set" },
-  { title: "CRM dedupe shield", subtitle: "Deal protection", icon: "ShieldCheck", stage: "shield", binding: "n8n-nodes-base.hubspot" },
-  { title: "Data tool adapter", subtitle: "Contact reveal", icon: "Search", stage: "data", binding: "n8n-nodes-base.apollo" },
-  { title: "AI research & PAS", subtitle: "Email copy", icon: "Sparkles", stage: "ai", binding: "n8n-nodes-base.openai" },
-  { title: "Approval switch", subtitle: "Human gate", icon: "Scale", stage: "logic", binding: "n8n-nodes-base.switch" },
-  { title: "CRM contact create", subtitle: "Lead sync", icon: "Database", stage: "shield", binding: "n8n-nodes-base.hubspot" },
-  { title: "Sequence enrollment", subtitle: "Outreach start", icon: "Send", stage: "sequence", binding: "n8n-nodes-base.smartlead" },
-  { title: "Review alert", subtitle: "Slack notify", icon: "Bell", stage: "logic", binding: "n8n-nodes-base.slack" },
+  {
+    title: "Intake & cron",
+    subtitle: "Trigger source",
+    icon: "Zap",
+    stage: "trigger",
+    binding: "n8n-nodes-base.cron",
+    tooltip: "Choose how leads enter: webhook from your LLM chat that sends data from prompts or file uploads, a scheduled pull from your CRM to enrich existing companies, or a daily trigger that finds new leads from your ICP and dedupes against your contact list.",
+  },
+  {
+    title: "Data normalizer",
+    subtitle: "Schema transform",
+    icon: "FileBraces",
+    stage: "logic",
+    binding: "n8n-nodes-base.set",
+    tooltip: "Cleans up messy data from different sources. Standardizes company names, fixes formatting, and makes sure every lead has the fields your workflow needs before moving forward.",
+  },
+  {
+    title: "CRM dedupe shield",
+    subtitle: "Deal protection",
+    icon: "ShieldCheck",
+    stage: "shield",
+    binding: "n8n-nodes-base.hubspot",
+    tooltip: "Protects your existing deals. Checks every lead against your CRM to make sure you're not reaching out to companies already in your pipeline or past customers. Prevents embarrassing double-touches.",
+  },
+  {
+    title: "Data tool adapter",
+    subtitle: "Contact reveal",
+    icon: "Search",
+    stage: "data",
+    binding: "n8n-nodes-base.apollo",
+    tooltip: "Finds the right people at target companies. Uses Apollo, Clay, or ZoomInfo to pull verified emails for your target personas (VP Engineering, Head of Sales, etc.) and enriches company data.",
+  },
+  {
+    title: "AI research & PAS",
+    subtitle: "Email copy",
+    icon: "Sparkles",
+    stage: "ai",
+    binding: "n8n-nodes-base.openai",
+    tooltip: "Researches each company and writes personalized emails. The AI reads their website, finds pain points that match your solution, and writes Problem-Agitate-Solution copy tailored to each prospect.",
+  },
+  {
+    title: "Approval switch",
+    subtitle: "Human gate",
+    icon: "Scale",
+    stage: "logic",
+    binding: "n8n-nodes-base.switch",
+    tooltip: "Your quality control gate. Set to auto-send (no review), human approval (review each batch before sending), or draft-only (generate emails but never send). You control the level of automation.",
+  },
+  {
+    title: "CRM contact create",
+    subtitle: "Lead sync",
+    icon: "Database",
+    stage: "shield",
+    binding: "n8n-nodes-base.hubspot",
+    tooltip: "Adds approved leads to your CRM as contacts. Creates or updates records with all the enriched data, research notes, and email copy so your sales team has full context when they follow up.",
+  },
+  {
+    title: "Sequence enrollment",
+    subtitle: "Outreach start",
+    icon: "Send",
+    stage: "sequence",
+    binding: "n8n-nodes-base.smartlead",
+    tooltip: "Enrolls contacts into your email sequence. Connects to Smartlead, Instantly, or HubSpot Sequences to start sending the personalized emails on your schedule (immediate, next day, custom timing).",
+  },
+  {
+    title: "Review alert",
+    subtitle: "Slack notify",
+    icon: "Bell",
+    stage: "logic",
+    binding: "n8n-nodes-base.slack",
+    tooltip: "Sends you a summary notification in Slack. Shows how many leads were processed, enriched, and enrolled so you can track your automation without logging into multiple tools.",
+  },
 ];
 
 const AGENT_TOOLS = [
@@ -291,83 +355,297 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Live Canvas */}
+        {/* Architecture Diagram - 9-Node Workflow */}
         <div
           style={{
-            background: "var(--surface-deep)",
+            background: "var(--surface-card)",
             borderRadius: "var(--radius-2xl)",
-            border: "1px solid var(--border-deep)",
-            boxShadow: "var(--shadow-overlay)",
-            overflow: "hidden",
+            border: "1px solid var(--border-hairline)",
+            boxShadow: "var(--shadow-card)",
+            padding: "40px 32px",
             marginTop: 64,
           }}
         >
           <div
             style={{
-              padding: "12px 18px",
-              borderBottom: "1px solid var(--border-deep)",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
+              marginBottom: 32,
             }}
           >
-            <span
-              style={{
-                fontFamily: "var(--font-data)",
-                fontSize: "var(--text-caption)",
-                color: "var(--ink-300)",
-              }}
-            >
-              workflow.json · compiled · approved
-            </span>
+            <div>
+              <h3
+                style={{
+                  fontSize: "var(--text-body-lg)",
+                  fontWeight: 600,
+                  color: "var(--text-primary)",
+                  margin: 0,
+                }}
+              >
+                9-Node Pipeline Architecture
+              </h3>
+              <p
+                style={{
+                  fontSize: "var(--text-body-sm)",
+                  color: "var(--text-secondary)",
+                  margin: "6px 0 0",
+                }}
+              >
+                Click any node to see details
+              </p>
+            </div>
             <Badge tone="verified">Graph compiled</Badge>
           </div>
 
-          <div style={{ padding: "22px 20px" }}>
-            <PipelineRail nodes={NINE_NODES} activeIndex={activeNodeIndex} onSelect={setActiveNodeIndex} />
-
+          {/* 3x3 Grid Architecture */}
+          <div style={{ position: "relative" }}>
+            {/* Row 1: Intake */}
             <div
               style={{
-                marginTop: 18,
-                padding: "16px 18px",
-                borderRadius: "var(--radius-lg)",
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid var(--border-deep)",
-                display: "flex",
+                display: "grid",
+                gridTemplateColumns: "1fr auto 1fr auto 1fr",
                 alignItems: "center",
-                justifyContent: "space-between",
-                gap: 20,
-                flexWrap: "wrap",
+                gap: 0,
+                marginBottom: 20,
               }}
             >
-              <div style={{ maxWidth: 640 }}>
+              <NodeCard
+                step={1}
+                title={NINE_NODES[0].title}
+                subtitle={NINE_NODES[0].subtitle}
+                icon={NINE_NODES[0].icon}
+                stage={NINE_NODES[0].stage}
+                binding={NINE_NODES[0].binding}
+                selected={activeNodeIndex === 0}
+                onDeep={false}
+                onClick={() => setActiveNodeIndex(0)}
+                style={{ minWidth: "auto" }}
+              />
+              <div style={{ padding: "0 12px", color: "var(--text-muted)" }}>
+                <Icon name="ArrowRight" size={20} />
+              </div>
+              <NodeCard
+                step={2}
+                title={NINE_NODES[1].title}
+                subtitle={NINE_NODES[1].subtitle}
+                icon={NINE_NODES[1].icon}
+                stage={NINE_NODES[1].stage}
+                binding={NINE_NODES[1].binding}
+                selected={activeNodeIndex === 1}
+                onDeep={false}
+                onClick={() => setActiveNodeIndex(1)}
+                style={{ minWidth: "auto" }}
+              />
+              <div style={{ padding: "0 12px", color: "var(--text-muted)" }}>
+                <Icon name="ArrowRight" size={20} />
+              </div>
+              <NodeCard
+                step={3}
+                title={NINE_NODES[2].title}
+                subtitle={NINE_NODES[2].subtitle}
+                icon={NINE_NODES[2].icon}
+                stage={NINE_NODES[2].stage}
+                binding={NINE_NODES[2].binding}
+                selected={activeNodeIndex === 2}
+                onDeep={false}
+                onClick={() => setActiveNodeIndex(2)}
+                style={{ minWidth: "auto" }}
+              />
+            </div>
+
+            {/* Vertical connector after row 1 */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                paddingRight: "calc(16.67% - 10px)",
+                marginBottom: 20,
+              }}
+            >
+              <Icon name="ArrowDown" size={20} color="var(--text-muted)" />
+            </div>
+
+            {/* Row 2: Process */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr auto 1fr auto 1fr",
+                alignItems: "center",
+                gap: 0,
+                marginBottom: 20,
+              }}
+            >
+              <NodeCard
+                step={4}
+                title={NINE_NODES[3].title}
+                subtitle={NINE_NODES[3].subtitle}
+                icon={NINE_NODES[3].icon}
+                stage={NINE_NODES[3].stage}
+                binding={NINE_NODES[3].binding}
+                selected={activeNodeIndex === 3}
+                onDeep={false}
+                onClick={() => setActiveNodeIndex(3)}
+                style={{ minWidth: "auto" }}
+              />
+              <div style={{ padding: "0 12px", color: "var(--text-muted)" }}>
+                <Icon name="ArrowRight" size={20} />
+              </div>
+              <NodeCard
+                step={5}
+                title={NINE_NODES[4].title}
+                subtitle={NINE_NODES[4].subtitle}
+                icon={NINE_NODES[4].icon}
+                stage={NINE_NODES[4].stage}
+                binding={NINE_NODES[4].binding}
+                selected={activeNodeIndex === 4}
+                onDeep={false}
+                onClick={() => setActiveNodeIndex(4)}
+                style={{ minWidth: "auto" }}
+              />
+              <div style={{ padding: "0 12px", color: "var(--text-muted)" }}>
+                <Icon name="ArrowRight" size={20} />
+              </div>
+              <NodeCard
+                step={6}
+                title={NINE_NODES[5].title}
+                subtitle={NINE_NODES[5].subtitle}
+                icon={NINE_NODES[5].icon}
+                stage={NINE_NODES[5].stage}
+                binding={NINE_NODES[5].binding}
+                selected={activeNodeIndex === 5}
+                onDeep={false}
+                onClick={() => setActiveNodeIndex(5)}
+                style={{ minWidth: "auto" }}
+              />
+            </div>
+
+            {/* Vertical connector after row 2 */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                paddingRight: "calc(16.67% - 10px)",
+                marginBottom: 20,
+              }}
+            >
+              <Icon name="ArrowDown" size={20} color="var(--text-muted)" />
+            </div>
+
+            {/* Row 3: Output */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr auto 1fr auto 1fr",
+                alignItems: "center",
+                gap: 0,
+              }}
+            >
+              <NodeCard
+                step={7}
+                title={NINE_NODES[6].title}
+                subtitle={NINE_NODES[6].subtitle}
+                icon={NINE_NODES[6].icon}
+                stage={NINE_NODES[6].stage}
+                binding={NINE_NODES[6].binding}
+                selected={activeNodeIndex === 6}
+                onDeep={false}
+                onClick={() => setActiveNodeIndex(6)}
+                style={{ minWidth: "auto" }}
+              />
+              <div style={{ padding: "0 12px", color: "var(--text-muted)" }}>
+                <Icon name="ArrowRight" size={20} />
+              </div>
+              <NodeCard
+                step={8}
+                title={NINE_NODES[7].title}
+                subtitle={NINE_NODES[7].subtitle}
+                icon={NINE_NODES[7].icon}
+                stage={NINE_NODES[7].stage}
+                binding={NINE_NODES[7].binding}
+                selected={activeNodeIndex === 7}
+                onDeep={false}
+                onClick={() => setActiveNodeIndex(7)}
+                style={{ minWidth: "auto" }}
+              />
+              <div style={{ padding: "0 12px", color: "var(--text-muted)" }}>
+                <Icon name="ArrowRight" size={20} />
+              </div>
+              <NodeCard
+                step={9}
+                title={NINE_NODES[8].title}
+                subtitle={NINE_NODES[8].subtitle}
+                icon={NINE_NODES[8].icon}
+                stage={NINE_NODES[8].stage}
+                binding={NINE_NODES[8].binding}
+                selected={activeNodeIndex === 8}
+                onDeep={false}
+                onClick={() => setActiveNodeIndex(8)}
+                style={{ minWidth: "auto" }}
+              />
+            </div>
+          </div>
+
+          {/* Selected Node Details Panel */}
+          <div
+            style={{
+              marginTop: 28,
+              padding: "24px 28px",
+              borderRadius: "var(--radius-xl)",
+              background: "var(--surface-sunken)",
+              border: "1px solid var(--border-hairline)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 24, marginBottom: 14 }}>
+              <div>
                 <div
                   style={{
                     fontFamily: "var(--font-data)",
                     fontSize: "var(--text-micro)",
-                    color: "var(--champagne-200)",
-                    marginBottom: 5,
+                    color: "var(--text-muted)",
+                    marginBottom: 8,
+                    letterSpacing: "0.05em",
                   }}
                 >
                   NODE {String(activeNodeIndex + 1).padStart(2, "0")} · {NINE_NODES[activeNodeIndex].binding}
                 </div>
-                <div
+                <h4
                   style={{
-                    fontSize: "var(--text-body-sm)",
-                    color: "var(--ink-200)",
-                    lineHeight: "var(--leading-relaxed)",
+                    fontSize: "var(--text-body-lg)",
+                    color: "var(--text-primary)",
+                    fontWeight: 600,
+                    margin: "0 0 6px",
                   }}
                 >
-                  <strong style={{ color: "var(--paper-0)", fontWeight: 600 }}>
-                    {NINE_NODES[activeNodeIndex].title}
-                  </strong>{" "}
-                  — {NINE_NODES[activeNodeIndex].subtitle}.
-                </div>
+                  {NINE_NODES[activeNodeIndex].title}
+                </h4>
+                <p
+                  style={{
+                    fontSize: "var(--text-caption)",
+                    color: "var(--text-muted)",
+                    fontWeight: 500,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    margin: 0,
+                  }}
+                >
+                  {NINE_NODES[activeNodeIndex].subtitle}
+                </p>
               </div>
-              <Button variant="inverse" icon="Settings2" onClick={() => handleOpenCheckout("builder")}>
-                Configure this node
+              <Button variant="outline" icon="Settings2" onClick={() => handleOpenCheckout("builder")} size="sm">
+                Configure
               </Button>
             </div>
+            <p
+              style={{
+                fontSize: "var(--text-body-sm)",
+                color: "var(--text-secondary)",
+                lineHeight: "var(--leading-relaxed)",
+                margin: 0,
+              }}
+            >
+              {NINE_NODES[activeNodeIndex].tooltip}
+            </p>
           </div>
         </div>
       </section>

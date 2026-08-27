@@ -18,6 +18,7 @@ export interface NodeCardProps {
   step: number;
   title: string;
   subtitle?: string;
+  tooltip?: string;
   icon: IconProps["name"];
   stage?: NodeStage;
   binding?: string;

@@ -1,9 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import dynamic from "next/dynamic";
 
-const AssistantChat = dynamic(
-  () => import("@/components/chat/AssistantChat"),
+const ChatView = dynamic(
+  () => import("@/components/views/ChatView"),
   {
     ssr: false,
     loading: () => (
@@ -15,16 +16,23 @@ const AssistantChat = dynamic(
         color: "var(--text-muted)",
         fontSize: "var(--text-body-sm)",
       }}>
-        Loading chat...
+        Loading Agent Swarm...
       </div>
     ),
   }
 );
 
 export default function EngineerView() {
+  const [outputs, setOutputs] = useState<Record<string, unknown> | null>(null);
+
+  const handleOutputReady = (output: Record<string, unknown>) => {
+    setOutputs(output);
+    console.log('Workflow outputs ready:', output);
+  };
+
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <AssistantChat />
+      <ChatView projectId={null} onOutputReady={handleOutputReady} />
     </div>
   );
 }
