@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
       const project = await createProject(
         userId,
         projectName || `Campaign ${new Date().toLocaleDateString()}`,
+        undefined,
         userDescription.slice(0, 200)
       );
       projectId = project.id;

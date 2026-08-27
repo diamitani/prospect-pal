@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT NOT NULL UNIQUE,
   full_name TEXT,
   avatar_url TEXT,
-  plan TEXT CHECK (plan IN ('free', 'pro', 'agency')) DEFAULT 'free',
+  plan TEXT CHECK (plan IN ('free', 'diy', 'pro', 'core', 'agency')) DEFAULT 'free',
   onboarding_completed BOOLEAN DEFAULT FALSE,
   onboarding_data JSONB DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS workspaces (
   name TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
   owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  plan TEXT CHECK (plan IN ('free', 'pro', 'agency')) DEFAULT 'free',
+  plan TEXT CHECK (plan IN ('free', 'diy', 'pro', 'core', 'agency')) DEFAULT 'free',
   settings JSONB DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -445,6 +445,38 @@ CREATE TRIGGER update_projects_updated_at BEFORE UPDATE ON projects
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_workflows_updated_at BEFORE UPDATE ON automation_workflows
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================================
+-- LEADS & SDR ACTIVITY (Autonomous Core SDR Agent)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS leads (
+  id TEXT PRIMARY KEY,
+  workspace_id UUID REFERENCES workspaces(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  title TEXT,
+  company TEXT NOT NULL,
+  domain TEXT,
+  email TEXT NOT NULL,
+  email_status TEXT DEFAULT 'verified',
+  icp_score INTEGER DEFAULT 90,
+  status TEXT CHECK (status IN ('ready', 'queued', 'sent', 'replied', 'bounced')) DEFAULT 'ready',
+  location TEXT,
+  employee_count TEXT,
+  funding TEXT,
+  tech_stack TEXT[] DEFAULT ARRAY[]::TEXT[],
+  outreach_subject TEXT,
+  outreach_body TEXT,
+  last_contacted_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_leads_workspace_id ON leads(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
+CREATE INDEX IF NOT EXISTS idx_leads_icp_score ON leads(icp_score DESC);
+
+CREATE TRIGGER update_leads_updated_at BEFORE UPDATE ON leads
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Grant access to authenticated users

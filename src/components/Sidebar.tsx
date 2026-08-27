@@ -11,6 +11,8 @@ import {
   Settings,
   LogOut,
   Plus,
+  Sparkles,
+  Package,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -21,12 +23,14 @@ interface SidebarProps {
   userEmail: string;
 }
 
-const NAV: { id: View; label: string; icon: typeof LayoutDashboard }[] = [
+const NAV: { id: View; label: string; icon: typeof LayoutDashboard; badge?: string }[] = [
   { id: "home", label: "Dashboard", icon: LayoutDashboard },
   { id: "campaigns", label: "Campaigns", icon: Target },
   { id: "workflows", label: "Workflows", icon: Workflow },
   { id: "canvas", label: "Canvas", icon: PenTool },
-  { id: "engineer", label: "n8n Engineer", icon: MessageSquare },
+  { id: "core-sdr", label: "Core SDR Agent", icon: Sparkles as unknown as typeof LayoutDashboard, badge: "$199" },
+  { id: "engineer", label: "Agent Chat", icon: MessageSquare },
+  { id: "blueprints", label: "Blueprints Vault", icon: Package as unknown as typeof LayoutDashboard, badge: "$19.99" },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
@@ -115,6 +119,21 @@ export default function Sidebar({ currentView, onViewChange, projectName, userNa
             >
               <IconComponent size={16} strokeWidth={1.75} />
               <span style={{ flex: 1 }}>{item.label}</span>
+              {item.badge && (
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontFamily: "var(--font-data)",
+                    padding: "2px 6px",
+                    borderRadius: "var(--radius-pill)",
+                    background: item.badge === "$199" ? "rgba(217,185,104,0.18)" : "rgba(42,65,201,0.2)",
+                    color: item.badge === "$199" ? "var(--champagne-300)" : "var(--cobalt-300)",
+                    fontWeight: 700,
+                  }}
+                >
+                  {item.badge}
+                </span>
+              )}
               {active && (
                 <span
                   style={{
@@ -122,6 +141,7 @@ export default function Sidebar({ currentView, onViewChange, projectName, userNa
                     height: 6,
                     borderRadius: "50%",
                     background: "var(--cobalt-400)",
+                    marginLeft: 4,
                   }}
                 />
               )}

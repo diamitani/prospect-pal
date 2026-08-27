@@ -2,7 +2,7 @@
 
 import { View } from "@/types/app";
 import { Button, Card, Badge, Icon, StatTile } from "@/components/ds";
-import { Target, Workflow, PenTool, Settings, ArrowRight } from "lucide-react";
+import { Target, Workflow, PenTool, Settings, ArrowRight, Sparkles, Package } from "lucide-react";
 
 interface DashboardHomeProps {
   userName: string;
@@ -15,31 +15,39 @@ const quickActions = [
     id: "campaigns",
     icon: Target,
     title: "New campaign",
-    description: "Create filters for lead generation and promote products",
+    description: "Define ICP filters and campaign messaging",
     primary: true,
     view: "campaigns" as View,
   },
   {
-    id: "workflows",
-    icon: Workflow,
-    title: "Workflows",
-    description: "Browse and activate workflow templates",
+    id: "core-sdr",
+    icon: Sparkles,
+    title: "Core SDR agent",
+    description: "Launch autonomous research, PAS copy & direct outreach",
     primary: false,
-    view: "workflows" as View,
+    view: "core-sdr" as View,
   },
   {
     id: "canvas",
     icon: PenTool,
-    title: "Canvas",
-    description: "Edit and customize your automation workflows",
+    title: "Workflow canvas",
+    description: "Edit & deploy 9-node n8n, Make & Gumloop graphs",
     primary: false,
     view: "canvas" as View,
   },
   {
+    id: "blueprints",
+    icon: Package,
+    title: "Blueprints vault",
+    description: "Download JSONs, prompt engineering suites & PRDs",
+    primary: false,
+    view: "blueprints" as View,
+  },
+  {
     id: "settings",
     icon: Settings,
-    title: "Settings",
-    description: "Configure API keys and tool connections",
+    title: "Settings & BYOK",
+    description: "Manage zero-storage API keys and credentials",
     primary: false,
     view: "settings" as View,
   },
@@ -228,12 +236,15 @@ export default function DashboardHome({ userName, onNavigate }: DashboardHomePro
               Upload your company data, connect your GTM tools via Composio, and we&apos;ll generate a custom
               prospect automation engine based on your campaign details.
             </p>
-            <div style={{ display: "flex", gap: "var(--space-4)" }}>
-              <Button variant="accent" icon="Settings" onClick={() => onNavigate("settings")}>
-                Connect tools
+            <div style={{ display: "flex", gap: "var(--space-4)", flexWrap: "wrap" }}>
+              <Button variant="accent" icon="Sparkles" onClick={() => onNavigate("core-sdr")}>
+                Launch Core SDR ($199/mo)
               </Button>
-              <Button variant="outline" onClick={() => onNavigate("campaigns")}>
-                Create campaign
+              <Button variant="outline" icon="PenTool" onClick={() => onNavigate("canvas")}>
+                Open Workflow Canvas
+              </Button>
+              <Button variant="outline" icon="Package" onClick={() => onNavigate("blueprints")}>
+                Blueprints Vault ($19.99)
               </Button>
             </div>
           </div>

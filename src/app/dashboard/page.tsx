@@ -9,6 +9,8 @@ import WorkflowsView from "@/components/views/WorkflowsView";
 import CanvasView from "@/components/views/CanvasView";
 import EngineerView from "@/components/views/EngineerView";
 import SettingsView from "@/components/views/SettingsView";
+import CoreSdrView from "@/components/views/CoreSdrView";
+import BlueprintsView from "@/components/views/ProjectsView";
 import { View } from "@/types/app";
 
 interface UserSession {
@@ -84,7 +86,9 @@ export default function DashboardPage() {
           )}
           {view === "workflows" && <WorkflowsView />}
           {view === "canvas" && <CanvasView projectId={projectId} projectName={projectName} />}
+          {view === "core-sdr" && <CoreSdrView />}
           {view === "engineer" && <EngineerView />}
+          {view === "blueprints" && <BlueprintsView />}
           {view === "settings" && <SettingsView />}
         </main>
       </div>
