@@ -147,7 +147,7 @@ export default function HomePage() {
                 lineHeight: "var(--leading-tight)",
               }}
             >
-              Build a custom prospecting workflow<br />in n8n.
+              Your AI-powered<br />sales development team.
             </h1>
 
             <p
@@ -158,17 +158,17 @@ export default function HomePage() {
                 color: "var(--text-secondary)",
               }}
             >
-              Automate your Go-to-Market engine. Define your ICP and persona, connect your tools, and deploy a custom workflow to n8n — or download the JSON to import yourself.
+              From prospect research to personalized outreach — Prospect PAL handles the entire SDR workflow. Use our full-stack agent, or generate custom automation workflows for n8n, Make, or Gumloop.
             </p>
 
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 36 }}>
               <Link href="/signup">
                 <Button variant="accent" size="lg" icon="Zap">
-                  Build my engine — $99/mo
+                  Start free trial
                 </Button>
               </Link>
               <Button variant="outline" size="lg" icon="Play">
-                See a compile, 2 min
+                Watch the demo
               </Button>
             </div>
 
@@ -754,9 +754,9 @@ export default function HomePage() {
       {/* Pricing Section */}
       <section id="pricing" style={{ padding: "84px 32px", maxWidth: "var(--layout-max)", margin: "0 auto" }}>
         <SectionHeading
-          eyebrow="Transparent plans"
-          title="Compile once. Run it forever."
-          description="Bring your own keys. No per-lead markup, no vendor lock-in."
+          eyebrow="Simple pricing"
+          title="Choose your level of automation"
+          description="From DIY workflow templates to full-stack SDR agent. Start small, scale up."
         />
         <div
           style={{
@@ -768,60 +768,63 @@ export default function HomePage() {
           }}
         >
           <PricingCard
-            name="DIY build package"
+            name="Agent package"
             price="$19.99"
-            note="One-time download"
-            description="For engineers who want the prompts, the blueprint and the JSON, and will wire it themselves."
+            note="One-time purchase"
+            description="Everything you need to build your own automation. Skills, prompts, scaffolding, and documentation."
             features={[
-              "Canonical 9-node workflow JSON",
-              "Full prompt suite & variable schema",
-              "Self-hosted Docker guide",
-              "PAS email template suite",
-              ".env.template & credential map",
+              "9-node workflow JSON template",
+              "Agent skills & instructions",
+              "PRD & tech stack docs",
+              "Integration scaffolding",
+              "PAS email framework",
+              "Self-hosting guide",
             ]}
             cta={
-              <Button variant="outline" fullWidth onClick={() => handleOpenCheckout("diy")}>
+              <Button variant="outline" fullWidth onClick={() => handleOpenCheckout("package")}>
                 Get the package
               </Button>
             }
           />
           <PricingCard
             featured
-            name="Pro unlimited engine"
+            name="Campaign builder"
             price="$99"
             cadence="/ month"
-            note="Cancel anytime · BYOK"
-            description="The full architect: unlimited compiles, live node canvas, execution triage and signal leads."
+            note="Cancel anytime"
+            description="Design custom campaigns with our AI architect. Generate workflows for n8n, Make, or Gumloop."
             features={[
               "Unlimited campaign compiles",
-              "Live 9-node canvas",
-              "Connect & deploy to your n8n",
-              "Execution error triage",
-              "A/B PAS scripts studio",
-              "Slack one-click approval gates",
+              "Agent chat interface",
+              "Live workflow canvas",
+              "Multi-platform export",
+              "A/B email copy studio",
+              "Deploy to your instance",
             ]}
             cta={
-              <Button variant="accent" fullWidth icon="Zap" onClick={() => handleOpenCheckout("pro")}>
-                Start Pro
+              <Button variant="accent" fullWidth icon="Zap" onClick={() => handleOpenCheckout("builder")}>
+                Start building
               </Button>
             }
           />
           <PricingCard
             tone="sunken"
-            name="Custom architecture"
-            price="$999+"
-            note="White-glove engagement"
-            description="Custom waterfalls, sub-workflows, CRM cleansing and private infrastructure, built with you."
+            name="Core SDR agent"
+            price="$199"
+            cadence="/ month"
+            note="Full-stack automation"
+            description="Skip the workflow platforms. Our agent handles prospect research, outreach, and reporting directly."
             features={[
-              "Dedicated GTM systems engineer",
-              "Custom Clay & Apollo waterfalls",
-              "Legacy CRM dedupe audit",
-              "Custom sub-workflows & webhooks",
-              "Private support channel",
+              "End-to-end SDR automation",
+              "Prospect research & enrichment",
+              "AI-written personalized emails",
+              "Campaign performance dashboard",
+              "CRM sync & dedupe",
+              "No external tools required",
             ]}
             cta={
-              <Button variant="outline" fullWidth onClick={() => handleOpenCheckout("custom")}>
-                Request a build
+              <Button variant="primary" fullWidth icon="Sparkles" onClick={() => handleOpenCheckout("core")}>
+                Upgrade to Core
               </Button>
             }
           />
@@ -863,7 +866,7 @@ export default function HomePage() {
               marginBottom: 16,
             }}
           >
-            Automate your GTM engine today.
+            Stop manually prospecting. Start closing.
           </h2>
           <p
             style={{
@@ -873,13 +876,18 @@ export default function HomePage() {
               lineHeight: "var(--leading-relaxed)",
             }}
           >
-            Upload your company data. Connect your tools. Deploy a custom prospect automation engine in minutes.
+            Whether you build the automation yourself or let our agent handle everything — Prospect PAL gets your pipeline moving.
           </p>
-          <Link href="/signup">
-            <Button variant="accent" size="lg" icon="Zap">
-              Build my engine — $99/mo
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <Link href="/signup">
+              <Button variant="accent" size="lg" icon="Zap">
+                Start free trial
+              </Button>
+            </Link>
+            <Button variant="inverse" size="lg" icon="Package" onClick={() => handleOpenCheckout("package")}>
+              Get the $19.99 package
             </Button>
-          </Link>
+          </div>
         </div>
       </section>
 
