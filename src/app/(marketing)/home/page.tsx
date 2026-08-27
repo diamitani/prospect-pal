@@ -533,7 +533,7 @@ export default function HomePage() {
               <Icon name="ArrowDown" size={20} color="var(--text-muted)" />
             </div>
 
-            {/* Row 2: 4 nodes - AI & Output */}
+            {/* Row 2: 4 nodes - AI & Output (reversed for snake flow: 08 ← 07 ← 06 ← 05) */}
             <div
               style={{
                 display: "grid",
@@ -543,32 +543,18 @@ export default function HomePage() {
               }}
             >
               <NodeCard
-                step={5}
-                title={PIPELINE_NODES[4].title}
-                subtitle={PIPELINE_NODES[4].subtitle}
-                icon={PIPELINE_NODES[4].icon}
-                stage={PIPELINE_NODES[4].stage}
-                selected={activeNodeIndex === 4}
+                step={8}
+                title={PIPELINE_NODES[7].title}
+                subtitle={PIPELINE_NODES[7].subtitle}
+                icon={PIPELINE_NODES[7].icon}
+                stage={PIPELINE_NODES[7].stage}
+                selected={activeNodeIndex === 7}
                 onDeep={false}
-                onClick={() => setActiveNodeIndex(4)}
+                onClick={() => setActiveNodeIndex(7)}
                 style={{ minWidth: "auto" }}
               />
               <div style={{ padding: "0 8px", color: "var(--text-muted)" }}>
-                <Icon name="ArrowRight" size={18} />
-              </div>
-              <NodeCard
-                step={6}
-                title={PIPELINE_NODES[5].title}
-                subtitle={PIPELINE_NODES[5].subtitle}
-                icon={PIPELINE_NODES[5].icon}
-                stage={PIPELINE_NODES[5].stage}
-                selected={activeNodeIndex === 5}
-                onDeep={false}
-                onClick={() => setActiveNodeIndex(5)}
-                style={{ minWidth: "auto" }}
-              />
-              <div style={{ padding: "0 8px", color: "var(--text-muted)" }}>
-                <Icon name="ArrowRight" size={18} />
+                <Icon name="ArrowLeft" size={18} />
               </div>
               <NodeCard
                 step={7}
@@ -582,17 +568,31 @@ export default function HomePage() {
                 style={{ minWidth: "auto" }}
               />
               <div style={{ padding: "0 8px", color: "var(--text-muted)" }}>
-                <Icon name="ArrowRight" size={18} />
+                <Icon name="ArrowLeft" size={18} />
               </div>
               <NodeCard
-                step={8}
-                title={PIPELINE_NODES[7].title}
-                subtitle={PIPELINE_NODES[7].subtitle}
-                icon={PIPELINE_NODES[7].icon}
-                stage={PIPELINE_NODES[7].stage}
-                selected={activeNodeIndex === 7}
+                step={6}
+                title={PIPELINE_NODES[5].title}
+                subtitle={PIPELINE_NODES[5].subtitle}
+                icon={PIPELINE_NODES[5].icon}
+                stage={PIPELINE_NODES[5].stage}
+                selected={activeNodeIndex === 5}
                 onDeep={false}
-                onClick={() => setActiveNodeIndex(7)}
+                onClick={() => setActiveNodeIndex(5)}
+                style={{ minWidth: "auto" }}
+              />
+              <div style={{ padding: "0 8px", color: "var(--text-muted)" }}>
+                <Icon name="ArrowLeft" size={18} />
+              </div>
+              <NodeCard
+                step={5}
+                title={PIPELINE_NODES[4].title}
+                subtitle={PIPELINE_NODES[4].subtitle}
+                icon={PIPELINE_NODES[4].icon}
+                stage={PIPELINE_NODES[4].stage}
+                selected={activeNodeIndex === 4}
+                onDeep={false}
+                onClick={() => setActiveNodeIndex(4)}
                 style={{ minWidth: "auto" }}
               />
             </div>
