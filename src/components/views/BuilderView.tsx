@@ -1,16 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useChat } from "ai/react";
 import { Button, Card, Badge, Icon, PipelineRail, PipelineNode } from "@/components/ds";
 import { Send, Loader2 } from "lucide-react";
 
 interface BuilderViewProps {
   onCompiled?: () => void;
-}
-
-interface Message {
-  role: "user" | "assistant";
-  content: string;
 }
 
 const NINE_NODES: PipelineNode[] = [
@@ -27,50 +23,30 @@ const NINE_NODES: PipelineNode[] = [
 
 export default function BuilderView({ onCompiled }: BuilderViewProps) {
   const [mode, setMode] = useState<"chat" | "form">("chat");
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: "I'm your GTM automation architect. Tell me who you sell to, which tools hold your data, and how leads should enter the system.",
-    },
-  ]);
-  const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [activeNode, setActiveNode] = useState(2);
   const [isCompiling, setIsCompiling] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Use Vercel AI SDK for agent chat
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+    api: "/api/agent/chat",
+    initialMessages: [
+      {
+        id: "initial",
+        role: "assistant",
+        content: "I'm your GTM automation architect. Tell me who you sell to, which tools hold your data, and how leads should enter the system.",
+      },
+    ],
+  });
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = async () => {
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (!input.trim() || isLoading) return;
-
-    const userMessage = input.trim();
-    setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
-    setIsLoading(true);
-
-    try {
-      const response = await fetch("/api/pal/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage, history: messages }),
-      });
-
-      const data = await response.json();
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data.reply || "I've processed your request. Shall I continue?" },
-      ]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "I encountered an issue. Please try again or rephrase your request." },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
+    handleSubmit(e);
   };
 
   const handleCompile = async () => {
@@ -184,12 +160,11 @@ export default function BuilderView({ onCompiled }: BuilderViewProps) {
         </div>
 
         {/* Input */}
-        <div style={{ padding: "12px 16px", borderTop: "1px solid var(--border-hairline)", display: "flex", flexDirection: "column", gap: 10 }}>
+        <form onSubmit={onSubmit} style={{ padding: "12px 16px", borderTop: "1px solid var(--border-hairline)", display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={{ display: "flex", gap: 8 }}>
             <input
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              onChange={handleInputChange}
               placeholder="e.g. VP Sales at Series A SaaS, HubSpot + Apollo..."
               style={{
                 flex: 1,
@@ -201,14 +176,14 @@ export default function BuilderView({ onCompiled }: BuilderViewProps) {
                 outline: "none",
               }}
             />
-            <Button variant="primary" icon="ArrowUp" onClick={handleSend} disabled={isLoading || !input.trim()}>
+            <Button type="submit" variant="primary" icon="ArrowUp" disabled={isLoading || !input.trim()}>
               Send
             </Button>
           </div>
-          <Button variant="accent" fullWidth icon="Zap" onClick={handleCompile} disabled={isCompiling}>
+          <Button variant="accent" fullWidth icon="Zap" onClick={handleCompile} disabled={isCompiling} type="button">
             {isCompiling ? "Compiling engine..." : "Compile GTM engine"}
           </Button>
-        </div>
+        </form>
       </div>
 
       {/* Right: Canvas */}
