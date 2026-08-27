@@ -231,48 +231,46 @@ export default function HomePage() {
       </nav>
 
       {/* Hero Section */}
-      <section style={{ padding: "64px 32px 0", maxWidth: "var(--layout-max)", margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <Badge tone="brand" icon="ShieldCheck" style={{ marginBottom: 22 }}>
+      <section style={{ padding: "80px 32px 0", maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", maxWidth: 840, margin: "0 auto 64px" }}>
+          <Badge tone="brand" icon="ShieldCheck" style={{ marginBottom: 20 }}>
             BYOK · your instance
           </Badge>
 
           <h1
             style={{
-              margin: "0 0 18px",
+              margin: "0 0 24px",
               fontFamily: "var(--font-display)",
               fontWeight: "var(--weight-bold)",
-              fontSize: "var(--text-display-1)",
-              letterSpacing: "var(--tracking-display)",
-              lineHeight: "var(--leading-tight)",
+              fontSize: 68,
+              letterSpacing: "-0.02em",
+              lineHeight: 1.1,
+              color: "var(--text-primary)",
             }}
           >
-            Prospect PAL<br />
-            <span style={{ color: "var(--cobalt-600)" }}>
-              Your agent copilot for building outbound sales motions.
-            </span>
+            Your agent copilot for{" "}
+            <span style={{ color: "var(--cobalt-600)" }}>outbound sales</span>
           </h1>
 
           <p
             style={{
-              margin: "0 auto 30px",
-              fontSize: 19,
-              lineHeight: "var(--leading-relaxed)",
+              margin: "0 auto 40px",
+              fontSize: 21,
+              lineHeight: 1.6,
               color: "var(--text-secondary)",
-              maxWidth: 660,
+              maxWidth: 680,
             }}
           >
-            Prospect PAL enables sales teams to book more qualified meetings. We provide an agent copilot tailored to your
-            tech stack, product, and ICP, and equip it with skills, sub-agents, and a harness to build an outbound
-            automation workflow in n8n, Make, Gumloop, or a custom AI solution that deploys from your instance.
+            Build automation workflows in n8n, Make, or Gumloop. Tailored to your stack, product, and ICP. Deploy from
+            your instance.
           </p>
 
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 36 }}>
+          <div style={{ display: "flex", gap: 16, justifyContent: "center", marginBottom: 48 }}>
             <Button variant="accent" size="lg" onClick={() => handleOpenCheckout("builder")}>
               Get Prospect PAL — $99/mo
             </Button>
             <Button variant="outline" size="lg" icon="Play">
-              See a compile, 2 min
+              See a compile
             </Button>
           </div>
 
@@ -281,15 +279,15 @@ export default function HomePage() {
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(4, 1fr)",
-              gap: 20,
-              maxWidth: 900,
+              gap: 24,
+              maxWidth: 800,
               margin: "0 auto",
             }}
           >
             <StatTile value="Your instance" label="Deploy, don't rent" tone="brand" />
-            <StatTile value="100% BYOK" label="Keys stay in your workspace" tone="verified" />
-            <StatTile value="Unlimited" label="Campaigns on Team" />
-            <StatTile value="Deterministic" label="Templates + your data" />
+            <StatTile value="100% BYOK" label="Keys stay local" tone="verified" />
+            <StatTile value="Unlimited" label="Campaigns" />
+            <StatTile value="Deterministic" label="Template-driven" />
           </div>
         </div>
 
