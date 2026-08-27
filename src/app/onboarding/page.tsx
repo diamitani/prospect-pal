@@ -52,6 +52,7 @@ export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [isCompiling, setIsCompiling] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<IntakeFormState>({
     trigger: "cron",
@@ -83,23 +84,35 @@ export default function OnboardingPage() {
   const handleComplete = async () => {
     setLoading(true);
     setIsCompiling(true);
+    setError(null);
 
     try {
-      // Save onboarding answers to API
-      await fetch("/api/user/onboarding", {
+      const res = await fetch("/api/user/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
-      }).catch(() => null);
+      });
 
-      // Simulate PAL Intent Compiler compilation
-      setTimeout(() => {
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error("[onboarding] API error:", data);
+        setError(data.error || "Failed to save your preferences. Please try again.");
         setIsCompiling(false);
         setLoading(false);
-        router.push("/dashboard");
-      }, 1400);
-    } catch {
+        return;
+      }
+
+      // Brief delay for visual feedback then navigate
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setIsCompiling(false);
+      setLoading(false);
       router.push("/dashboard");
+    } catch (err) {
+      console.error("[onboarding] Error:", err);
+      setError("Connection error. Please check your internet and try again.");
+      setIsCompiling(false);
+      setLoading(false);
     }
   };
 
@@ -504,6 +517,23 @@ export default function OnboardingPage() {
                   <div>LLM Provider: <strong style={{ color: "white" }}>{formData.llm}</strong></div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <div
+              style={{
+                marginTop: 24,
+                padding: "14px 18px",
+                background: "#fef2f2",
+                border: "1px solid #fecaca",
+                borderRadius: "var(--radius-lg)",
+                color: "#dc2626",
+                fontSize: 14,
+              }}
+            >
+              {error}
             </div>
           )}
 

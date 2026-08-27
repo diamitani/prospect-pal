@@ -1,6 +1,6 @@
 /**
  * Dashboard Layout
- * Auth and onboarding checks are handled by middleware
+ * Auth and onboarding checks
  */
 import { getSession } from '@/lib/auth-supabase';
 import { redirect } from 'next/navigation';
@@ -17,8 +17,9 @@ export default async function DashboardLayout({
     redirect('/login?redirectTo=/dashboard');
   }
 
-  // Onboarding check is handled in middleware
-  // Middleware redirects to /onboarding if not completed
+  if (!session.onboardingCompleted) {
+    redirect('/onboarding');
+  }
 
   return <>{children}</>;
 }

@@ -15,40 +15,61 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { company, role, tools, campaignIntent } = body;
-
     const supabase = await createClient();
 
-    // Save onboarding data to users table
-    const { error } = await supabase
+    // Update user record to mark onboarding complete
+    const { data, error } = await supabase
       .from('users')
       .update({
         onboarding_completed: true,
         onboarding_data: {
-          company,
-          role,
-          tools,
-          campaignIntent,
+          ...body,
           completed_at: new Date().toISOString(),
         },
         updated_at: new Date().toISOString(),
       })
-      .eq('id', session.id);
+      .eq('id', session.id)
+      .select('id')
+      .single();
 
     if (error) {
-      console.error("[onboarding] Error saving onboarding data:", error);
-      return NextResponse.json(
-        { error: "Failed to save onboarding data" },
-        { status: 500 }
-      );
+      console.error("[onboarding] Update error:", error);
+
+      // If no rows updated, user record doesn't exist - try to create it
+      if (error.code === 'PGRST116') {
+        console.log("[onboarding] User record not found, attempting insert");
+
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert({
+            id: session.id,
+            email: session.email,
+            full_name: session.name,
+            onboarding_completed: true,
+            onboarding_data: {
+              ...body,
+              completed_at: new Date().toISOString(),
+            },
+          });
+
+        if (insertError) {
+          console.error("[onboarding] Insert error:", insertError);
+          return NextResponse.json(
+            { error: "Failed to create user profile. Please contact support." },
+            { status: 500 }
+          );
+        }
+      } else {
+        return NextResponse.json(
+          { error: "Failed to save onboarding data" },
+          { status: 500 }
+        );
+      }
     }
 
     console.log("[onboarding] User completed onboarding:", {
       userId: session.id,
-      company,
-      role,
-      tools,
-      campaignIntent,
+      email: session.email,
     });
 
     return NextResponse.json({
