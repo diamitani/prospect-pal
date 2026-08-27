@@ -1,4 +1,8 @@
-import { getSession } from '@/lib/auth';
+/**
+ * Dashboard Layout
+ * Auth and onboarding checks are handled by middleware
+ */
+import { getSession } from '@/lib/auth-supabase';
 import { redirect } from 'next/navigation';
 import { ReactNode } from 'react';
 
@@ -13,11 +17,8 @@ export default async function DashboardLayout({
     redirect('/login?redirectTo=/dashboard');
   }
 
-  // Check onboarding status (implement this in auth library later)
-  // const onboardingCompleted = await checkOnboardingStatus(session.id);
-  // if (!onboardingCompleted) {
-  //   redirect('/onboarding');
-  // }
+  // Onboarding check is handled in middleware
+  // Middleware redirects to /onboarding if not completed
 
   return <>{children}</>;
 }

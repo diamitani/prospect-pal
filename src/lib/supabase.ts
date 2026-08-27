@@ -96,6 +96,7 @@ export interface Project {
 export async function createProject(
   userId: string,
   name: string,
+  workspaceId?: string,
   description?: string,
   icpConfig?: Record<string, unknown>,
   toolStack?: Record<string, unknown>
@@ -103,6 +104,7 @@ export async function createProject(
   const project = {
     id: uuidv4(),
     user_id: userId,
+    workspace_id: workspaceId,
     name,
     description,
     icp_config: icpConfig || {},

@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       toolStack?: Record<string, unknown>;
     };
     const userId = req.headers.get("x-user-id") || "demo-user";
-    const project = await createProject(userId, name || "New Campaign", description, icpConfig, toolStack);
+    const project = await createProject(userId, name || "New Campaign", undefined, description, icpConfig, toolStack);
     return NextResponse.json({ project }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });
