@@ -15,16 +15,19 @@ export async function POST(req: NextRequest) {
 
     // Update lead status in Supabase
     if (supabase) {
-      await supabase
-        .from("leads")
-        .update({
-          status: "sent",
-          last_contacted_at: new Date().toISOString(),
-          outreach_subject: emailSubject,
-          outreach_body: emailBody,
-        })
-        .eq("id", leadId)
-        .catch(() => null);
+      try {
+        await supabase
+          .from("leads")
+          .update({
+            status: "sent",
+            last_contacted_at: new Date().toISOString(),
+            outreach_subject: emailSubject,
+            outreach_body: emailBody,
+          })
+          .eq("id", leadId);
+      } catch (dbErr) {
+        console.warn("[SDR Dispatch] Supabase update warning:", dbErr);
+      }
     }
 
     return NextResponse.json({

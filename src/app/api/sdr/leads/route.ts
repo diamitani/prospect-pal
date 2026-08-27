@@ -118,7 +118,11 @@ export async function POST(req: NextRequest) {
 
     const supabase = await createClient().catch(() => null);
     if (supabase) {
-      await supabase.from("leads").insert([newLead]).catch(() => null);
+      try {
+        await supabase.from("leads").insert([newLead]);
+      } catch (dbErr) {
+        console.warn("[SDR Leads] Supabase insert warning:", dbErr);
+      }
     }
 
     return NextResponse.json({ success: true, lead: newLead });

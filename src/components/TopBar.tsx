@@ -14,6 +14,8 @@ const VIEW_META: Record<View, { title: string; crumb: string }> = {
   campaigns: { title: "Campaigns", crumb: "Manage your lead generation campaigns" },
   workflows: { title: "Workflows", crumb: "Templates and activated skills" },
   canvas: { title: "Canvas", crumb: "Edit your automation workflow" },
+  "core-sdr": { title: "Core SDR Agent", crumb: "Autonomous prospecting, deep research, and PAS outreach" },
+  blueprints: { title: "Blueprints Vault", crumb: "Production 9-node JSONs, soul.md, and documentation packages" },
   engineer: { title: "n8n Engineer", crumb: "Build and configure your prospect automation workflows" },
   settings: { title: "Settings", crumb: "API keys and configuration" },
 };
