@@ -225,7 +225,7 @@ export default function HomePage() {
             </Button>
           </Link>
           <Button variant="accent" size="md" onClick={() => handleOpenCheckout("builder")}>
-            Get Prospect PAL
+            Start free
           </Button>
         </div>
       </nav>
@@ -265,13 +265,13 @@ export default function HomePage() {
             your instance.
           </p>
 
-          <div style={{ display: "flex", gap: 16, justifyContent: "center", marginBottom: 48 }}>
+          <div style={{ display: "flex", gap: 16, justifyContent: "center", alignItems: "center", marginBottom: 48 }}>
             <Button variant="accent" size="lg" onClick={() => handleOpenCheckout("builder")}>
-              Get Prospect PAL — $99/mo
+              Build your first workflow free
             </Button>
-            <Button variant="outline" size="lg" icon="Play">
-              See a compile
-            </Button>
+            <span style={{ fontSize: "var(--text-caption)", color: "var(--text-muted)" }}>
+              No credit card required
+            </span>
           </div>
 
           {/* Hero Stats */}
@@ -661,7 +661,7 @@ export default function HomePage() {
             Research your leads, generate new ones, send personalized messages, and get accurate reporting.
           </p>
           <Button variant="accent" size="lg" onClick={() => handleOpenCheckout("builder")}>
-            Get your Prospect PAL today
+            Build your first workflow free
           </Button>
         </div>
       </section>
