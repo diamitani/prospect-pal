@@ -193,7 +193,7 @@ export default function HomePage() {
   const router = useRouter();
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("builder");
-  const [activeNodeIndex, setActiveNodeIndex] = useState(2);
+  const [activeNodeIndex, setActiveNodeIndex] = useState(0);
 
   const handleOpenCheckout = (planId: string) => {
     setSelectedPlan(planId);
