@@ -288,8 +288,8 @@ export default function HomePage() {
               Sign in
             </Button>
           </Link>
-          <Button variant="accent" size="md" onClick={() => handleOpenCheckout("builder")}>
-            Start free
+          <Button variant="accent" size="md" onClick={() => handleOpenCheckout("pro")}>
+            Get started
           </Button>
         </div>
       </nav>
@@ -330,12 +330,9 @@ export default function HomePage() {
           </p>
 
           <div style={{ display: "flex", gap: 16, justifyContent: "center", alignItems: "center", marginBottom: 48 }}>
-            <Button variant="accent" size="lg" onClick={() => handleOpenCheckout("builder")}>
-              Build your first workflow free
+            <Button variant="accent" size="lg" onClick={() => handleOpenCheckout("pro")}>
+              Build your first workflow
             </Button>
-            <span style={{ fontSize: "var(--text-caption)", color: "var(--text-muted)" }}>
-              No credit card required
-            </span>
           </div>
 
           {/* Hero Stats */}
@@ -632,7 +629,7 @@ export default function HomePage() {
                   {NINE_NODES[activeNodeIndex].subtitle}
                 </p>
               </div>
-              <Button variant="outline" icon="Settings2" onClick={() => handleOpenCheckout("builder")} size="sm">
+              <Button variant="outline" icon="Settings2" onClick={() => handleOpenCheckout("pro")} size="sm">
                 Configure
               </Button>
             </div>
@@ -819,8 +816,8 @@ export default function HomePage() {
         >
           <PricingCard
             name="DIY skill package"
-            price="Download"
-            note="Configure your keys"
+            price="$19.99"
+            note="One-time · Configure your keys"
             description="Agent directory files, sub-agents, SKILL.md files, and templates. Upload into your own coding harness and deploy."
             features={[
               "Agent directory + sub-agents",
@@ -830,9 +827,11 @@ export default function HomePage() {
               "You configure keys",
             ]}
             cta={
-              <Button variant="outline" fullWidth onClick={() => handleOpenCheckout("package")}>
-                Download the package
-              </Button>
+              <Link href="/packages">
+                <Button variant="outline" fullWidth>
+                  View package — $19.99
+                </Button>
+              </Link>
             }
           />
           <PricingCard
@@ -851,7 +850,7 @@ export default function HomePage() {
               "Unlimited campaigns",
             ]}
             cta={
-              <Button variant="accent" fullWidth onClick={() => handleOpenCheckout("builder")}>
+              <Button variant="accent" fullWidth onClick={() => handleOpenCheckout("pro")}>
                 Start Team
               </Button>
             }
@@ -938,8 +937,8 @@ export default function HomePage() {
           >
             Research your leads, generate new ones, send personalized messages, and get accurate reporting.
           </p>
-          <Button variant="accent" size="lg" onClick={() => handleOpenCheckout("builder")}>
-            Build your first workflow free
+          <Button variant="accent" size="lg" onClick={() => handleOpenCheckout("pro")}>
+            Build your first workflow
           </Button>
         </div>
       </section>
@@ -954,7 +953,7 @@ export default function HomePage() {
             title="Leads that already run n8n"
             description="Stack detection plus hiring intent, so your first line writes itself."
             action={
-              <Button variant="inverse" iconRight="ArrowUpRight" onClick={() => handleOpenCheckout("builder")}>
+              <Button variant="inverse" iconRight="ArrowUpRight" onClick={() => handleOpenCheckout("pro")}>
                 Access live signals
               </Button>
             }
