@@ -20,7 +20,7 @@ import {
   NodeCard,
 } from "@/components/ds";
 
-const NINE_NODES: PipelineNode[] = [
+const PIPELINE_NODES: PipelineNode[] = [
   {
     title: "Intake & cron",
     subtitle: "Trigger source",
@@ -54,20 +54,20 @@ const NINE_NODES: PipelineNode[] = [
     tooltip: "Finds the right people at target companies. Uses Apollo, Clay, or ZoomInfo to pull verified emails for your target personas (VP Engineering, Head of Sales, etc.) and enriches company data.",
   },
   {
-    title: "AI research & PAS",
-    subtitle: "Email copy",
+    title: "AI research",
+    subtitle: "Company intel",
+    icon: "Search",
+    stage: "ai",
+    binding: "n8n-nodes-base.openai",
+    tooltip: "Researches each company using AI. Reads their website, recent news, and LinkedIn to find pain points, tech stack, and triggers that match your solution.",
+  },
+  {
+    title: "Email copywriter",
+    subtitle: "Personalized copy",
     icon: "Sparkles",
     stage: "ai",
     binding: "n8n-nodes-base.openai",
-    tooltip: "Researches each company and writes personalized emails. The AI reads their website, finds pain points that match your solution, and writes Problem-Agitate-Solution copy tailored to each prospect.",
-  },
-  {
-    title: "Approval switch",
-    subtitle: "Human gate",
-    icon: "Scale",
-    stage: "logic",
-    binding: "n8n-nodes-base.switch",
-    tooltip: "Your quality control gate. Set to auto-send (no review), human approval (review each batch before sending), or draft-only (generate emails but never send). You control the level of automation.",
+    tooltip: "Writes personalized emails using the research. Creates Problem-Agitate-Solution copy tailored to each prospect's specific situation and pain points.",
   },
   {
     title: "CRM contact create",
@@ -84,14 +84,6 @@ const NINE_NODES: PipelineNode[] = [
     stage: "sequence",
     binding: "n8n-nodes-base.smartlead",
     tooltip: "Enrolls contacts into your email sequence. Connects to Smartlead, Instantly, or HubSpot Sequences to start sending the personalized emails on your schedule (immediate, next day, custom timing).",
-  },
-  {
-    title: "Review alert",
-    subtitle: "Slack notify",
-    icon: "Bell",
-    stage: "logic",
-    binding: "n8n-nodes-base.slack",
-    tooltip: "Sends you a summary notification in Slack. Shows how many leads were processed, enriched, and enrolled so you can track your automation without logging into multiple tools.",
   },
 ];
 
@@ -380,7 +372,7 @@ export default function HomePage() {
                   margin: 0,
                 }}
               >
-                9-Node Pipeline Architecture
+                8-Node Pipeline Architecture
               </h3>
               <p
                 style={{
@@ -395,13 +387,80 @@ export default function HomePage() {
             <Badge tone="verified">Graph compiled</Badge>
           </div>
 
-          {/* 3x3 Grid Architecture */}
+          {/* Selected Node Details Panel - Prominent at top */}
+          <div
+            style={{
+              padding: "20px 24px",
+              borderRadius: "var(--radius-xl)",
+              background: "var(--cobalt-50)",
+              border: "2px solid var(--cobalt-200)",
+              marginBottom: 28,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 24 }}>
+              <div style={{ flex: 1 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    marginBottom: 10,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: "var(--font-data)",
+                      fontSize: "var(--text-h3)",
+                      fontWeight: 700,
+                      color: "var(--cobalt-600)",
+                    }}
+                  >
+                    {String(activeNodeIndex + 1).padStart(2, "0")}
+                  </span>
+                  <h4
+                    style={{
+                      fontSize: "var(--text-body-lg)",
+                      color: "var(--text-primary)",
+                      fontWeight: 600,
+                      margin: 0,
+                    }}
+                  >
+                    {PIPELINE_NODES[activeNodeIndex].title}
+                  </h4>
+                  <span
+                    style={{
+                      fontSize: "var(--text-caption)",
+                      color: "var(--text-muted)",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {PIPELINE_NODES[activeNodeIndex].subtitle}
+                  </span>
+                </div>
+                <p
+                  style={{
+                    fontSize: "var(--text-body-sm)",
+                    color: "var(--text-secondary)",
+                    lineHeight: "var(--leading-relaxed)",
+                    margin: 0,
+                  }}
+                >
+                  {PIPELINE_NODES[activeNodeIndex].tooltip}
+                </p>
+              </div>
+              <Button variant="primary" icon="Settings2" onClick={() => handleOpenCheckout("pro")} size="sm">
+                Configure
+              </Button>
+            </div>
+          </div>
+
+          {/* 4+3 Grid Architecture */}
           <div style={{ position: "relative" }}>
-            {/* Row 1: Intake */}
+            {/* Row 1: 4 nodes - Intake & Process */}
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "1fr auto 1fr auto 1fr",
+                gridTemplateColumns: "1fr auto 1fr auto 1fr auto 1fr",
                 alignItems: "center",
                 gap: 0,
                 marginBottom: 20,
@@ -409,240 +468,134 @@ export default function HomePage() {
             >
               <NodeCard
                 step={1}
-                title={NINE_NODES[0].title}
-                subtitle={NINE_NODES[0].subtitle}
-                icon={NINE_NODES[0].icon}
-                stage={NINE_NODES[0].stage}
-                binding={NINE_NODES[0].binding}
+                title={PIPELINE_NODES[0].title}
+                subtitle={PIPELINE_NODES[0].subtitle}
+                icon={PIPELINE_NODES[0].icon}
+                stage={PIPELINE_NODES[0].stage}
                 selected={activeNodeIndex === 0}
                 onDeep={false}
                 onClick={() => setActiveNodeIndex(0)}
                 style={{ minWidth: "auto" }}
               />
-              <div style={{ padding: "0 12px", color: "var(--text-muted)" }}>
-                <Icon name="ArrowRight" size={20} />
+              <div style={{ padding: "0 8px", color: "var(--text-muted)" }}>
+                <Icon name="ArrowRight" size={18} />
               </div>
               <NodeCard
                 step={2}
-                title={NINE_NODES[1].title}
-                subtitle={NINE_NODES[1].subtitle}
-                icon={NINE_NODES[1].icon}
-                stage={NINE_NODES[1].stage}
-                binding={NINE_NODES[1].binding}
+                title={PIPELINE_NODES[1].title}
+                subtitle={PIPELINE_NODES[1].subtitle}
+                icon={PIPELINE_NODES[1].icon}
+                stage={PIPELINE_NODES[1].stage}
                 selected={activeNodeIndex === 1}
                 onDeep={false}
                 onClick={() => setActiveNodeIndex(1)}
                 style={{ minWidth: "auto" }}
               />
-              <div style={{ padding: "0 12px", color: "var(--text-muted)" }}>
-                <Icon name="ArrowRight" size={20} />
+              <div style={{ padding: "0 8px", color: "var(--text-muted)" }}>
+                <Icon name="ArrowRight" size={18} />
               </div>
               <NodeCard
                 step={3}
-                title={NINE_NODES[2].title}
-                subtitle={NINE_NODES[2].subtitle}
-                icon={NINE_NODES[2].icon}
-                stage={NINE_NODES[2].stage}
-                binding={NINE_NODES[2].binding}
+                title={PIPELINE_NODES[2].title}
+                subtitle={PIPELINE_NODES[2].subtitle}
+                icon={PIPELINE_NODES[2].icon}
+                stage={PIPELINE_NODES[2].stage}
                 selected={activeNodeIndex === 2}
                 onDeep={false}
                 onClick={() => setActiveNodeIndex(2)}
                 style={{ minWidth: "auto" }}
               />
-            </div>
-
-            {/* Vertical connector after row 1 */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                paddingRight: "calc(16.67% - 10px)",
-                marginBottom: 20,
-              }}
-            >
-              <Icon name="ArrowDown" size={20} color="var(--text-muted)" />
-            </div>
-
-            {/* Row 2: Process */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr auto 1fr auto 1fr",
-                alignItems: "center",
-                gap: 0,
-                marginBottom: 20,
-              }}
-            >
+              <div style={{ padding: "0 8px", color: "var(--text-muted)" }}>
+                <Icon name="ArrowRight" size={18} />
+              </div>
               <NodeCard
                 step={4}
-                title={NINE_NODES[3].title}
-                subtitle={NINE_NODES[3].subtitle}
-                icon={NINE_NODES[3].icon}
-                stage={NINE_NODES[3].stage}
-                binding={NINE_NODES[3].binding}
+                title={PIPELINE_NODES[3].title}
+                subtitle={PIPELINE_NODES[3].subtitle}
+                icon={PIPELINE_NODES[3].icon}
+                stage={PIPELINE_NODES[3].stage}
                 selected={activeNodeIndex === 3}
                 onDeep={false}
                 onClick={() => setActiveNodeIndex(3)}
                 style={{ minWidth: "auto" }}
               />
-              <div style={{ padding: "0 12px", color: "var(--text-muted)" }}>
-                <Icon name="ArrowRight" size={20} />
-              </div>
-              <NodeCard
-                step={5}
-                title={NINE_NODES[4].title}
-                subtitle={NINE_NODES[4].subtitle}
-                icon={NINE_NODES[4].icon}
-                stage={NINE_NODES[4].stage}
-                binding={NINE_NODES[4].binding}
-                selected={activeNodeIndex === 4}
-                onDeep={false}
-                onClick={() => setActiveNodeIndex(4)}
-                style={{ minWidth: "auto" }}
-              />
-              <div style={{ padding: "0 12px", color: "var(--text-muted)" }}>
-                <Icon name="ArrowRight" size={20} />
-              </div>
-              <NodeCard
-                step={6}
-                title={NINE_NODES[5].title}
-                subtitle={NINE_NODES[5].subtitle}
-                icon={NINE_NODES[5].icon}
-                stage={NINE_NODES[5].stage}
-                binding={NINE_NODES[5].binding}
-                selected={activeNodeIndex === 5}
-                onDeep={false}
-                onClick={() => setActiveNodeIndex(5)}
-                style={{ minWidth: "auto" }}
-              />
             </div>
 
-            {/* Vertical connector after row 2 */}
+            {/* Vertical connector */}
             <div
               style={{
                 display: "flex",
                 justifyContent: "flex-end",
-                paddingRight: "calc(16.67% - 10px)",
+                paddingRight: "calc(12.5% - 10px)",
                 marginBottom: 20,
               }}
             >
               <Icon name="ArrowDown" size={20} color="var(--text-muted)" />
             </div>
 
-            {/* Row 3: Output */}
+            {/* Row 2: 4 nodes - AI & Output */}
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "1fr auto 1fr auto 1fr",
+                gridTemplateColumns: "1fr auto 1fr auto 1fr auto 1fr",
                 alignItems: "center",
                 gap: 0,
               }}
             >
               <NodeCard
+                step={5}
+                title={PIPELINE_NODES[4].title}
+                subtitle={PIPELINE_NODES[4].subtitle}
+                icon={PIPELINE_NODES[4].icon}
+                stage={PIPELINE_NODES[4].stage}
+                selected={activeNodeIndex === 4}
+                onDeep={false}
+                onClick={() => setActiveNodeIndex(4)}
+                style={{ minWidth: "auto" }}
+              />
+              <div style={{ padding: "0 8px", color: "var(--text-muted)" }}>
+                <Icon name="ArrowRight" size={18} />
+              </div>
+              <NodeCard
+                step={6}
+                title={PIPELINE_NODES[5].title}
+                subtitle={PIPELINE_NODES[5].subtitle}
+                icon={PIPELINE_NODES[5].icon}
+                stage={PIPELINE_NODES[5].stage}
+                selected={activeNodeIndex === 5}
+                onDeep={false}
+                onClick={() => setActiveNodeIndex(5)}
+                style={{ minWidth: "auto" }}
+              />
+              <div style={{ padding: "0 8px", color: "var(--text-muted)" }}>
+                <Icon name="ArrowRight" size={18} />
+              </div>
+              <NodeCard
                 step={7}
-                title={NINE_NODES[6].title}
-                subtitle={NINE_NODES[6].subtitle}
-                icon={NINE_NODES[6].icon}
-                stage={NINE_NODES[6].stage}
-                binding={NINE_NODES[6].binding}
+                title={PIPELINE_NODES[6].title}
+                subtitle={PIPELINE_NODES[6].subtitle}
+                icon={PIPELINE_NODES[6].icon}
+                stage={PIPELINE_NODES[6].stage}
                 selected={activeNodeIndex === 6}
                 onDeep={false}
                 onClick={() => setActiveNodeIndex(6)}
                 style={{ minWidth: "auto" }}
               />
-              <div style={{ padding: "0 12px", color: "var(--text-muted)" }}>
-                <Icon name="ArrowRight" size={20} />
+              <div style={{ padding: "0 8px", color: "var(--text-muted)" }}>
+                <Icon name="ArrowRight" size={18} />
               </div>
               <NodeCard
                 step={8}
-                title={NINE_NODES[7].title}
-                subtitle={NINE_NODES[7].subtitle}
-                icon={NINE_NODES[7].icon}
-                stage={NINE_NODES[7].stage}
-                binding={NINE_NODES[7].binding}
+                title={PIPELINE_NODES[7].title}
+                subtitle={PIPELINE_NODES[7].subtitle}
+                icon={PIPELINE_NODES[7].icon}
+                stage={PIPELINE_NODES[7].stage}
                 selected={activeNodeIndex === 7}
                 onDeep={false}
                 onClick={() => setActiveNodeIndex(7)}
                 style={{ minWidth: "auto" }}
               />
-              <div style={{ padding: "0 12px", color: "var(--text-muted)" }}>
-                <Icon name="ArrowRight" size={20} />
-              </div>
-              <NodeCard
-                step={9}
-                title={NINE_NODES[8].title}
-                subtitle={NINE_NODES[8].subtitle}
-                icon={NINE_NODES[8].icon}
-                stage={NINE_NODES[8].stage}
-                binding={NINE_NODES[8].binding}
-                selected={activeNodeIndex === 8}
-                onDeep={false}
-                onClick={() => setActiveNodeIndex(8)}
-                style={{ minWidth: "auto" }}
-              />
             </div>
-          </div>
-
-          {/* Selected Node Details Panel */}
-          <div
-            style={{
-              marginTop: 28,
-              padding: "24px 28px",
-              borderRadius: "var(--radius-xl)",
-              background: "var(--surface-sunken)",
-              border: "1px solid var(--border-hairline)",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 24, marginBottom: 14 }}>
-              <div>
-                <div
-                  style={{
-                    fontFamily: "var(--font-data)",
-                    fontSize: "var(--text-micro)",
-                    color: "var(--text-muted)",
-                    marginBottom: 8,
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  NODE {String(activeNodeIndex + 1).padStart(2, "0")} · {NINE_NODES[activeNodeIndex].binding}
-                </div>
-                <h4
-                  style={{
-                    fontSize: "var(--text-body-lg)",
-                    color: "var(--text-primary)",
-                    fontWeight: 600,
-                    margin: "0 0 6px",
-                  }}
-                >
-                  {NINE_NODES[activeNodeIndex].title}
-                </h4>
-                <p
-                  style={{
-                    fontSize: "var(--text-caption)",
-                    color: "var(--text-muted)",
-                    fontWeight: 500,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                    margin: 0,
-                  }}
-                >
-                  {NINE_NODES[activeNodeIndex].subtitle}
-                </p>
-              </div>
-              <Button variant="outline" icon="Settings2" onClick={() => handleOpenCheckout("pro")} size="sm">
-                Configure
-              </Button>
-            </div>
-            <p
-              style={{
-                fontSize: "var(--text-body-sm)",
-                color: "var(--text-secondary)",
-                lineHeight: "var(--leading-relaxed)",
-                margin: 0,
-              }}
-            >
-              {NINE_NODES[activeNodeIndex].tooltip}
-            </p>
           </div>
         </div>
       </section>
