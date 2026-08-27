@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
+import { getSession } from "@/lib/auth-supabase";
 
 // Root / — redirect to /dashboard if authed, else /home (landing)
 export default async function RootPage() {

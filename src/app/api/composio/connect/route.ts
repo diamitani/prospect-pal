@@ -4,7 +4,7 @@
  * Returns a redirect URL to send the user to for OAuth.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getSession } from "@/lib/auth-supabase";
 import { initiateConnection, isComposioConfigured } from "@/lib/composio";
 
 export const runtime = "nodejs";

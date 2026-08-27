@@ -3,7 +3,7 @@
  * Returns connection status for all Composio-supported apps for the current user.
  */
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getSession } from "@/lib/auth-supabase";
 import { getConnectionStatuses, isComposioConfigured, COMPOSIO_APPS } from "@/lib/composio";
 
 export const runtime = "nodejs";

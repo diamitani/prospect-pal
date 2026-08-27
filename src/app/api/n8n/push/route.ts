@@ -4,7 +4,7 @@
  * Requires: n8nUrl (e.g. https://myinstance.app.n8n.cloud), n8nApiKey, workflowJson
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getSession } from "@/lib/auth-supabase";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
