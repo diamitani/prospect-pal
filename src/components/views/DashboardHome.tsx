@@ -12,36 +12,36 @@ interface DashboardHomeProps {
 
 const quickActions = [
   {
-    id: "campaigns",
+    id: "wizard",
     icon: Target,
-    title: "New campaign",
-    description: "Create filters for lead generation and promote products",
+    title: "Campaign wizard",
+    description: "Answer 10 questions to configure your prospect automation",
     primary: true,
-    view: "campaigns" as View,
+    view: "wizard" as View,
   },
   {
-    id: "workflows",
+    id: "builder",
     icon: Workflow,
-    title: "Workflows",
-    description: "Browse and activate workflow templates",
+    title: "Workflow builder",
+    description: "Chat with PAE to compile custom n8n, Make, or Gumloop workflows",
     primary: false,
-    view: "workflows" as View,
+    view: "builder" as View,
   },
   {
-    id: "canvas",
+    id: "outputs",
     icon: PenTool,
-    title: "Canvas",
-    description: "Edit and customize your automation workflows",
+    title: "Outputs & deploy",
+    description: "Download workflow JSON or deploy directly to your instance",
     primary: false,
-    view: "canvas" as View,
+    view: "outputs" as View,
   },
   {
-    id: "settings",
+    id: "analyst",
     icon: Settings,
-    title: "Settings",
-    description: "Configure API keys and tool connections",
+    title: "Campaign analyst",
+    description: "Track performance, replies, and optimize your outreach",
     primary: false,
-    view: "settings" as View,
+    view: "analyst" as View,
   },
 ];
 
@@ -232,7 +232,7 @@ export default function DashboardHome({ userName, onNavigate }: DashboardHomePro
               <Button variant="accent" icon="Settings" onClick={() => onNavigate("settings")}>
                 Connect tools
               </Button>
-              <Button variant="outline" onClick={() => onNavigate("campaigns")}>
+              <Button variant="outline" onClick={() => onNavigate("wizard")}>
                 Create campaign
               </Button>
             </div>

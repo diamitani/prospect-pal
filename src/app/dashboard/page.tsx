@@ -4,10 +4,10 @@ import { useState, useCallback, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import TopBar from "@/components/TopBar";
 import DashboardHome from "@/components/views/DashboardHome";
-import CampaignsView from "@/components/views/CampaignsView";
-import WorkflowsView from "@/components/views/WorkflowsView";
-import CanvasView from "@/components/views/CanvasView";
-import EngineerView from "@/components/views/EngineerView";
+import WizardView from "@/components/views/WizardView";
+import BuilderView from "@/components/views/BuilderView";
+import OutputsView from "@/components/views/OutputsView";
+import AnalystView from "@/components/views/AnalystView";
 import SettingsView from "@/components/views/SettingsView";
 import { View } from "@/types/app";
 
@@ -45,7 +45,7 @@ export default function DashboardPage() {
   const handleSelectCampaign = useCallback((id: string, name: string) => {
     setProjectId(id);
     setProjectName(name);
-    setView("canvas");
+    setView("builder");
   }, []);
 
   const userName = user?.name || "User";
@@ -76,15 +76,13 @@ export default function DashboardPage() {
             <DashboardHome
               userName={firstName}
               onNavigate={setView}
-              onNewProject={() => setView("campaigns")}
+              onNewProject={() => setView("wizard")}
             />
           )}
-          {view === "campaigns" && (
-            <CampaignsView onSelectCampaign={handleSelectCampaign} />
-          )}
-          {view === "workflows" && <WorkflowsView />}
-          {view === "canvas" && <CanvasView projectId={projectId} projectName={projectName} />}
-          {view === "engineer" && <EngineerView />}
+          {view === "wizard" && <WizardView onComplete={() => setView("builder")} />}
+          {view === "builder" && <BuilderView onCompiled={() => setView("outputs")} />}
+          {view === "outputs" && <OutputsView />}
+          {view === "analyst" && <AnalystView />}
           {view === "settings" && <SettingsView />}
         </main>
       </div>

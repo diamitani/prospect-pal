@@ -11,10 +11,10 @@ interface TopBarProps {
 
 const VIEW_META: Record<View, { title: string; crumb: string }> = {
   home: { title: "Dashboard", crumb: "Welcome back" },
-  campaigns: { title: "Campaigns", crumb: "Manage your lead generation campaigns" },
-  workflows: { title: "Workflows", crumb: "Templates and activated skills" },
-  canvas: { title: "Canvas", crumb: "Edit your automation workflow" },
-  engineer: { title: "n8n Engineer", crumb: "Build and configure your prospect automation workflows" },
+  wizard: { title: "Campaign Wizard", crumb: "Configure your prospect automation" },
+  builder: { title: "Workflow Builder", crumb: "Build your GTM automation workflow" },
+  outputs: { title: "Outputs & Deploy", crumb: "Download or deploy your workflow" },
+  analyst: { title: "Campaign Analyst", crumb: "Track performance and optimize" },
   settings: { title: "Settings", crumb: "API keys and configuration" },
 };
 
@@ -45,7 +45,7 @@ export default function TopBar({ userName, projectName, view }: TopBarProps) {
         >
           {meta.title}
         </span>
-        {projectName && view === "canvas" && (
+        {projectName && view === "builder" && (
           <>
             <span style={{ color: "var(--text-subtle)", fontSize: "var(--text-caption)" }}>·</span>
             <span

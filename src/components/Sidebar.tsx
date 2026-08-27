@@ -4,10 +4,10 @@ import { View } from "@/types/app";
 import { Logo, Icon } from "@/components/ds";
 import {
   LayoutDashboard,
-  Target,
+  Wand2,
   Workflow,
-  PenTool,
-  MessageSquare,
+  Package,
+  BarChart3,
   Settings,
   LogOut,
   Plus,
@@ -23,10 +23,10 @@ interface SidebarProps {
 
 const NAV: { id: View; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "home", label: "Dashboard", icon: LayoutDashboard },
-  { id: "campaigns", label: "Campaigns", icon: Target },
-  { id: "workflows", label: "Workflows", icon: Workflow },
-  { id: "canvas", label: "Canvas", icon: PenTool },
-  { id: "engineer", label: "n8n Engineer", icon: MessageSquare },
+  { id: "wizard", label: "Campaign wizard", icon: Wand2 },
+  { id: "builder", label: "Workflow builder", icon: Workflow },
+  { id: "outputs", label: "Outputs & deploy", icon: Package },
+  { id: "analyst", label: "Campaign analyst", icon: BarChart3 },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
@@ -59,7 +59,7 @@ export default function Sidebar({ currentView, onViewChange, projectName, userNa
       {/* New Campaign CTA */}
       <div style={{ padding: "12px 12px 6px" }}>
         <button
-          onClick={() => onViewChange("campaigns")}
+          onClick={() => onViewChange("wizard")}
           style={{
             width: "100%",
             padding: "10px",
