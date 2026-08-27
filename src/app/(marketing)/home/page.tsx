@@ -770,61 +770,60 @@ export default function HomePage() {
           <PricingCard
             name="Agent package"
             price="$19.99"
-            note="One-time purchase"
-            description="Everything you need to build your own automation. Skills, prompts, scaffolding, and documentation."
+            note="One-time download"
+            description="Skills, instructions, agent scaffolding (to integrate with your tech stack), PRD, tech stack, overview, and PAS templates."
             features={[
-              "9-node workflow JSON template",
-              "Agent skills & instructions",
-              "PRD & tech stack docs",
-              "Integration scaffolding",
-              "PAS email framework",
-              "Self-hosting guide",
+              "Canonical 9-node workflow JSON",
+              "Agent scaffolding (soul.md & manifest)",
+              "Full PRD & system architecture specs",
+              "3-sentence PAS email copy suite",
+              ".env.template & credential map",
             ]}
             cta={
-              <Button variant="outline" fullWidth onClick={() => handleOpenCheckout("package")}>
-                Get the package
+              <Button variant="outline" fullWidth onClick={() => handleOpenCheckout("diy")}>
+                Get the package — $19.99
               </Button>
             }
           />
           <PricingCard
             featured
-            name="Campaign builder"
+            name="Custom template agent"
             price="$99"
             cadence="/ month"
-            note="Cancel anytime"
-            description="Design custom campaigns with our AI architect. Generate workflows for n8n, Make, or Gumloop."
+            note="Cancel anytime · BYOK"
+            description="Designs specific campaigns based on your inputs. Multi-campaign studio, live 9-node canvas, and direct instance deployment."
             features={[
               "Unlimited campaign compiles",
-              "Agent chat interface",
-              "Live workflow canvas",
-              "Multi-platform export",
-              "A/B email copy studio",
-              "Deploy to your instance",
+              "Multi-platform (n8n, Make, Gumloop)",
+              "Live interactive visual canvas",
+              "Direct instance API deploy",
+              "Multi-agent swarm chat harness",
+              "Slack one-click approval gates",
             ]}
             cta={
-              <Button variant="accent" fullWidth icon="Zap" onClick={() => handleOpenCheckout("builder")}>
-                Start building
+              <Button variant="accent" fullWidth icon="Zap" onClick={() => handleOpenCheckout("pro")}>
+                Start Pro — $99/mo
               </Button>
             }
           />
           <PricingCard
             tone="sunken"
-            name="Core SDR agent"
+            name="Core agent"
             price="$199"
             cadence="/ month"
-            note="Full-stack automation"
-            description="Skip the workflow platforms. Our agent handles prospect research, outreach, and reporting directly."
+            note="No automations required"
+            description="Turns into a full autonomous SDR. Outreach, research, reporting, all in one dashboard without external automation tools."
             features={[
-              "End-to-end SDR automation",
-              "Prospect research & enrichment",
-              "AI-written personalized emails",
-              "Campaign performance dashboard",
-              "CRM sync & dedupe",
-              "No external tools required",
+              "Built-in autonomous SDR agent",
+              "No n8n or Make setup required",
+              "Automated 4-layer company research",
+              "Dynamic 3-sentence PAS email drafts",
+              "Direct sequence dispatch & inbox tracking",
+              "Native CRM synchronization",
             ]}
             cta={
-              <Button variant="primary" fullWidth icon="Sparkles" onClick={() => handleOpenCheckout("core")}>
-                Upgrade to Core
+              <Button variant="outline" fullWidth onClick={() => handleOpenCheckout("core")}>
+                Activate Core SDR — $199/mo
               </Button>
             }
           />

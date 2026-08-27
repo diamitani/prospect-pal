@@ -15,6 +15,8 @@ const VIEW_META: Record<View, { title: string; crumb: string }> = {
   builder: { title: "Workflow Builder", crumb: "Build your GTM automation workflow" },
   outputs: { title: "Outputs & Deploy", crumb: "Download or deploy your workflow" },
   analyst: { title: "Campaign Analyst", crumb: "Track performance and optimize" },
+  "core-sdr": { title: "Core SDR Agent", crumb: "Autonomous prospecting, deep research, and PAS outreach" },
+  blueprints: { title: "Blueprints Vault", crumb: "Production 9-node JSONs, soul.md, and documentation packages" },
   settings: { title: "Settings", crumb: "API keys and configuration" },
 };
 

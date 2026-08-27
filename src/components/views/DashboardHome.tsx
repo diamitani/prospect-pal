@@ -2,7 +2,7 @@
 
 import { View } from "@/types/app";
 import { Button, Card, Badge, Icon, StatTile } from "@/components/ds";
-import { Target, Workflow, PenTool, Settings, ArrowRight } from "lucide-react";
+import { Target, Workflow, PenTool, Settings, ArrowRight, Sparkles, Package, BarChart3 } from "lucide-react";
 
 interface DashboardHomeProps {
   userName: string;
@@ -28,6 +28,14 @@ const quickActions = [
     view: "builder" as View,
   },
   {
+    id: "core-sdr",
+    icon: Sparkles,
+    title: "Core SDR agent",
+    description: "Launch autonomous research, PAS copy & direct outreach",
+    primary: false,
+    view: "core-sdr" as View,
+  },
+  {
     id: "outputs",
     icon: PenTool,
     title: "Outputs & deploy",
@@ -36,8 +44,16 @@ const quickActions = [
     view: "outputs" as View,
   },
   {
+    id: "blueprints",
+    icon: Package,
+    title: "Blueprints vault",
+    description: "Download JSONs, prompt engineering suites & PRDs",
+    primary: false,
+    view: "blueprints" as View,
+  },
+  {
     id: "analyst",
-    icon: Settings,
+    icon: BarChart3,
     title: "Campaign analyst",
     description: "Track performance, replies, and optimize your outreach",
     primary: false,
@@ -228,12 +244,15 @@ export default function DashboardHome({ userName, onNavigate }: DashboardHomePro
               Upload your company data, connect your GTM tools via Composio, and we&apos;ll generate a custom
               prospect automation engine based on your campaign details.
             </p>
-            <div style={{ display: "flex", gap: "var(--space-4)" }}>
-              <Button variant="accent" icon="Settings" onClick={() => onNavigate("settings")}>
-                Connect tools
+            <div style={{ display: "flex", gap: "var(--space-4)", flexWrap: "wrap" }}>
+              <Button variant="accent" icon="Sparkles" onClick={() => onNavigate("core-sdr")}>
+                Launch Core SDR ($199/mo)
               </Button>
               <Button variant="outline" onClick={() => onNavigate("wizard")}>
                 Create campaign
+              </Button>
+              <Button variant="outline" icon="Package" onClick={() => onNavigate("blueprints")}>
+                Blueprints Vault ($19.99)
               </Button>
             </div>
           </div>

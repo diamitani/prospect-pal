@@ -9,6 +9,8 @@ import BuilderView from "@/components/views/BuilderView";
 import OutputsView from "@/components/views/OutputsView";
 import AnalystView from "@/components/views/AnalystView";
 import SettingsView from "@/components/views/SettingsView";
+import CoreSdrView from "@/components/views/CoreSdrView";
+import BlueprintsView from "@/components/views/ProjectsView";
 import { View } from "@/types/app";
 
 interface UserSession {
@@ -83,6 +85,8 @@ export default function DashboardPage() {
           {view === "builder" && <BuilderView onCompiled={() => setView("outputs")} />}
           {view === "outputs" && <OutputsView />}
           {view === "analyst" && <AnalystView />}
+          {view === "core-sdr" && <CoreSdrView />}
+          {view === "blueprints" && <BlueprintsView />}
           {view === "settings" && <SettingsView />}
         </main>
       </div>

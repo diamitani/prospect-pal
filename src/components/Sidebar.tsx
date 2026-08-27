@@ -1,7 +1,7 @@
 "use client";
 
 import { View } from "@/types/app";
-import { Logo, Icon } from "@/components/ds";
+import { Logo } from "@/components/ds";
 import {
   LayoutDashboard,
   Wand2,
@@ -11,6 +11,7 @@ import {
   Settings,
   LogOut,
   Plus,
+  Sparkles,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -21,12 +22,14 @@ interface SidebarProps {
   userEmail: string;
 }
 
-const NAV: { id: View; label: string; icon: typeof LayoutDashboard }[] = [
+const NAV: { id: View; label: string; icon: typeof LayoutDashboard; badge?: string }[] = [
   { id: "home", label: "Dashboard", icon: LayoutDashboard },
   { id: "wizard", label: "Campaign wizard", icon: Wand2 },
   { id: "builder", label: "Workflow builder", icon: Workflow },
   { id: "outputs", label: "Outputs & deploy", icon: Package },
   { id: "analyst", label: "Campaign analyst", icon: BarChart3 },
+  { id: "core-sdr", label: "Core SDR Agent", icon: Sparkles, badge: "$199" },
+  { id: "blueprints", label: "Blueprints Vault", icon: Package, badge: "$19.99" },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
@@ -115,6 +118,21 @@ export default function Sidebar({ currentView, onViewChange, projectName, userNa
             >
               <IconComponent size={16} strokeWidth={1.75} />
               <span style={{ flex: 1 }}>{item.label}</span>
+              {item.badge && (
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontFamily: "var(--font-data)",
+                    padding: "2px 6px",
+                    borderRadius: "var(--radius-pill)",
+                    background: item.badge === "$199" ? "rgba(217,185,104,0.18)" : "rgba(42,65,201,0.2)",
+                    color: item.badge === "$199" ? "var(--champagne-300)" : "var(--cobalt-300)",
+                    fontWeight: 700,
+                  }}
+                >
+                  {item.badge}
+                </span>
+              )}
               {active && (
                 <span
                   style={{
@@ -122,6 +140,7 @@ export default function Sidebar({ currentView, onViewChange, projectName, userNa
                     height: 6,
                     borderRadius: "50%",
                     background: "var(--cobalt-400)",
+                    marginLeft: 4,
                   }}
                 />
               )}
