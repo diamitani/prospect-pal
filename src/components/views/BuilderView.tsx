@@ -1,12 +1,16 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { useChat } from "ai/react";
+import { useState, useRef, useEffect, FormEvent } from "react";
 import { Button, Card, Badge, Icon, PipelineRail, PipelineNode } from "@/components/ds";
-import { Send, Loader2 } from "lucide-react";
 
 interface BuilderViewProps {
   onCompiled?: () => void;
+}
+
+interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
 }
 
 const NINE_NODES: PipelineNode[] = [
@@ -25,28 +29,68 @@ export default function BuilderView({ onCompiled }: BuilderViewProps) {
   const [mode, setMode] = useState<"chat" | "form">("chat");
   const [activeNode, setActiveNode] = useState(2);
   const [isCompiling, setIsCompiling] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "initial",
+      role: "assistant",
+      content: "I'm your GTM automation architect. Tell me who you sell to, which tools hold your data, and how leads should enter the system.",
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Use Vercel AI SDK for agent chat
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: "/api/agent/chat",
-    initialMessages: [
-      {
-        id: "initial",
-        role: "assistant",
-        content: "I'm your GTM automation architect. Tell me who you sell to, which tools hold your data, and how leads should enter the system.",
-      },
-    ],
-  });
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
-    handleSubmit(e);
+
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      content: input.trim(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [...messages, userMessage].map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+        }),
+      });
+
+      const data = await res.json();
+      const assistantMessage: Message = {
+        id: `assistant-${Date.now()}`,
+        role: "assistant",
+        content: data.content || data.message || "I can help you configure your workflow. What tools are you using?",
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error("Chat error:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `error-${Date.now()}`,
+          role: "assistant",
+          content: "Sorry, I encountered an error. Please try again.",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCompile = async () => {
@@ -118,7 +162,7 @@ export default function BuilderView({ onCompiled }: BuilderViewProps) {
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 10 }}>
           {messages.map((msg, i) => (
             <div
-              key={i}
+              key={msg.id}
               style={{
                 padding: "12px 16px",
                 borderRadius: "var(--radius-xl)",
@@ -164,7 +208,7 @@ export default function BuilderView({ onCompiled }: BuilderViewProps) {
           <div style={{ display: "flex", gap: 8 }}>
             <input
               value={input}
-              onChange={handleInputChange}
+              onChange={(e) => setInput(e.target.value)}
               placeholder="e.g. VP Sales at Series A SaaS, HubSpot + Apollo..."
               style={{
                 flex: 1,
