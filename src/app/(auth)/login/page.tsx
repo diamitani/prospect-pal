@@ -161,12 +161,12 @@ function LoginForm() {
             <div style={{ flex: 1, height: 1, background: "#f0f0ec" }} />
           </div>
 
-          <Link href="/signup" style={{
+          <Link href="/checkout?plan=pro" style={{
             display: "block", textAlign: "center", padding: "12px",
             fontSize: 14, fontWeight: 700, color: "#2A41C9",
             border: "1.5px solid #2A41C9", borderRadius: 10,
             textDecoration: "none", transition: "all 0.2s",
-          }}>Create free workspace →</Link>
+          }}>Create workspace →</Link>
 
           <p style={{ textAlign: "center", fontSize: 11, color: "#D1D5DB", marginTop: 20 }}>
             🔒 Secured with Supabase Auth · Encrypted at rest
