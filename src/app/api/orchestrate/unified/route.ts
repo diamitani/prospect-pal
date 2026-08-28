@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
       deployGuide: result.deployGuide,
       trace: {
         phase: result.trace.phase.phase,
-        priority: result.trace.priority.composite,
+        priority: result.trace.priority.total,
         skill: result.trace.skill,
         executionTimeMs: result.executionTimeMs,
         tokensUsed: result.tokensUsed,

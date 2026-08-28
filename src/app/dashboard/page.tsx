@@ -12,6 +12,7 @@ import SettingsView from "@/components/views/SettingsView";
 import CoreSdrView from "@/components/views/CoreSdrView";
 import BlueprintsView from "@/components/views/ProjectsView";
 import { View } from "@/types/app";
+import { IntakeData } from "@/components/views/WizardView";
 
 interface UserSession {
   id: string;
@@ -26,6 +27,7 @@ export default function DashboardPage() {
   const [projectName, setProjectName] = useState<string | null>(null);
   const [user, setUser] = useState<UserSession | null>(null);
   const [loading, setLoading] = useState(true);
+  const [wizardData, setWizardData] = useState<IntakeData | null>(null);
 
   useEffect(() => {
     // Fetch current user session
@@ -81,8 +83,8 @@ export default function DashboardPage() {
               onNewProject={() => setView("wizard")}
             />
           )}
-          {view === "wizard" && <WizardView onComplete={() => setView("builder")} />}
-          {view === "builder" && <BuilderView onCompiled={() => setView("outputs")} />}
+          {view === "wizard" && <WizardView onComplete={(data) => { setWizardData(data); setView("builder"); }} />}
+          {view === "builder" && <BuilderView wizardData={wizardData} onCompiled={() => setView("outputs")} />}
           {view === "outputs" && <OutputsView />}
           {view === "analyst" && <AnalystView />}
           {view === "core-sdr" && <CoreSdrView />}

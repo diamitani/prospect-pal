@@ -28,21 +28,25 @@ CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at DESC);
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policy: Users can read and update their own profile
-CREATE POLICY IF NOT EXISTS "Users can view own profile"
+DROP POLICY IF EXISTS "Users can view own profile" ON users;
+CREATE POLICY "Users can view own profile"
   ON users FOR SELECT
   USING (auth.uid() = id);
 
-CREATE POLICY IF NOT EXISTS "Users can update own profile"
+DROP POLICY IF EXISTS "Users can update own profile" ON users;
+CREATE POLICY "Users can update own profile"
   ON users FOR UPDATE
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
 
-CREATE POLICY IF NOT EXISTS "Users can insert own profile"
+DROP POLICY IF EXISTS "Users can insert own profile" ON users;
+CREATE POLICY "Users can insert own profile"
   ON users FOR INSERT
   WITH CHECK (auth.uid() = id);
 
 -- Service role can do anything (for API routes)
-CREATE POLICY IF NOT EXISTS "Service role has full access"
+DROP POLICY IF EXISTS "Service role has full access" ON users;
+CREATE POLICY "Service role has full access"
   ON users FOR ALL
   USING (auth.jwt() ->> 'role' = 'service_role');
 

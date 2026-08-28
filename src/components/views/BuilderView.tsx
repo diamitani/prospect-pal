@@ -2,8 +2,10 @@
 
 import { useState, useRef, useEffect, FormEvent } from "react";
 import { Button, Card, Badge, Icon, PipelineRail, PipelineNode } from "@/components/ds";
+import { IntakeData } from "./WizardView";
 
 interface BuilderViewProps {
+  wizardData?: IntakeData | null;
   onCompiled?: () => void;
 }
 
@@ -58,20 +60,41 @@ const DEFAULT_CONFIG: WorkflowConfig = {
   slackAlerts: true,
 };
 
-export default function BuilderView({ onCompiled }: BuilderViewProps) {
+export default function BuilderView({ wizardData, onCompiled }: BuilderViewProps) {
   const [mode, setMode] = useState<"chat" | "form">("chat");
   const [activeNode, setActiveNode] = useState(2);
   const [isCompiling, setIsCompiling] = useState(false);
+
+  // Map wizard data to config
+  const initialConfig: WorkflowConfig = wizardData ? {
+    icpPrompt: `${wizardData.companyBackground}\n\nProduct: ${wizardData.product}\n\nICP: ${wizardData.icp}`,
+    leadSource: (wizardData.trigger?.toLowerCase().includes("apollo") ? "apollo" :
+                 wizardData.trigger?.toLowerCase().includes("csv") ? "upload_csv" : "apollo") as WorkflowConfig["leadSource"],
+    enrichment: [wizardData.dataTools?.toLowerCase().includes("clay") ? "clay" : "apollo_enrich"] as WorkflowConfig["enrichment"],
+    crm: (wizardData.crm?.toLowerCase().includes("hubspot") ? "hubspot" :
+          wizardData.crm?.toLowerCase().includes("salesforce") ? "salesforce" :
+          wizardData.crm?.toLowerCase().includes("pipedrive") ? "pipedrive" : "hubspot") as WorkflowConfig["crm"],
+    sequencer: (wizardData.outreach?.toLowerCase().includes("smartlead") ? "smartlead" :
+                wizardData.outreach?.toLowerCase().includes("instantly") ? "instantly" :
+                wizardData.outreach?.toLowerCase().includes("lemlist") ? "lemlist" : "smartlead") as WorkflowConfig["sequencer"],
+    approvalGate: wizardData.approvalPolicy?.toLowerCase().includes("human") || wizardData.approvalPolicy?.toLowerCase().includes("approval") || true,
+    slackAlerts: true,
+  } : DEFAULT_CONFIG;
+
+  const initialMessage = wizardData
+    ? `Got it! I've configured your workflow based on your inputs:\n\n• **CRM:** ${wizardData.crm}\n• **Outreach:** ${wizardData.outreach}\n• **Enrichment:** ${wizardData.dataTools}\n• **AI:** ${wizardData.llm}\n\nReady to compile? Click "Compile Workflow" or refine any settings below.`
+    : "I'm your GTM automation architect. Tell me who you sell to, which tools hold your data, and how leads should enter the system.";
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "initial",
       role: "assistant",
-      content: "I'm your GTM automation architect. Tell me who you sell to, which tools hold your data, and how leads should enter the system.",
+      content: initialMessage,
     },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [config, setConfig] = useState<WorkflowConfig>(DEFAULT_CONFIG);
+  const [config, setConfig] = useState<WorkflowConfig>(initialConfig);
   const [apiKey, setApiKey] = useState("");
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [result, setResult] = useState<OrchestrationResult | null>(null);

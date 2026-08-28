@@ -1,0 +1,34 @@
+Prospect PAL — Agent Copilot for Outbound Sales
+
+What if building outbound automation was as simple as describing it?
+
+THE PROBLEM:
+Most SDR tools are black boxes. You rent access to someone else's infrastructure. You don't own your workflows. You don't control your data. When the vendor changes pricing or shuts down, you're stuck starting over.
+
+THE SOLUTION:
+Prospect PAL is an agent copilot that compiles your natural language campaign descriptions into real, deployable workflows. Describe what you want — your ICP, your messaging, your data sources — and PAL generates a complete n8n or Make workflow you can download, inspect, modify, and deploy on your own infrastructure.
+
+HOW IT WORKS:
+1. Describe your campaign in plain English
+2. PAL compiles it into a 9-node deterministic pipeline
+3. You deploy it on your own instance
+
+THE 9-NODE PIPELINE:
+- Intake & Cron (trigger)
+- Data Normalizer
+- CRM Dedupe Shield
+- Data Tool Adapter
+- AI Research & PAS
+- Approval Switch
+- CRM Contact Create
+- Sequence Enrollment
+- Review Alert
+
+WHAT YOU OWN:
+- Your instance — deploy, don't rent
+- 100% BYOK — keys stay local
+- Unlimited campaigns
+- Deterministic, template-driven workflows
+
+Prospect PAL: Your agent copilot for outbound sales.
+Start building → prospectpal.dev

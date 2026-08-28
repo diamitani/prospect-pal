@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <title>Frame 3 — The Solution</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 1920px; height: 1080px; overflow: hidden; }
+    body {
+      background: #fdfae7;
+      font-family: 'Space Grotesk', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px;
+    }
+
+    .header { text-align: center; margin-bottom: 48px; }
+    .header-tag {
+      display: inline-block;
+      padding: 8px 20px;
+      background: rgba(30,43,250,0.08);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1e2bfa;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .header-title {
+      font-size: 48px;
+      font-weight: 700;
+      color: #111111;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+    .header-subtitle {
+      font-size: 22px;
+      font-weight: 500;
+      color: #525252;
+      max-width: 800px;
+    }
+
+    .process { display: flex; align-items: center; gap: 48px; }
+
+    .input-card {
+      width: 500px;
+      background: #fff;
+      border: 1.5px solid rgba(30,43,250,0.15);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.06);
+    }
+    .input-header {
+      padding: 14px 20px;
+      background: rgba(30,43,250,0.04);
+      border-bottom: 1px solid rgba(30,43,250,0.1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #ff5f57; }
+    .dot-yellow { background: #febc2e; }
+    .dot-green { background: #28c840; }
+    .input-body { padding: 24px; }
+    .input-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #1e2bfa;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .input-field {
+      width: 100%;
+      padding: 16px;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      color: #111111;
+      background: rgba(30,43,250,0.02);
+      border: 1.5px solid rgba(30,43,250,0.1);
+      border-radius: 10px;
+      line-height: 1.5;
+    }
+
+    .process-arrow { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .arrow-line {
+      width: 100px;
+      height: 4px;
+      background: linear-gradient(90deg, rgba(30,43,250,0.15), #1e2bfa);
+      border-radius: 2px;
+      position: relative;
+      transform-origin: left;
+    }
+    .arrow-line::after {
+      content: '';
+      position: absolute;
+      right: -8px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 8px solid transparent;
+      border-left-color: #1e2bfa;
+    }
+    .arrow-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #1e2bfa;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .output-card {
+      width: 500px;
+      background: rgba(30,43,250,0.04);
+      border: 1.5px solid rgba(30,43,250,0.15);
+      border-radius: 16px;
+      padding: 24px;
+    }
+    .output-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .output-title { font-size: 15px; font-weight: 600; color: #111111; }
+    .output-badge {
+      padding: 6px 14px;
+      background: rgba(5,150,105,0.1);
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #047857;
+      letter-spacing: 0.03em;
+    }
+    .mini-pipeline { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .mini-node {
+      padding: 10px 14px;
+      background: #fff;
+      border: 1.5px solid rgba(30,43,250,0.12);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #111111;
+    }
+    .mini-connector { width: 12px; height: 2px; background: rgba(30,43,250,0.25); transform-origin: left; }
+
+    .benefits { margin-top: 48px; display: flex; align-items: center; gap: 32px; }
+    .benefit {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 24px;
+      background: #fff;
+      border: 1.5px solid rgba(30,43,250,0.12);
+      border-radius: 12px;
+    }
+    .benefit-icon { font-size: 22px; }
+    .benefit-text { font-size: 15px; font-weight: 600; color: #111111; }
+  </style>
+</head>
+<body>
+  <div data-hf-id="hf-ywm6" data-composition-id="03-solution" data-width="1920" data-height="1080" style="width:1920px;height:1080px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+  <div data-hf-id="hf-4y7z" class="header">
+    <div data-hf-id="hf-h95p" class="header-tag">What You Get</div>
+    <div data-hf-id="hf-ii86" class="header-title">A customized prospect automation workflow</div>
+    <div data-hf-id="hf-repc" class="header-subtitle">Book more meetings with personalized research, emails, and campaign settings</div>
+  </div>
+
+  <div data-hf-id="hf-p4av" class="process">
+    <div data-hf-id="hf-id3r" class="input-card">
+      <div data-hf-id="hf-4n6u" class="input-header">
+        <div data-hf-id="hf-5wte" class="dot dot-red"></div>
+        <div data-hf-id="hf-6a95" class="dot dot-yellow"></div>
+        <div data-hf-id="hf-0zde" class="dot dot-green"></div>
+      </div>
+      <div data-hf-id="hf-73rd" class="input-body">
+        <div data-hf-id="hf-crsz" class="input-label">Describe your campaign</div>
+        <div data-hf-id="hf-u1rd" class="input-field">Target Series A DevOps leads, use Apollo for data, Claude for research, enroll in Smartlead sequences...</div>
+      </div>
+    </div>
+
+    <div data-hf-id="hf-yyl7" class="process-arrow">
+      <div data-hf-id="hf-za1b" class="arrow-label">PAL Compiles</div>
+      <div data-hf-id="hf-vkvm" class="arrow-line"></div>
+    </div>
+
+    <div data-hf-id="hf-3fjm" class="output-card">
+      <div data-hf-id="hf-3s13" class="output-header">
+        <div data-hf-id="hf-eet2" class="output-title">Your Workflow</div>
+        <div data-hf-id="hf-t2z4" class="output-badge">Ready to deploy</div>
+      </div>
+      <div data-hf-id="hf-5w0w" class="mini-pipeline">
+        <div data-hf-id="hf-whe0" class="mini-node mn1">Intake</div>
+        <div data-hf-id="hf-62i2" class="mini-connector mc1"></div>
+        <div data-hf-id="hf-zeru" class="mini-node mn2">Normalize</div>
+        <div data-hf-id="hf-zws9" class="mini-connector mc2"></div>
+        <div data-hf-id="hf-b8ql" class="mini-node mn3">Dedupe</div>
+        <div data-hf-id="hf-z54g" class="mini-connector mc3"></div>
+        <div data-hf-id="hf-jxvk" class="mini-node mn4">Research</div>
+        <div data-hf-id="hf-v70f" class="mini-connector mc4"></div>
+        <div data-hf-id="hf-ovm9" class="mini-node mn5">Approve</div>
+        <div data-hf-id="hf-r8we" class="mini-connector mc5"></div>
+        <div data-hf-id="hf-d6vz" class="mini-node mn6">Enroll</div>
+      </div>
+    </div>
+  </div>
+
+  <div data-hf-id="hf-u4kc" class="benefits">
+    <div data-hf-id="hf-xim4" class="benefit b1"><span data-hf-id="hf-iq38" class="benefit-icon">📧</span><span data-hf-id="hf-u63x" class="benefit-text">Personalized emails</span></div>
+    <div data-hf-id="hf-8e3r" class="benefit b2"><span data-hf-id="hf-7xmd" class="benefit-icon">🔬</span><span data-hf-id="hf-qfy6" class="benefit-text">AI-powered research</span></div>
+    <div data-hf-id="hf-4fzq" class="benefit b3"><span data-hf-id="hf-adnn" class="benefit-icon">📊</span><span data-hf-id="hf-pse6" class="benefit-text">Your CRM, your data</span></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+
+    // Initial states
+    gsap.set('.header-tag', { opacity: 0, y: -20 });
+    gsap.set('.header-title', { opacity: 0, y: 20 });
+    gsap.set('.header-subtitle', { opacity: 0, y: 20 });
+    gsap.set('.input-card', { opacity: 0, x: -60 });
+    gsap.set('.process-arrow', { opacity: 0 });
+    gsap.set('.arrow-line', { scaleX: 0 });
+    gsap.set('.output-card', { opacity: 0, x: 60 });
+    gsap.set('.mini-node', { opacity: 0, scale: 0.8 });
+    gsap.set('.mini-connector', { scaleX: 0 });
+    gsap.set('.output-badge', { opacity: 0, scale: 0.8 });
+    gsap.set('.benefit', { opacity: 0, y: 30 });
+
+    // Scene 1 (0.0-2.5s): Header and input card enter
+    tl.to('.header-tag', { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0);
+    tl.to('.header-title', { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.15);
+    tl.to('.header-subtitle', { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.3);
+    tl.to('.input-card', { opacity: 1, x: 0, duration: 0.6, ease: 'power3.out' }, 0.5);
+
+    // Scene 2 (2.5-5.5s): Arrow appears, pulses, output card enters
+    tl.to('.process-arrow', { opacity: 1, duration: 0.3 }, 2.5);
+    tl.to('.arrow-line', { scaleX: 1, duration: 0.6, ease: 'power3.out' }, 2.8);
+    tl.to('.input-card', { boxShadow: '0 24px 64px rgba(30,43,250,0.15)', duration: 0.3 }, 3.2);
+    tl.to('.input-card', { boxShadow: '0 24px 64px rgba(0,0,0,0.06)', duration: 0.4 }, 3.6);
+
+    // Scene 3 (5.5-8.0s): Output card and nodes appear
+    tl.to('.output-card', { opacity: 1, x: 0, duration: 0.6, ease: 'power3.out' }, 5.5);
+    tl.to('.mn1', { opacity: 1, scale: 1, duration: 0.25, ease: 'power3.out' }, 5.9);
+    tl.to('.mc1', { scaleX: 1, duration: 0.15, ease: 'power3.out' }, 6.05);
+    tl.to('.mn2', { opacity: 1, scale: 1, duration: 0.25, ease: 'power3.out' }, 6.15);
+    tl.to('.mc2', { scaleX: 1, duration: 0.15, ease: 'power3.out' }, 6.3);
+    tl.to('.mn3', { opacity: 1, scale: 1, duration: 0.25, ease: 'power3.out' }, 6.4);
+    tl.to('.mc3', { scaleX: 1, duration: 0.15, ease: 'power3.out' }, 6.55);
+    tl.to('.mn4', { opacity: 1, scale: 1, duration: 0.25, ease: 'power3.out' }, 6.65);
+    tl.to('.mc4', { scaleX: 1, duration: 0.15, ease: 'power3.out' }, 6.8);
+    tl.to('.mn5', { opacity: 1, scale: 1, duration: 0.25, ease: 'power3.out' }, 6.9);
+    tl.to('.mc5', { scaleX: 1, duration: 0.15, ease: 'power3.out' }, 7.05);
+    tl.to('.mn6', { opacity: 1, scale: 1, duration: 0.25, ease: 'power3.out' }, 7.15);
+    tl.to('.output-badge', { opacity: 1, scale: 1, duration: 0.3, ease: 'power3.out' }, 7.4);
+
+    // Scene 4 (8.0-10.0s): Benefits appear
+    tl.to('.b1', { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 8.0);
+    tl.to('.b2', { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 8.3);
+    tl.to('.b3', { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 8.6);
+
+    window.__timelines['03-solution'] = tl;
+  </script>
+  </div>
+</body>
+</html>

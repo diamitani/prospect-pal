@@ -1,0 +1,37 @@
+{
+  "provider": "auto",
+  "speed": 1,
+  "lines": [
+    {
+      "id": "01",
+      "text": "What if building outbound automation — was as simple as describing it?"
+    },
+    {
+      "id": "02",
+      "text": "Most SDR tools are black boxes. — You rent access. — You don't own your workflows."
+    },
+    {
+      "id": "03",
+      "text": "Prospect PAL is different. — Describe your campaign in plain English — and PAL compiles it into a real workflow you own."
+    },
+    {
+      "id": "04",
+      "text": "Nine deterministic nodes. — Intake to enrollment. — Your keys. Your instance."
+    },
+    {
+      "id": "05",
+      "text": "Deploy, don't rent. — Keys stay local. — Unlimited campaigns."
+    },
+    {
+      "id": "06",
+      "text": "Start building."
+    }
+  ],
+  "bgm": {
+    "mode": "retrieve",
+    "query": "confident minimal upbeat underscore",
+    "blob": "PAL compiles your campaign description into a deployable workflow you own",
+    "arc": "Hook → Problem → Solution → Proof → CTA"
+  },
+  "voice": "am_michael"
+}

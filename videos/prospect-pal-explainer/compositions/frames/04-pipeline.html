@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <title>Frame 4 — The Pipeline</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 1920px; height: 1080px; overflow: hidden; }
+    body {
+      background: #fdfae7;
+      font-family: 'Space Grotesk', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px;
+    }
+
+    .header { text-align: center; margin-bottom: 48px; }
+    .header-tag {
+      display: inline-block;
+      padding: 8px 20px;
+      background: rgba(30,43,250,0.08);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #1e2bfa;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .header-title {
+      font-size: 52px;
+      font-weight: 700;
+      color: #111111;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+    .header-subtitle {
+      font-size: 20px;
+      font-weight: 500;
+      color: #525252;
+    }
+
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 280px);
+      gap: 20px;
+      margin-bottom: 48px;
+    }
+    .pipeline-node {
+      padding: 28px 24px;
+      background: #fff;
+      border: 1.5px solid rgba(30,43,250,0.12);
+      border-radius: 16px;
+      text-align: center;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.04);
+      position: relative;
+    }
+    .pipeline-node::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: #1e2bfa;
+      border-radius: 16px 16px 0 0;
+      transform-origin: left;
+    }
+    .node-number {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      line-height: 32px;
+      background: rgba(30,43,250,0.08);
+      border-radius: 50%;
+      font-size: 14px;
+      font-weight: 700;
+      color: #1e2bfa;
+      margin-bottom: 12px;
+    }
+    .node-name {
+      font-size: 17px;
+      font-weight: 600;
+      color: #111111;
+      line-height: 1.3;
+      margin-bottom: 6px;
+    }
+    .node-desc {
+      font-size: 13px;
+      font-weight: 400;
+      color: #525252;
+    }
+
+    .ownership-row { display: flex; gap: 24px; }
+    .ownership-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 28px;
+      background: rgba(5,150,105,0.06);
+      border: 1.5px solid rgba(5,150,105,0.15);
+      border-radius: 12px;
+    }
+    .ownership-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(5,150,105,0.1);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .ownership-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: #111111;
+    }
+  </style>
+</head>
+<body>
+  <div data-hf-id="hf-im44" data-composition-id="04-pipeline" data-width="1920" data-height="1080" style="width:1920px;height:1080px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+  <div data-hf-id="hf-4y7z" class="header">
+    <div data-hf-id="hf-jor4" class="header-tag">9 Deterministic Nodes</div>
+    <div data-hf-id="hf-9r5j" class="header-title">Your complete automation pipeline</div>
+    <div data-hf-id="hf-abps" class="header-subtitle">From intake to enrollment — every step you control</div>
+  </div>
+
+  <div data-hf-id="hf-4a3b" class="pipeline-grid">
+    <div data-hf-id="hf-howk" class="pipeline-node pn1">
+      <div data-hf-id="hf-co1h" class="node-number">1</div>
+      <div data-hf-id="hf-n00u" class="node-name">Intake &amp; Cron</div>
+      <div data-hf-id="hf-h95g" class="node-desc">Trigger on schedule or webhook</div>
+    </div>
+    <div data-hf-id="hf-qcsf" class="pipeline-node pn2">
+      <div data-hf-id="hf-duyk" class="node-number">2</div>
+      <div data-hf-id="hf-xcaj" class="node-name">Normalizer</div>
+      <div data-hf-id="hf-kvkz" class="node-desc">Clean and format data</div>
+    </div>
+    <div data-hf-id="hf-meoe" class="pipeline-node pn3">
+      <div data-hf-id="hf-dgnj" class="node-number">3</div>
+      <div data-hf-id="hf-flgr" class="node-name">CRM Dedupe</div>
+      <div data-hf-id="hf-ela3" class="node-desc">Skip existing contacts</div>
+    </div>
+    <div data-hf-id="hf-v2k9" class="pipeline-node pn4">
+      <div data-hf-id="hf-enkm" class="node-number">4</div>
+      <div data-hf-id="hf-2jxr" class="node-name">Data Adapter</div>
+      <div data-hf-id="hf-ir1v" class="node-desc">Apollo, Clay, ZoomInfo</div>
+    </div>
+    <div data-hf-id="hf-uawg" class="pipeline-node pn5">
+      <div data-hf-id="hf-e99l" class="node-number">5</div>
+      <div data-hf-id="hf-iwnr" class="node-name">AI Research</div>
+      <div data-hf-id="hf-x4b1" class="node-desc">Personalized insights</div>
+    </div>
+    <div data-hf-id="hf-56e3" class="pipeline-node pn6">
+      <div data-hf-id="hf-fg6o" class="node-number">6</div>
+      <div data-hf-id="hf-me7n" class="node-name">Approval</div>
+      <div data-hf-id="hf-ha47" class="node-desc">Review or auto-send</div>
+    </div>
+    <div data-hf-id="hf-18a2" class="pipeline-node pn7">
+      <div data-hf-id="hf-f1vn" class="node-number">7</div>
+      <div data-hf-id="hf-r1vz" class="node-name">CRM Upsert</div>
+      <div data-hf-id="hf-u22p" class="node-desc">Create or update contacts</div>
+    </div>
+    <div data-hf-id="hf-9w5x" class="pipeline-node pn8">
+      <div data-hf-id="hf-9vwa" class="node-number">8</div>
+      <div data-hf-id="hf-t1fk" class="node-name">Enrollment</div>
+      <div data-hf-id="hf-ppig" class="node-desc">Add to sequences</div>
+    </div>
+    <div data-hf-id="hf-94i4" class="pipeline-node pn9">
+      <div data-hf-id="hf-9hl9" class="node-number">9</div>
+      <div data-hf-id="hf-uz8a" class="node-name">Review Alert</div>
+      <div data-hf-id="hf-hevv" class="node-desc">Slack or email notifications</div>
+    </div>
+  </div>
+
+  <div data-hf-id="hf-2mn8" class="ownership-row">
+    <div data-hf-id="hf-tfzw" class="ownership-item oi1">
+      <div data-hf-id="hf-t23t" class="ownership-icon">🔑</div>
+      <div data-hf-id="hf-50ws" class="ownership-text">Your keys stay local</div>
+    </div>
+    <div data-hf-id="hf-23vr" class="ownership-item oi2">
+      <div data-hf-id="hf-h4da" class="ownership-icon">🖥️</div>
+      <div data-hf-id="hf-w2ul" class="ownership-text">Deploy on your instance</div>
+    </div>
+    <div data-hf-id="hf-y5rq" class="ownership-item oi3">
+      <div data-hf-id="hf-bqi4" class="ownership-icon">📦</div>
+      <div data-hf-id="hf-n35n" class="ownership-text">Download as JSON</div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+
+    // Initial states
+    gsap.set('.header-tag', { opacity: 0, y: -20 });
+    gsap.set('.header-title', { opacity: 0, y: 20 });
+    gsap.set('.header-subtitle', { opacity: 0, y: 20 });
+    gsap.set('.pipeline-node', { opacity: 0, y: 40, scale: 0.9 });
+    gsap.set('.pipeline-node::before', { scaleX: 0 });
+    gsap.set('.ownership-item', { opacity: 0, y: 30 });
+
+    // Scene 1 (0.0-1.5s): Header enters with count
+    tl.to('.header-tag', { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0);
+    tl.to('.header-title', { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.2);
+    tl.to('.header-subtitle', { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.4);
+
+    // Scene 2 (1.5-5.5s): Nodes cascade in
+    const nodeDelay = 0.22;
+    tl.to('.pn1', { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'power3.out' }, 1.5);
+    tl.to('.pn2', { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'power3.out' }, 1.5 + nodeDelay);
+    tl.to('.pn3', { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'power3.out' }, 1.5 + nodeDelay * 2);
+    tl.to('.pn4', { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'power3.out' }, 1.5 + nodeDelay * 3);
+    tl.to('.pn5', { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'power3.out' }, 1.5 + nodeDelay * 4);
+    tl.to('.pn6', { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'power3.out' }, 1.5 + nodeDelay * 5);
+    tl.to('.pn7', { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'power3.out' }, 1.5 + nodeDelay * 6);
+    tl.to('.pn8', { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'power3.out' }, 1.5 + nodeDelay * 7);
+    tl.to('.pn9', { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'power3.out' }, 1.5 + nodeDelay * 8);
+
+    // Scene 3 (5.5-8.0s): Ownership items appear
+    tl.to('.oi1', { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 5.5);
+    tl.to('.oi2', { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 6.2);
+    tl.to('.oi3', { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 6.9);
+
+    // Scene 4 (8.0-10.0s): Subtle glow on grid
+    tl.to('.pipeline-grid', { filter: 'drop-shadow(0 0 30px rgba(30,43,250,0.1))', duration: 0.5 }, 8.0);
+    tl.to('.pipeline-grid', { filter: 'drop-shadow(0 0 0px rgba(30,43,250,0))', duration: 1 }, 8.8);
+
+    window.__timelines['04-pipeline'] = tl;
+  </script>
+  </div>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <title>Frame 2 — The Problem</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 1920px; height: 1080px; overflow: hidden; }
+    body {
+      background: #fdfae7;
+      font-family: 'Space Grotesk', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px;
+    }
+
+    .header { text-align: center; margin-bottom: 60px; }
+    .header-tag {
+      display: inline-block;
+      padding: 8px 20px;
+      background: rgba(220,38,38,0.08);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #b91c1c;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .header-title {
+      font-size: 48px;
+      font-weight: 700;
+      color: #111111;
+      letter-spacing: -0.02em;
+    }
+
+    .comparison { display: flex; align-items: center; gap: 80px; }
+    .box-side { display: flex; flex-direction: column; align-items: center; gap: 32px; }
+
+    .black-box {
+      width: 380px;
+      height: 380px;
+      background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.25), 0 20px 40px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.05);
+      transform: perspective(1000px) rotateY(-6deg) rotateX(2deg);
+    }
+
+    .box-icon {
+      width: 80px;
+      height: 80px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+    }
+
+    .box-badge {
+      padding: 10px 20px;
+      background: rgba(220,38,38,0.15);
+      border: 1px solid rgba(220,38,38,0.3);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #b91c1c;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .box-label {
+      font-size: 20px;
+      font-weight: 600;
+      color: #525252;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .vs-divider { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .vs-line {
+      width: 2px;
+      height: 80px;
+      background: linear-gradient(to bottom, transparent, rgba(30,43,250,0.3), transparent);
+    }
+    .vs-badge {
+      padding: 12px 20px;
+      background: rgba(30,43,250,0.08);
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #1e2bfa;
+    }
+
+    .open-box {
+      width: 380px;
+      height: 380px;
+      background: rgba(30,43,250,0.02);
+      border: 2px dashed rgba(30,43,250,0.2);
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      transform: perspective(1000px) rotateY(6deg) rotateX(2deg);
+    }
+
+    .node-row { display: flex; gap: 16px; }
+    .mini-node {
+      width: 60px;
+      height: 32px;
+      background: rgba(30,43,250,0.08);
+      border: 1.5px solid rgba(30,43,250,0.2);
+      border-radius: 8px;
+    }
+
+    .open-badge {
+      padding: 10px 20px;
+      background: rgba(5,150,105,0.1);
+      border: 1px solid rgba(5,150,105,0.3);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #047857;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .pain-row { display: flex; gap: 48px; margin-top: 60px; }
+    .pain-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 18px;
+      font-weight: 500;
+      color: #525252;
+    }
+    .pain-x {
+      width: 28px;
+      height: 28px;
+      background: rgba(220,38,38,0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: #b91c1c;
+    }
+  </style>
+</head>
+<body>
+  <div data-hf-id="hf-45kp" data-composition-id="02-problem" data-width="1920" data-height="1080" style="width:1920px;height:1080px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+  <div data-hf-id="hf-4y7z" class="header">
+    <div data-hf-id="hf-h488" class="header-tag">The Problem</div>
+    <div data-hf-id="hf-o7mt" class="header-title">Most SDR tools are black boxes</div>
+  </div>
+
+  <div data-hf-id="hf-rnsj" class="comparison">
+    <div data-hf-id="hf-2nvo" class="box-side left-side">
+      <div data-hf-id="hf-i9q5" class="black-box">
+        <div data-hf-id="hf-bhd8" class="box-icon">🔒</div>
+        <div data-hf-id="hf-ahxc" class="box-badge">No access</div>
+      </div>
+      <div data-hf-id="hf-uqi4" class="box-label">Black Box</div>
+    </div>
+
+    <div data-hf-id="hf-6fhh" class="vs-divider">
+      <div data-hf-id="hf-yf7w" class="vs-line line-top"></div>
+      <div data-hf-id="hf-ewcs" class="vs-badge">VS</div>
+      <div data-hf-id="hf-1pqm" class="vs-line line-bottom"></div>
+    </div>
+
+    <div data-hf-id="hf-29ll" class="box-side right-side">
+      <div data-hf-id="hf-dbdk" class="open-box">
+        <div data-hf-id="hf-9is5" class="node-row row-1">
+          <div data-hf-id="hf-s8ox" class="mini-node n1"></div>
+          <div data-hf-id="hf-w6sy" class="mini-node n2"></div>
+          <div data-hf-id="hf-2cir" class="mini-node n3"></div>
+        </div>
+        <div data-hf-id="hf-dgw6" class="node-row row-2">
+          <div data-hf-id="hf-ev18" class="mini-node n4"></div>
+          <div data-hf-id="hf-fmp1" class="mini-node n5"></div>
+          <div data-hf-id="hf-jkt2" class="mini-node n6"></div>
+        </div>
+        <div data-hf-id="hf-4v57" class="open-badge">You own this</div>
+      </div>
+      <div data-hf-id="hf-lqf3" class="box-label" style="color: #1e2bfa;">What you need</div>
+    </div>
+  </div>
+
+  <div data-hf-id="hf-5ltz" class="pain-row">
+    <div data-hf-id="hf-1gjl" class="pain-item p1"><div data-hf-id="hf-beqm" class="pain-x">✕</div><span data-hf-id="hf-jud3">You rent access</span></div>
+    <div data-hf-id="hf-5enm" class="pain-item p2"><div data-hf-id="hf-rhaa" class="pain-x">✕</div><span data-hf-id="hf-0fur">You don't own your workflows</span></div>
+    <div data-hf-id="hf-bkdf" class="pain-item p3"><div data-hf-id="hf-rvlb" class="pain-x">✕</div><span data-hf-id="hf-gnfa">Vendor lock-in</span></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+
+    // Initial states
+    gsap.set('.header-tag', { opacity: 0, y: -20 });
+    gsap.set('.header-title', { opacity: 0, y: 20 });
+    gsap.set('.left-side', { opacity: 0, x: -100 });
+    gsap.set('.vs-divider', { opacity: 0, scale: 0.8 });
+    gsap.set('.right-side', { opacity: 0, x: 100 });
+    gsap.set('.box-icon', { opacity: 0, scale: 0.5 });
+    gsap.set('.box-badge', { opacity: 0, y: 20 });
+    gsap.set('.mini-node', { opacity: 0, scale: 0.5 });
+    gsap.set('.open-badge', { opacity: 0, y: 20 });
+    gsap.set('.pain-item', { opacity: 0, y: 30 });
+
+    // Scene 1 (0.0-2.5s): Header and black box enter
+    tl.to('.header-tag', { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0);
+    tl.to('.header-title', { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.2);
+    tl.to('.left-side', { opacity: 1, x: 0, duration: 0.7, ease: 'power3.out' }, 0.5);
+    tl.to('.box-icon', { opacity: 1, scale: 1, duration: 0.5, ease: 'power3.out' }, 1.0);
+    tl.to('.box-badge', { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 1.4);
+
+    // Scene 2 (2.5-5.0s): Pain items appear
+    tl.to('.p1', { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 2.5);
+    tl.to('.p2', { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 3.2);
+
+    // Scene 3 (5.0-7.0s): VS divider and open box reveal
+    tl.to('.vs-divider', { opacity: 1, scale: 1, duration: 0.5, ease: 'power3.out' }, 5.0);
+    tl.to('.right-side', { opacity: 1, x: 0, duration: 0.7, ease: 'power3.out' }, 5.3);
+    tl.to('.mini-node', { opacity: 1, scale: 1, duration: 0.3, ease: 'power3.out', stagger: 0.08 }, 5.8);
+    tl.to('.open-badge', { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 6.4);
+    tl.to('.p3', { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 6.6);
+
+    // Scene 4 (7.0-8.0s): Hold with subtle black box pulse
+    tl.to('.black-box', { scale: 1.02, duration: 0.3, ease: 'power2.out' }, 7.2);
+    tl.to('.black-box', { scale: 1, duration: 0.5, ease: 'power2.inOut' }, 7.5);
+
+    window.__timelines['02-problem'] = tl;
+  </script>
+  </div>
+</body>
+</html>

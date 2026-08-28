@@ -7,7 +7,7 @@ interface WizardViewProps {
   onComplete?: (data: IntakeData) => void;
 }
 
-interface IntakeData {
+export interface IntakeData {
   trigger: string;
   crm: string;
   outreach: string;

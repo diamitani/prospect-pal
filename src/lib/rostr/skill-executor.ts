@@ -135,13 +135,13 @@ async function executeSingleSkill(
       task_description: manifest.instructions.task_description + '\n\n' + skill.description,
     },
     tools_enabled: {
-      ...manifest.instructions,
       allow: [...(manifest.tools_enabled?.allow || []), ...skill.tools],
+      deny: manifest.tools_enabled?.deny || [],
     },
   };
 
   // Execute agent with skill-enhanced manifest
-  const result = await executeAgentWithBedrock(enhancedManifest, config.apiKey);
+  const result = await executeAgentWithBedrock(enhancedManifest);
 
   const executionTime = Date.now() - startTime;
 

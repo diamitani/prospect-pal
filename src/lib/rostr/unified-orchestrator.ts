@@ -56,12 +56,16 @@ export interface OrchestrationResult {
     priority: PriorityScore;
     skill: SkillName;
     skillInstructions: string;
+    executionTimeMs?: number;
   };
 
   // Sub-skill results (if orchestrator was used)
   skillResults?: SkillResult;
 
   // Metadata
+  metadata?: {
+    nodeCount?: number;
+  };
   executionTimeMs: number;
   tokensUsed?: {
     input: number;
@@ -176,10 +180,7 @@ Generate a complete n8n workflow JSON that automates prospect outreach for this 
 `.trim();
 
     // Compile using PAL Compiler
-    const manifest = await compilePAL(description, {
-      domain: 'automation',
-      urgency: 'immediate',
-    });
+    const manifest = await compilePAL(description);
 
     return manifest;
   }
@@ -188,8 +189,17 @@ Generate a complete n8n workflow JSON that automates prospect outreach for this 
    * Stage 5: Compile Workflow from Agent Results
    */
   private async compileWorkflow(userInput: UserInput, skillResult: SkillResult): Promise<any> {
+    // Convert UserInput to WorkflowConfig with defaults
+    const workflowConfig = {
+      ...userInput,
+      approvalGate: userInput.approvalGate ?? false,
+      slackAlerts: userInput.slackAlerts ?? false,
+      companyUrls: userInput.companyUrls ?? [],
+      companyPrompt: userInput.companyPrompt ?? '',
+    };
+
     // Build node sequence from config
-    const nodes = buildNodeSequence(userInput);
+    const nodes = buildNodeSequence(workflowConfig);
 
     // If orchestrator skill was used, extract workflow from sub-skill results
     if (skillResult.subSkillResults) {
@@ -201,7 +211,7 @@ Generate a complete n8n workflow JSON that automates prospect outreach for this 
 
     // Fallback: Generate workflow using existing workflow-generator
     try {
-      const workflowJson = await generateN8nJson(userInput, nodes);
+      const workflowJson = await generateN8nJson(workflowConfig, nodes);
       return workflowJson;
     } catch (error) {
       console.error('[Orchestrator] Workflow compilation failed:', error);

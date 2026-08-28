@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, height=1080">
+  <title>Frame 5 — Ownership</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 1920px; height: 1080px; overflow: hidden; }
+    body {
+      background: #fdfae7;
+      font-family: 'Space Grotesk', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px;
+    }
+
+    .header { text-align: center; margin-bottom: 60px; }
+    .header-tag {
+      display: inline-block;
+      padding: 8px 20px;
+      background: rgba(5,150,105,0.08);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #059669;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .header-title {
+      font-size: 52px;
+      font-weight: 700;
+      color: #111111;
+      letter-spacing: -0.02em;
+    }
+
+    .cards-container { display: flex; gap: 32px; }
+    .stat-card {
+      width: 380px;
+      padding: 48px 40px;
+      background: #fff;
+      border: 1.5px solid rgba(30,43,250,0.12);
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.04);
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: #1e2bfa;
+      transform-origin: left;
+    }
+    .stat-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 24px;
+      background: rgba(30,43,250,0.06);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+    }
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #111111;
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+    }
+    .stat-label {
+      font-size: 18px;
+      font-weight: 500;
+      color: #525252;
+      line-height: 1.4;
+    }
+
+    .bottom-bar { margin-top: 60px; display: flex; align-items: center; gap: 16px; }
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      background: rgba(5,150,105,0.06);
+      border-radius: 100px;
+      font-size: 15px;
+      font-weight: 500;
+      color: #111111;
+    }
+    .check-icon {
+      width: 22px;
+      height: 22px;
+      background: #059669;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .divider {
+      width: 4px;
+      height: 4px;
+      background: rgba(30,43,250,0.3);
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <div data-hf-id="hf-88x8" data-composition-id="05-ownership" data-width="1920" data-height="1080" style="width:1920px;height:1080px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+  <div data-hf-id="hf-4y7z" class="header">
+    <div data-hf-id="hf-h95p" class="header-tag">What You Get</div>
+    <div data-hf-id="hf-slne" class="header-title">Total ownership. Zero lock-in.</div>
+  </div>
+
+  <div data-hf-id="hf-w0cf" class="cards-container">
+    <div data-hf-id="hf-os9e" class="stat-card sc1">
+      <div data-hf-id="hf-0fub" class="stat-icon">🖥️</div>
+      <div data-hf-id="hf-e4hk" class="stat-value">Your Instance</div>
+      <div data-hf-id="hf-lmc7" class="stat-label">Deploy on your own infrastructure.<br data-hf-id="hf-x5px">No vendor dependency.</div>
+    </div>
+    <div data-hf-id="hf-ku5d" class="stat-card sc2">
+      <div data-hf-id="hf-wqui" class="stat-icon">🔑</div>
+      <div data-hf-id="hf-2fhj" class="stat-value">100% BYOK</div>
+      <div data-hf-id="hf-3d5j" class="stat-label">Bring your own keys.<br data-hf-id="hf-rsrt">We never store credentials.</div>
+    </div>
+    <div data-hf-id="hf-huvs" class="stat-card sc3">
+      <div data-hf-id="hf-qxv6" class="stat-icon">∞</div>
+      <div data-hf-id="hf-t9ot" class="stat-value">Unlimited</div>
+      <div data-hf-id="hf-vmhd" class="stat-label">No limits on campaigns.<br data-hf-id="hf-szow">Scale without extra cost.</div>
+    </div>
+  </div>
+
+  <div data-hf-id="hf-tmht" class="bottom-bar">
+    <div data-hf-id="hf-g8qx" class="check-item ci1"><div data-hf-id="hf-zz3n" class="check-icon">✓</div><span data-hf-id="hf-kchj">Deploy, don't rent</span></div>
+    <div data-hf-id="hf-cp1w" class="divider d1"></div>
+    <div data-hf-id="hf-k6uy" class="check-item ci2"><div data-hf-id="hf-3j6b" class="check-icon">✓</div><span data-hf-id="hf-av05">Keys stay local</span></div>
+    <div data-hf-id="hf-lcxr" class="divider d2"></div>
+    <div data-hf-id="hf-o4yz" class="check-item ci3"><div data-hf-id="hf-34va" class="check-icon">✓</div><span data-hf-id="hf-h9j9">Downloadable JSON</span></div>
+    <div data-hf-id="hf-hetq" class="divider d3"></div>
+    <div data-hf-id="hf-0nhg" class="check-item ci4"><div data-hf-id="hf-2qk9" class="check-icon">✓</div><span data-hf-id="hf-41s0">n8n / Make / Gumloop</span></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    const tl = gsap.timeline({ paused: true });
+
+    // Initial states
+    gsap.set('.header-tag', { opacity: 0, y: -20 });
+    gsap.set('.header-title', { opacity: 0, y: 20 });
+    gsap.set('.stat-card', { opacity: 0, y: 50 });
+    gsap.set('.check-item', { opacity: 0, y: 20 });
+    gsap.set('.divider', { opacity: 0, scale: 0 });
+
+    // Scene 1 (0.0-2.0s): Header + first card
+    tl.to('.header-tag', { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0);
+    tl.to('.header-title', { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.15);
+    tl.to('.sc1', { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.5);
+
+    // Scene 2 (2.0-4.0s): Second card
+    tl.to('.sc2', { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 2.0);
+
+    // Scene 3 (4.0-5.5s): Third card
+    tl.to('.sc3', { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 4.0);
+
+    // Scene 4 (5.5-7.0s): Bottom bar items - HOLD/BREATHER frame
+    tl.to('.ci1', { opacity: 1, y: 0, duration: 0.3, ease: 'power3.out' }, 5.5);
+    tl.to('.d1', { opacity: 1, scale: 1, duration: 0.2, ease: 'power3.out' }, 5.7);
+    tl.to('.ci2', { opacity: 1, y: 0, duration: 0.3, ease: 'power3.out' }, 5.8);
+    tl.to('.d2', { opacity: 1, scale: 1, duration: 0.2, ease: 'power3.out' }, 6.0);
+    tl.to('.ci3', { opacity: 1, y: 0, duration: 0.3, ease: 'power3.out' }, 6.1);
+    tl.to('.d3', { opacity: 1, scale: 1, duration: 0.2, ease: 'power3.out' }, 6.3);
+    tl.to('.ci4', { opacity: 1, y: 0, duration: 0.3, ease: 'power3.out' }, 6.4);
+
+    // Hold - no additional motion, stillness reads
+
+    window.__timelines['05-ownership'] = tl;
+  </script>
+  </div>
+</body>
+</html>
