@@ -593,6 +593,26 @@ export default function HomePage() {
               />
             </div>
           </div>
+
+          {/* See the workflow link */}
+          <div style={{ textAlign: "center", marginTop: 28 }}>
+            <Link
+              href="/templates"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                color: "var(--cobalt-600)",
+                fontSize: "var(--text-body-sm)",
+                fontWeight: 500,
+                textDecoration: "none",
+              }}
+            >
+              <Icon name="FileBraces" size={18} />
+              See the workflow template
+              <Icon name="ArrowRight" size={16} />
+            </Link>
+          </div>
         </div>
       </section>
 
