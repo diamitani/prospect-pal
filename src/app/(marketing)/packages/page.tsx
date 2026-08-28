@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import CheckoutModal from "@/components/CheckoutModal";
 import {
   Logo,
   Button,
@@ -69,8 +67,6 @@ const FAQ = [
 ];
 
 export default function PackagesPage() {
-  const router = useRouter();
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   return (
@@ -167,9 +163,11 @@ export default function PackagesPage() {
             </span>
           </div>
 
-          <Button variant="accent" size="lg" onClick={() => setIsCheckoutOpen(true)}>
-            Buy and download
-          </Button>
+          <Link href="/checkout?plan=diy">
+            <Button variant="accent" size="lg">
+              Buy and download
+            </Button>
+          </Link>
         </div>
       </section>
 
@@ -341,9 +339,11 @@ export default function PackagesPage() {
           >
             Get the complete blueprint package and start automating your outbound today.
           </p>
-          <Button variant="accent" size="lg" onClick={() => setIsCheckoutOpen(true)}>
-            Buy for $19.99
-          </Button>
+          <Link href="/checkout?plan=diy">
+            <Button variant="accent" size="lg">
+              Buy for $19.99
+            </Button>
+          </Link>
         </div>
       </section>
 
@@ -380,17 +380,6 @@ export default function PackagesPage() {
           </Link>
         </div>
       </footer>
-
-      {/* Checkout Modal */}
-      <CheckoutModal
-        isOpen={isCheckoutOpen}
-        selectedPlanInitial="diy"
-        onClose={() => setIsCheckoutOpen(false)}
-        onSuccess={() => {
-          setIsCheckoutOpen(false);
-          router.push("/dashboard");
-        }}
-      />
     </>
   );
 }

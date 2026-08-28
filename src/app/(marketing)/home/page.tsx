@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import CheckoutModal from "@/components/CheckoutModal";
 import {
   Logo,
   Button,
@@ -190,15 +188,7 @@ const LEADS = [
 ];
 
 export default function HomePage() {
-  const router = useRouter();
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState("builder");
   const [activeNodeIndex, setActiveNodeIndex] = useState(0);
-
-  const handleOpenCheckout = (planId: string) => {
-    setSelectedPlan(planId);
-    setIsCheckoutOpen(true);
-  };
 
   return (
     <>
@@ -280,9 +270,11 @@ export default function HomePage() {
               Sign in
             </Button>
           </Link>
-          <Button variant="accent" size="md" onClick={() => handleOpenCheckout("pro")}>
-            Get started
-          </Button>
+          <Link href="/checkout?plan=pro">
+            <Button variant="accent" size="md">
+              Get started
+            </Button>
+          </Link>
         </div>
       </nav>
 
@@ -322,9 +314,11 @@ export default function HomePage() {
           </p>
 
           <div style={{ display: "flex", gap: 16, justifyContent: "center", alignItems: "center", marginBottom: 48 }}>
-            <Button variant="accent" size="lg" onClick={() => handleOpenCheckout("pro")}>
-              Build your first workflow
-            </Button>
+            <Link href="/checkout?plan=pro">
+              <Button variant="accent" size="lg">
+                Build your first workflow
+              </Button>
+            </Link>
           </div>
 
           {/* Hero Stats */}
@@ -448,9 +442,11 @@ export default function HomePage() {
                   {PIPELINE_NODES[activeNodeIndex].tooltip}
                 </p>
               </div>
-              <Button variant="primary" icon="Settings2" onClick={() => handleOpenCheckout("pro")} size="sm">
-                Configure
-              </Button>
+              <Link href="/checkout?plan=pro">
+                <Button variant="primary" icon="Settings2" size="sm">
+                  Configure
+                </Button>
+              </Link>
             </div>
           </div>
 
@@ -803,9 +799,11 @@ export default function HomePage() {
               "Unlimited campaigns",
             ]}
             cta={
-              <Button variant="accent" fullWidth onClick={() => handleOpenCheckout("pro")}>
-                Start Team
-              </Button>
+              <Link href="/checkout?plan=pro">
+                <Button variant="accent" fullWidth>
+                  Start Team
+                </Button>
+              </Link>
             }
           />
           <PricingCard
@@ -822,9 +820,11 @@ export default function HomePage() {
               "Dedicated setup",
             ]}
             cta={
-              <Button variant="outline" fullWidth onClick={() => handleOpenCheckout("core")}>
-                Request Elite
-              </Button>
+              <Link href="/checkout?plan=core">
+                <Button variant="outline" fullWidth>
+                  Request Elite
+                </Button>
+              </Link>
             }
           />
         </div>
@@ -890,9 +890,11 @@ export default function HomePage() {
           >
             Research your leads, generate new ones, send personalized messages, and get accurate reporting.
           </p>
-          <Button variant="accent" size="lg" onClick={() => handleOpenCheckout("pro")}>
-            Build your first workflow
-          </Button>
+          <Link href="/checkout?plan=pro">
+            <Button variant="accent" size="lg">
+              Build your first workflow
+            </Button>
+          </Link>
         </div>
       </section>
 
@@ -906,9 +908,11 @@ export default function HomePage() {
             title="Leads that already run n8n"
             description="Stack detection plus hiring intent, so your first line writes itself."
             action={
-              <Button variant="inverse" iconRight="ArrowUpRight" onClick={() => handleOpenCheckout("pro")}>
-                Access live signals
-              </Button>
+              <Link href="/checkout?plan=pro">
+                <Button variant="inverse" iconRight="ArrowUpRight">
+                  Access live signals
+                </Button>
+              </Link>
             }
           />
           <div
@@ -971,16 +975,6 @@ export default function HomePage() {
         </div>
       </footer>
 
-      {/* Checkout Modal */}
-      <CheckoutModal
-        isOpen={isCheckoutOpen}
-        selectedPlanInitial={selectedPlan}
-        onClose={() => setIsCheckoutOpen(false)}
-        onSuccess={() => {
-          setIsCheckoutOpen(false);
-          router.push("/dashboard");
-        }}
-      />
     </>
   );
 }

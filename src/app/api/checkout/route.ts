@@ -55,8 +55,8 @@ export async function POST(req: NextRequest) {
             },
           ],
           mode: targetPlan.type === "subscription" ? "subscription" : "payment",
-          success_url: `${origin}/dashboard?payment=success&plan=${planId}&session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${origin}/?payment=cancelled`,
+          success_url: `${origin}/checkout/success?plan=${planId}&session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${origin}/checkout?plan=${planId}&cancelled=true`,
           metadata: {
             userId: session?.id || "anonymous",
             planId,
@@ -86,8 +86,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Fallback instant checkout url
-    const redirectUrl = `${origin}/dashboard?payment=success&plan=${planId}`;
+    // Fallback instant checkout url (dev mode)
+    const redirectUrl = `${origin}/checkout/success?plan=${planId}`;
     return NextResponse.json({
       url: redirectUrl,
       plan: planId,
