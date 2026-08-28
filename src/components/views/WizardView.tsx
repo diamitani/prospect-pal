@@ -27,7 +27,7 @@ const STEPS = [
   { key: "dataTools", title: "Where does enrichment come from?", gate: true },
   { key: "llm", title: "Which AI writes your copy?", gate: true },
   { key: "approvalPolicy", title: "How should we handle approvals?", gate: true },
-  { key: "targetUrl", title: "Where should we deploy?", gate: true },
+  { key: "targetUrl", title: "Where should we deploy?", gate: false },
   { key: "companyBackground", title: "Tell us about your company", gate: true },
   { key: "product", title: "What do you sell?", gate: true },
   { key: "icp", title: "Who is your ideal customer?", gate: true },
