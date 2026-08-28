@@ -7,6 +7,40 @@ import { v4 as uuidv4 } from "uuid";
 import type { AgentManifest } from "./pal-compiler";
 import type { PhaseClassification, PriorityScore, Agent } from "./npao-classifier";
 import { classifyPhase, calculatePriority, allocateAgent } from "./npao-classifier";
+import { loadSkill, listAvailableSkills, type Skill } from "./skill-loader";
+import {
+  loadAgentSession,
+  saveAgentSession,
+  generateSessionId,
+} from "../agent-session";
+
+// Re-export orchestration patterns for external use
+export {
+  OrchestrationPatterns,
+  createPatterns,
+  fanOut,
+  pipeline,
+  conditional,
+  retry,
+  timeout,
+  aggregate,
+  race,
+  type OrchestrationResult,
+  type PipelineStage,
+  type ConditionFn,
+  type ReducerFn,
+  type BackoffConfig,
+} from "./orchestration-patterns";
+
+/**
+ * Session context for task execution
+ */
+export interface SessionContext {
+  sessionId: string;
+  userId: string;
+  conversationHistory: Array<{ role: string; content: string }>;
+  metadata?: Record<string, unknown>;
+}
 
 export interface SwarmTask {
   id: string;
@@ -23,6 +57,7 @@ export interface SwarmTask {
   createdAt: string;
   startedAt?: string;
   completedAt?: string;
+  sessionContext?: SessionContext;
 }
 
 export interface SwarmOrchestration {
@@ -39,6 +74,8 @@ export interface SwarmOrchestration {
  */
 export class AgentRegistry {
   private agents: Map<string, Agent> = new Map();
+  private skills: Map<string, Skill> = new Map();
+  private initialized: boolean = false;
 
   constructor() {
     this.registerDefaultAgents();
@@ -105,6 +142,95 @@ export class AgentRegistry {
     ];
 
     defaultAgents.forEach((agent) => this.agents.set(agent.id, agent));
+  }
+
+  /**
+   * Load and register agents from skill files dynamically
+   */
+  async loadSkillBasedAgents(): Promise<void> {
+    if (this.initialized) return;
+
+    try {
+      const availableSkills = listAvailableSkills();
+
+      for (const skillName of availableSkills) {
+        try {
+          const skill = await loadSkill(skillName);
+          this.skills.set(skillName, skill);
+
+          // Create agent from skill
+          const agentType = this.inferAgentTypeFromSkill(skill);
+          const agentId = `skill-${skillName}`;
+
+          const agent: Agent = {
+            id: agentId,
+            name: skill.name,
+            type: agentType,
+            phases: this.inferPhasesFromSkill(skill),
+            tools: skill.tools,
+            current_tasks: 0,
+            max_parallel_tasks: skill.metadata.complexity === "high" ? 2 : 5,
+            performance: {
+              tasks_completed: 0,
+              avg_completion_minutes: skill.metadata.estimatedTokens
+                ? Math.ceil(skill.metadata.estimatedTokens / 1000)
+                : 15,
+              success_rate: 0.90,
+            },
+          };
+
+          this.agents.set(agentId, agent);
+        } catch (err) {
+          console.warn(`Failed to load skill ${skillName}:`, err);
+        }
+      }
+
+      this.initialized = true;
+    } catch (err) {
+      console.error("Failed to load skill-based agents:", err);
+    }
+  }
+
+  /**
+   * Infer agent type from skill metadata
+   */
+  private inferAgentTypeFromSkill(skill: Skill): string {
+    const domain = skill.metadata.domain?.toLowerCase() || "";
+    const name = skill.name.toLowerCase();
+
+    if (domain.includes("research") || name.includes("research")) return "researcher";
+    if (domain.includes("copy") || name.includes("copy") || name.includes("writer")) return "copywriter";
+    if (domain.includes("analyze") || name.includes("analyst")) return "analyst";
+    if (domain.includes("architect") || name.includes("architect")) return "architect";
+    return "orchestrator";
+  }
+
+  /**
+   * Infer phases from skill complexity and domain
+   */
+  private inferPhasesFromSkill(skill: Skill): PhaseClassification["phase"][] {
+    const domain = skill.metadata.domain?.toLowerCase() || "";
+    const complexity = skill.metadata.complexity;
+
+    if (domain.includes("research")) return ["PreD", "Design"];
+    if (domain.includes("debug")) return ["Debugging"];
+    if (domain.includes("deploy")) return ["Deployment"];
+    if (complexity === "high") return ["Design", "Development"];
+    return ["Development"];
+  }
+
+  /**
+   * Get skill by name
+   */
+  getSkill(skillName: string): Skill | undefined {
+    return this.skills.get(skillName);
+  }
+
+  /**
+   * Get all loaded skills
+   */
+  getAllSkills(): Skill[] {
+    return Array.from(this.skills.values());
   }
 
   getAgent(id: string): Agent | undefined {
@@ -180,6 +306,7 @@ export class AgentSwarm {
   private queue: TaskQueue;
   private runningTasks: Map<string, SwarmTask> = new Map();
   private completedTasks: Map<string, SwarmTask> = new Map();
+  private sessionContextCache: Map<string, SessionContext> = new Map();
 
   constructor() {
     this.registry = new AgentRegistry();
@@ -187,9 +314,88 @@ export class AgentSwarm {
   }
 
   /**
+   * Initialize skill-based agents (call once at startup)
+   */
+  async initialize(): Promise<void> {
+    await this.registry.loadSkillBasedAgents();
+  }
+
+  /**
+   * Get or create session context
+   */
+  async getSessionContext(
+    sessionId: string,
+    userId: string = "anonymous"
+  ): Promise<SessionContext> {
+    // Check cache first
+    if (this.sessionContextCache.has(sessionId)) {
+      return this.sessionContextCache.get(sessionId)!;
+    }
+
+    // Load from persistent storage
+    try {
+      const history = await loadAgentSession(userId, sessionId);
+      const context: SessionContext = {
+        sessionId,
+        userId,
+        conversationHistory: history.map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
+      };
+      this.sessionContextCache.set(sessionId, context);
+      return context;
+    } catch {
+      // Create new session context
+      const context: SessionContext = {
+        sessionId,
+        userId,
+        conversationHistory: [],
+      };
+      this.sessionContextCache.set(sessionId, context);
+      return context;
+    }
+  }
+
+  /**
+   * Update session context with new messages
+   */
+  async updateSessionContext(
+    sessionId: string,
+    userMessage: string,
+    assistantMessage: string
+  ): Promise<void> {
+    const context = this.sessionContextCache.get(sessionId);
+    if (!context) return;
+
+    context.conversationHistory.push(
+      { role: "user", content: userMessage },
+      { role: "assistant", content: assistantMessage }
+    );
+
+    // Persist to storage
+    try {
+      await saveAgentSession(
+        context.userId,
+        sessionId,
+        context.conversationHistory.map((m) => ({
+          role: m.role as "user" | "assistant" | "system",
+          content: m.content,
+          timestamp: new Date().toISOString(),
+        }))
+      );
+    } catch (err) {
+      console.warn("Failed to persist session:", err);
+    }
+  }
+
+  /**
    * Submit task to swarm
    */
-  async submitTask(manifest: AgentManifest): Promise<SwarmTask> {
+  async submitTask(
+    manifest: AgentManifest,
+    sessionContext?: SessionContext
+  ): Promise<SwarmTask> {
     // Classify phase
     const phase = classifyPhase(manifest);
 
@@ -204,6 +410,7 @@ export class AgentSwarm {
       priority,
       status: "pending",
       createdAt: new Date().toISOString(),
+      sessionContext,
     };
 
     // Try immediate allocation if high priority
@@ -312,10 +519,31 @@ export class AgentSwarm {
     // Import dynamically to avoid circular deps
     const { executeWithRetry } = await import("./bedrock-executor");
 
-    const result = await executeWithRetry(task.manifest, 3);
+    // Include session context in manifest if available
+    const manifestWithContext = task.sessionContext
+      ? {
+          ...task.manifest,
+          context: {
+            ...task.manifest.context,
+            conversationHistory: task.sessionContext.conversationHistory,
+            sessionId: task.sessionContext.sessionId,
+          },
+        }
+      : task.manifest;
+
+    const result = await executeWithRetry(manifestWithContext, 3);
 
     if (!result.success) {
       throw new Error(result.error || "Agent execution failed");
+    }
+
+    // Update session context with result if available
+    if (task.sessionContext && result.output) {
+      await this.updateSessionContext(
+        task.sessionContext.sessionId,
+        task.manifest.instructions.task_description,
+        result.output
+      );
     }
 
     return {
@@ -325,6 +553,7 @@ export class AgentSwarm {
       output: result.output,
       usage: result.usage,
       duration_ms: result.duration_ms,
+      session_id: task.sessionContext?.sessionId,
       timestamp: new Date().toISOString(),
     };
   }
@@ -348,6 +577,7 @@ export class AgentSwarm {
       queue_size: this.queue.size(),
       running_tasks: this.runningTasks.size,
       completed_tasks: this.completedTasks.size,
+      active_sessions: this.sessionContextCache.size,
       agents: this.registry.getAllAgents().map((a) => ({
         id: a.id,
         name: a.name,
@@ -355,7 +585,21 @@ export class AgentSwarm {
         max_capacity: a.max_parallel_tasks,
         performance: a.performance,
       })),
+      skills: this.registry.getAllSkills().map((s) => ({
+        name: s.name,
+        description: s.description,
+        tools: s.tools,
+        domain: s.metadata.domain,
+        complexity: s.metadata.complexity,
+      })),
     };
+  }
+
+  /**
+   * Get registry for external access
+   */
+  getRegistry(): AgentRegistry {
+    return this.registry;
   }
 
   /**

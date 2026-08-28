@@ -2,7 +2,7 @@
 
 import { View } from "@/types/app";
 import { Button, Card, Badge, Icon, StatTile } from "@/components/ds";
-import { Target, Workflow, PenTool, Settings, ArrowRight, Sparkles, Package, BarChart3 } from "lucide-react";
+import { Target, Workflow, PenTool, Settings, ArrowRight, Sparkles, Package, BarChart3, MessageSquare } from "lucide-react";
 
 interface DashboardHomeProps {
   userName: string;
@@ -12,52 +12,28 @@ interface DashboardHomeProps {
 
 const quickActions = [
   {
-    id: "wizard",
-    icon: Target,
-    title: "Campaign wizard",
-    description: "Answer 10 questions to configure your prospect automation",
+    id: "studio",
+    icon: MessageSquare,
+    title: "Studio",
+    description: "Chat-first workflow builder. Pick a template or describe your stack.",
     primary: true,
-    view: "wizard" as View,
-  },
-  {
-    id: "builder",
-    icon: Workflow,
-    title: "Workflow builder",
-    description: "Chat with PAE to compile custom n8n, Make, or Gumloop workflows",
-    primary: false,
-    view: "builder" as View,
-  },
-  {
-    id: "core-sdr",
-    icon: Sparkles,
-    title: "Core SDR agent",
-    description: "Launch autonomous research, PAS copy & direct outreach",
-    primary: false,
-    view: "core-sdr" as View,
-  },
-  {
-    id: "outputs",
-    icon: PenTool,
-    title: "Outputs & deploy",
-    description: "Download workflow JSON or deploy directly to your instance",
-    primary: false,
-    view: "outputs" as View,
+    view: "studio" as View,
   },
   {
     id: "blueprints",
     icon: Package,
-    title: "Blueprints vault",
-    description: "Download JSONs, prompt engineering suites & PRDs",
+    title: "Templates",
+    description: "Pre-built workflows for common stacks. Download and customize.",
     primary: false,
     view: "blueprints" as View,
   },
   {
-    id: "analyst",
-    icon: BarChart3,
-    title: "Campaign analyst",
-    description: "Track performance, replies, and optimize your outreach",
+    id: "settings",
+    icon: Settings,
+    title: "Settings",
+    description: "API keys, integrations, and account preferences.",
     primary: false,
-    view: "analyst" as View,
+    view: "settings" as View,
   },
 ];
 
@@ -245,14 +221,11 @@ export default function DashboardHome({ userName, onNavigate }: DashboardHomePro
               prospect automation engine based on your campaign details.
             </p>
             <div style={{ display: "flex", gap: "var(--space-4)", flexWrap: "wrap" }}>
-              <Button variant="accent" icon="Sparkles" onClick={() => onNavigate("core-sdr")}>
-                Launch Core SDR ($199/mo)
-              </Button>
-              <Button variant="outline" onClick={() => onNavigate("wizard")}>
-                Create campaign
+              <Button variant="accent" icon="Sparkles" onClick={() => onNavigate("studio")}>
+                Open Studio
               </Button>
               <Button variant="outline" icon="Package" onClick={() => onNavigate("blueprints")}>
-                Blueprints Vault ($19.99)
+                Browse Templates
               </Button>
             </div>
           </div>

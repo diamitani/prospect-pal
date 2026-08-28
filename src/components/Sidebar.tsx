@@ -12,6 +12,7 @@ import {
   LogOut,
   Plus,
   Sparkles,
+  MessageSquare,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -24,12 +25,8 @@ interface SidebarProps {
 
 const NAV: { id: View; label: string; icon: typeof LayoutDashboard; badge?: string }[] = [
   { id: "home", label: "Dashboard", icon: LayoutDashboard },
-  { id: "wizard", label: "Campaign wizard", icon: Wand2 },
-  { id: "builder", label: "Workflow builder", icon: Workflow },
-  { id: "outputs", label: "Outputs & deploy", icon: Package },
-  { id: "analyst", label: "Campaign analyst", icon: BarChart3 },
-  { id: "core-sdr", label: "Core SDR Agent", icon: Sparkles, badge: "$199" },
-  { id: "blueprints", label: "Blueprints Vault", icon: Package, badge: "$19.99" },
+  { id: "studio", label: "Studio", icon: MessageSquare },
+  { id: "blueprints", label: "Templates", icon: Package },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
@@ -62,7 +59,7 @@ export default function Sidebar({ currentView, onViewChange, projectName, userNa
       {/* New Campaign CTA */}
       <div style={{ padding: "12px 12px 6px" }}>
         <button
-          onClick={() => onViewChange("wizard")}
+          onClick={() => onViewChange("studio")}
           style={{
             width: "100%",
             padding: "10px",

@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import TopBar from "@/components/TopBar";
 import DashboardHome from "@/components/views/DashboardHome";
+import StudioView from "@/components/views/StudioView";
 import WizardView from "@/components/views/WizardView";
 import BuilderView from "@/components/views/BuilderView";
 import OutputsView from "@/components/views/OutputsView";
@@ -80,9 +81,10 @@ export default function DashboardPage() {
             <DashboardHome
               userName={firstName}
               onNavigate={setView}
-              onNewProject={() => setView("wizard")}
+              onNewProject={() => setView("studio")}
             />
           )}
+          {view === "studio" && <StudioView onComplete={() => setView("outputs")} />}
           {view === "wizard" && <WizardView onComplete={(data) => { setWizardData(data); setView("builder"); }} />}
           {view === "builder" && <BuilderView wizardData={wizardData} onCompiled={() => setView("outputs")} />}
           {view === "outputs" && <OutputsView />}
