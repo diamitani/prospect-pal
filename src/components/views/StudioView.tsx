@@ -33,13 +33,12 @@ export default function StudioView({ onComplete }: StudioViewProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userPrompt: `Build a lead automation workflow for: ${company || icp}`,
-          config: {
-            icpPrompt: icp,
-            leadSource: stack.dataSource,
-            enrichment: [stack.enrichment],
-            crm: stack.crm,
-            sequencer: stack.sequencer,
+          userInput: {
+            icpPrompt: icp || `Build a lead automation workflow for: ${company}`,
+            leadSource: stack.dataSource as any,
+            enrichment: [stack.enrichment] as any,
+            crm: stack.crm as any,
+            sequencer: stack.sequencer as any,
             approvalGate: true,
             slackAlerts: true,
           },
@@ -50,9 +49,12 @@ export default function StudioView({ onComplete }: StudioViewProps) {
       const result = await response.json();
       if (result.workflow) {
         setWorkflowJson(result.workflow);
+      } else if (result.byok) {
+        // API key required - show modal
+        setShowApiKeyModal(true);
       } else if (result.error) {
         console.error("Compile error:", result.error);
-        alert(`Compile failed: ${result.error}`);
+        alert(`Compile failed: ${result.message || result.error}`);
       }
     } catch (err) {
       console.error("Compile error:", err);
