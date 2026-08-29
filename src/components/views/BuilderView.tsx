@@ -35,6 +35,9 @@ interface OrchestrationResult {
     skill: string;
     executionTimeMs: number;
   };
+  metadata?: {
+    nodeCount?: number;
+  };
   error?: string;
 }
 

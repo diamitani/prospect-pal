@@ -211,7 +211,7 @@ Generate a complete n8n workflow JSON that automates prospect outreach for this 
 
     // Fallback: Generate workflow using existing workflow-generator
     try {
-      const workflowJson = await generateN8nJson(workflowConfig, nodes);
+      const workflowJson = await generateN8nJson(workflowConfig, nodes.nodes);
       return workflowJson;
     } catch (error) {
       console.error('[Orchestrator] Workflow compilation failed:', error);
