@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/ds/brand/Logo";
@@ -10,7 +11,7 @@ const PLAN_NAMES: Record<string, string> = {
   core: "Core Autonomous SDR",
 };
 
-export default function CheckoutSuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const plan = searchParams.get("plan") || "pro";
   const planName = PLAN_NAMES[plan] || "Prospect PAL";
@@ -127,5 +128,13 @@ export default function CheckoutSuccessPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>Loading...</div>}>
+      <SuccessContent />
+    </Suspense>
   );
 }
