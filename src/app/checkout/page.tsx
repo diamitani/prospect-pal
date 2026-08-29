@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, FormEvent, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Logo } from "@/components/ds/brand/Logo";
@@ -55,7 +55,7 @@ const PLANS = {
   },
 };
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const searchParams = useSearchParams();
   const planParam = searchParams.get("plan") || "pro";
   const plan = PLANS[planParam as keyof typeof PLANS] || PLANS.pro;
@@ -320,5 +320,13 @@ function Spinner() {
         display: "inline-block",
       }}
     />
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>Loading...</div>}>
+      <CheckoutContent />
+    </Suspense>
   );
 }
