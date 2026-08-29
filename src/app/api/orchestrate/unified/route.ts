@@ -1,7 +1,7 @@
 import { UnifiedPALOrchestrator, UserInput } from '@/lib/rostr/unified-orchestrator';
 import { NextRequest } from 'next/server';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 export const maxDuration = 60;
 
 /**
