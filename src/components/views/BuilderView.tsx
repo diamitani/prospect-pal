@@ -111,12 +111,38 @@ export default function BuilderView({ wizardData, onCompiled }: BuilderViewProps
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [result, setResult] = useState<OrchestrationResult | null>(null);
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
+  const [deployedWorkflow, setDeployedWorkflow] = useState<{ id: string; active: boolean; url: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { nodes: generatedNodes, connections: generatedConnections } = useMemo(() => buildNodeSequence({ ...config, companyUrls: [], companyPrompt: "" }), [config]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+
+    // Sync agentic tool calls to local UI state
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage?.role === "assistant") {
+      const toolInvocations: any[] = (lastMessage as any).toolInvocations || 
+                              (lastMessage.parts as any[])?.filter(p => p.type === "tool-invocation").map(p => p.toolInvocation) || [];
+      
+      toolInvocations.forEach((invocation: any) => {
+        if (invocation.toolName === "updateWorkflowConfig") {
+          const args = invocation.args;
+          if (args && typeof args === "object") {
+            setConfig(prev => {
+              const next = { ...prev, ...args };
+              return JSON.stringify(prev) === JSON.stringify(next) ? prev : next;
+            });
+            
+            // Force canvas to show if hidden
+            setResult(prev => {
+              if (prev?.success) return prev;
+              return { ...prev, success: true, workflow: { nodes: [], connections: [], n8nJson: {} } } as any;
+            });
+          }
+        }
+      });
+    }
   }, [messages]);
 
   // Chat mode: conversational interaction
@@ -492,9 +518,35 @@ export default function BuilderView({ wizardData, onCompiled }: BuilderViewProps
               <Button variant="outline" size="sm" icon="Download" onClick={downloadWorkflow} disabled={!result?.success} style={{ flex: 1 }}>
                 Download JSON
               </Button>
-              <Button variant="accent" size="sm" icon="Play" onClick={() => setIsDeployModalOpen(true)} disabled={!result?.success} style={{ flex: 1 }}>
-                Deploy to n8n
-              </Button>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flex: 1 }}>
+                {deployedWorkflow && (
+                  <Button
+                    variant={deployedWorkflow.active ? "primary" : "outline"}
+                    style={{ flex: 1 }}
+                    onClick={async () => {
+                      const active = !deployedWorkflow.active;
+                      setDeployedWorkflow({ ...deployedWorkflow, active });
+                      await fetch("/api/n8n/connect", {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          instanceUrl: localStorage.getItem("n8n_instance_url"),
+                          apiKey: localStorage.getItem("n8n_api_key"),
+                          workflowId: deployedWorkflow.id,
+                          active,
+                        }),
+                      });
+                    }}
+                  >
+                    <Icon name={deployedWorkflow.active ? "Activity" : "Power"} size={14} style={{ marginRight: 6 }} />
+                    {deployedWorkflow.active ? "Active" : "Activate"}
+                  </Button>
+                )}
+                <Button variant="accent" onClick={() => setIsDeployModalOpen(true)} style={{ flex: 1 }}>
+                  <Icon name="Play" size={14} style={{ marginRight: 6 }} />
+                  Deploy to n8n
+                </Button>
+              </div>
             </div>
           )}
         </div>
@@ -653,12 +705,15 @@ export default function BuilderView({ wizardData, onCompiled }: BuilderViewProps
         workflowJson={result?.workflow}
         onDeploySuccess={(res) => {
           setIsDeployModalOpen(false);
+          if (res.deployed) {
+            setDeployedWorkflow({ id: res.deployed.id, active: false, url: res.deployed.url });
+          }
           setMessages((prev) => [
             ...prev,
             {
               id: `deploy-${Date.now()}`,
               role: "assistant",
-              parts: [{ type: "text", text: `🚀 Successfully pushed workflow to n8n!\n\nOpen your instance to activate the newly deployed workflow.` }],
+              parts: [{ type: "text", text: `🚀 Successfully pushed workflow to n8n!\n\n[View it in n8n](${res.deployed?.url || res.editorUrl || "your n8n instance"}) to activate it and start automating.` }],
             } as unknown as UIMessage,
           ]);
         }}

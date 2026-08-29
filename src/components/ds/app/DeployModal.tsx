@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button, Card, Icon } from "@/components/ds";
 
 interface DeployModalProps {
@@ -14,6 +14,15 @@ export function DeployModal({ workflowJson, isOpen, onClose, onDeploySuccess }: 
   const [isDeploying, setIsDeploying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (isOpen) {
+      const savedUrl = localStorage.getItem("n8n_instance_url");
+      const savedKey = localStorage.getItem("n8n_api_key");
+      if (savedUrl) setInstanceUrl(savedUrl);
+      if (savedKey) setApiKey(savedKey);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleDeploy = async () => {
@@ -26,14 +35,16 @@ export function DeployModal({ workflowJson, isOpen, onClose, onDeploySuccess }: 
     setError(null);
 
     try {
-      const res = await fetch("/api/n8n/deploy", {
+      localStorage.setItem("n8n_instance_url", instanceUrl);
+      if (apiKey) localStorage.setItem("n8n_api_key", apiKey);
+
+      const res = await fetch("/api/n8n/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           instanceUrl,
           apiKey,
           workflowJson,
-          workflowName: "Prospect PAL Output",
         }),
       });
 
