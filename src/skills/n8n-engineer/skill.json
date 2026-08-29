@@ -1,0 +1,110 @@
+{
+  "id": "n8n-engineer",
+  "name": "n8n Workflow Engineer",
+  "version": "1.0.0",
+  "description": "Builds, edits, and validates n8n workflows for prospect automation campaigns",
+  "icon": "workflow",
+  "author": "Prospect PAL",
+  "capabilities": [
+    "build",
+    "edit",
+    "fix",
+    "validate",
+    "export"
+  ],
+  "inputs": {
+    "campaign_id": {
+      "type": "string",
+      "required": true,
+      "description": "Campaign identifier"
+    },
+    "intake_answers": {
+      "type": "object",
+      "required": true,
+      "description": "Wizard-collected campaign configuration"
+    },
+    "blueprint_id": {
+      "type": "string",
+      "required": false,
+      "description": "Starting template blueprint"
+    },
+    "action": {
+      "type": "string",
+      "enum": ["build", "edit", "fix", "validate"],
+      "required": true
+    }
+  },
+  "outputs": {
+    "workflow_json": {
+      "type": "object",
+      "description": "Complete n8n workflow JSON"
+    },
+    "validation_report": {
+      "type": "object",
+      "description": "Quality check results"
+    },
+    "changes_summary": {
+      "type": "string",
+      "description": "Human-readable summary of changes"
+    }
+  },
+  "nodes": {
+    "01_trigger": {
+      "name": "Intake & Cron",
+      "types": ["schedule", "webhook", "manual"],
+      "default": "schedule"
+    },
+    "02_normalizer": {
+      "name": "Data Normalizer",
+      "types": ["code", "function"],
+      "purpose": "Normalize data from any source to canonical format"
+    },
+    "03_dedupe": {
+      "name": "CRM Dedupe Shield",
+      "types": ["hubspot", "salesforce", "pipedrive", "attio"],
+      "purpose": "Prevent duplicates before enrichment"
+    },
+    "04_adapter": {
+      "name": "Data Adapter",
+      "types": ["apollo", "clay", "zoominfo", "linkedin"],
+      "purpose": "Fetch and enrich prospect data"
+    },
+    "05_ai": {
+      "name": "Research + PAS",
+      "types": ["ai_agent", "anthropic", "openai"],
+      "purpose": "Generate personalized copy sequence"
+    },
+    "06_approval": {
+      "name": "Approval Switch",
+      "types": ["if", "switch"],
+      "purpose": "Route to human review or auto-send"
+    },
+    "07_crm": {
+      "name": "CRM Upsert",
+      "types": ["hubspot", "salesforce", "pipedrive", "attio"],
+      "purpose": "Create or update contact record"
+    },
+    "08_enroll": {
+      "name": "Sequence Enroll",
+      "types": ["smartlead", "instantly", "lemlist", "amplemarket"],
+      "purpose": "Add to email sequence"
+    },
+    "09_alert": {
+      "name": "Review Alert",
+      "types": ["slack", "email", "http_request"],
+      "purpose": "Notify on completion or issues"
+    }
+  },
+  "quality_gates": [
+    "All nodes have credentials configured",
+    "Approval switch has human approval branch",
+    "Error handling on data fetch nodes",
+    "Rate limiting consideration",
+    "No hardcoded secrets in expressions"
+  ],
+  "rate_limits": {
+    "build_per_hour": 10,
+    "edit_per_hour": 30,
+    "validation_per_minute": 60
+  }
+}

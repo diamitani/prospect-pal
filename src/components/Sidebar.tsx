@@ -13,6 +13,10 @@ import {
   Plus,
   Sparkles,
   MessageSquare,
+  Layers,
+  Wrench,
+  Bot,
+  Stethoscope,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -23,11 +27,26 @@ interface SidebarProps {
   userEmail: string;
 }
 
-const NAV: { id: View; label: string; icon: typeof LayoutDashboard; badge?: string }[] = [
-  { id: "home", label: "Dashboard", icon: LayoutDashboard },
+interface NavItem {
+  id: View;
+  label: string;
+  icon: typeof LayoutDashboard;
+  badge?: string;
+  section?: string;
+}
+
+const NAV: NavItem[] = [
+  // Build
+  { id: "home", label: "Dashboard", icon: LayoutDashboard, section: "Build" },
   { id: "studio", label: "Studio", icon: MessageSquare },
-  { id: "blueprints", label: "Templates", icon: Package },
-  { id: "settings", label: "Settings", icon: Settings },
+  { id: "templates", label: "Templates", icon: Layers },
+  // Engineer
+  { id: "analyst", label: "Analyzer", icon: Stethoscope, section: "Engineer" },
+  // Agents
+  { id: "blueprints", label: "Agent Package", icon: Package, section: "Agents" },
+  { id: "core-sdr", label: "Core SDR", icon: Bot, badge: "beta" },
+  // Account
+  { id: "settings", label: "Settings", icon: Settings, section: "Account" },
 ];
 
 export default function Sidebar({ currentView, onViewChange, projectName, userName, userEmail }: SidebarProps) {
@@ -86,62 +105,78 @@ export default function Sidebar({ currentView, onViewChange, projectName, userNa
 
       {/* Nav */}
       <nav style={{ flex: 1, padding: "4px 8px", overflowY: "auto" }}>
-        {NAV.map((item) => {
+        {NAV.map((item, index) => {
           const active = currentView === item.id;
           const IconComponent = item.icon;
+          const showSection = item.section && (index === 0 || NAV[index - 1].section !== item.section);
           return (
-            <button
-              key={item.id}
-              onClick={() => onViewChange(item.id)}
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "8px 12px",
-                borderRadius: "var(--radius-md)",
-                border: "none",
-                cursor: "pointer",
-                textAlign: "left",
-                fontFamily: "inherit",
-                marginBottom: 2,
-                background: active ? "var(--surface-deep-raised)" : "transparent",
-                color: active ? "var(--paper-0)" : "var(--ink-300)",
-                fontWeight: active ? "var(--weight-semibold)" : "var(--weight-medium)",
-                fontSize: "var(--text-body-sm)",
-                transition: "var(--transition-control)",
-                borderLeft: active ? "3px solid var(--cobalt-400)" : "3px solid transparent",
-              }}
-            >
-              <IconComponent size={16} strokeWidth={1.75} />
-              <span style={{ flex: 1 }}>{item.label}</span>
-              {item.badge && (
-                <span
+            <div key={item.id}>
+              {showSection && (
+                <div
                   style={{
-                    fontSize: 10,
-                    fontFamily: "var(--font-data)",
-                    padding: "2px 6px",
-                    borderRadius: "var(--radius-pill)",
-                    background: item.badge === "$199" ? "rgba(217,185,104,0.18)" : "rgba(42,65,201,0.2)",
-                    color: item.badge === "$199" ? "var(--champagne-300)" : "var(--cobalt-300)",
-                    fontWeight: 700,
+                    fontSize: "var(--text-micro)",
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "var(--tracking-eyebrow)",
+                    color: "var(--ink-400)",
+                    padding: index === 0 ? "6px 12px 6px" : "14px 12px 6px",
                   }}
                 >
-                  {item.badge}
-                </span>
+                  {item.section}
+                </div>
               )}
-              {active && (
-                <span
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: "50%",
-                    background: "var(--cobalt-400)",
-                    marginLeft: 4,
-                  }}
-                />
-              )}
-            </button>
+              <button
+                onClick={() => onViewChange(item.id)}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "8px 12px",
+                  borderRadius: "var(--radius-md)",
+                  border: "none",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  fontFamily: "inherit",
+                  marginBottom: 2,
+                  background: active ? "var(--surface-deep-raised)" : "transparent",
+                  color: active ? "var(--paper-0)" : "var(--ink-300)",
+                  fontWeight: active ? "var(--weight-semibold)" : "var(--weight-medium)",
+                  fontSize: "var(--text-body-sm)",
+                  transition: "var(--transition-control)",
+                  borderLeft: active ? "3px solid var(--cobalt-400)" : "3px solid transparent",
+                }}
+              >
+                <IconComponent size={16} strokeWidth={1.75} />
+                <span style={{ flex: 1 }}>{item.label}</span>
+                {item.badge && (
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontFamily: "var(--font-data)",
+                      padding: "2px 6px",
+                      borderRadius: "var(--radius-pill)",
+                      background: item.badge === "beta" ? "rgba(217,185,104,0.18)" : "rgba(42,65,201,0.2)",
+                      color: item.badge === "beta" ? "var(--champagne-300)" : "var(--cobalt-300)",
+                      fontWeight: 700,
+                    }}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+                {active && (
+                  <span
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: "var(--cobalt-400)",
+                      marginLeft: 4,
+                    }}
+                  />
+                )}
+              </button>
+            </div>
           );
         })}
       </nav>

@@ -1,0 +1,80 @@
+{
+  "id": "n8n-analyst",
+  "name": "n8n Execution Analyst",
+  "version": "1.0.0",
+  "description": "Monitors workflow executions, generates reports, and diagnoses failures",
+  "icon": "activity",
+  "author": "Prospect PAL",
+  "capabilities": [
+    "health_check",
+    "execution_report",
+    "error_diagnosis",
+    "daily_digest",
+    "alert"
+  ],
+  "inputs": {
+    "workflow_id": {
+      "type": "string",
+      "required": false,
+      "description": "Specific workflow to analyze"
+    },
+    "date_range": {
+      "type": "object",
+      "required": false,
+      "properties": {
+        "from": "ISO date string",
+        "to": "ISO date string"
+      }
+    },
+    "report_type": {
+      "type": "string",
+      "enum": ["daily", "weekly", "health_check", "error_analysis"],
+      "required": true
+    }
+  },
+  "outputs": {
+    "report_html": {
+      "type": "string",
+      "description": "Formatted HTML report for email"
+    },
+    "report_json": {
+      "type": "object",
+      "description": "Structured report data"
+    },
+    "recommendations": {
+      "type": "array",
+      "description": "Actionable improvement suggestions"
+    }
+  },
+  "metrics_tracked": [
+    "total_executions",
+    "success_rate",
+    "average_duration",
+    "error_count",
+    "error_rate",
+    "nodes_most_failed",
+    "peak_execution_times"
+  ],
+  "alert_conditions": [
+    "Error rate > 10%",
+    "Workflow failing for > 1 hour",
+    "Success rate drop > 20% from baseline",
+    "Execution time > 2x average"
+  ],
+  "daily_report_template": {
+    "sections": [
+      {
+        "title": "Summary",
+        "metrics": ["total_runs", "successes", "errors", "success_rate"]
+      },
+      {
+        "title": "Failing Workflows",
+        "show": "workflows with errors in last 24h"
+      },
+      {
+        "title": "Recent Failures",
+        "show": "last 20 error details"
+      }
+    ]
+  }
+}

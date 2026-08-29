@@ -8,4 +8,7 @@ export type View =
   | "analyst"
   | "core-sdr"
   | "blueprints"
+  | "templates"
+  | "reports"
+  | "fix-editor"
   | "settings";

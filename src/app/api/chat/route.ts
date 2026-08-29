@@ -1,43 +1,57 @@
-import { streamText } from "ai";
-import { openai } from "@ai-sdk/openai";
-import { askDDG } from "@/lib/duckduckgo";
+/**
+ * Chat API - Using Vercel AI SDK & Vercel AI Gateway
+ */
+import { streamChat } from "@/lib/ai";
+import { type UIMessage } from "ai";
 
+export const runtime = "nodejs";
 export const maxDuration = 60;
+
+const SYSTEM_PROMPT = `You are an elite GTM Automation Architect & n8n Systems Engineer for Prospect PAL.
+Your job is to conduct a fast, high-converting PAL Intake with the user to architect their 5-Pillar Prospect Automation Engine (PAE).
+
+**Your Capabilities:**
+- Research companies and contacts using web search
+- Generate complete n8n workflows for prospect automation  
+- Validate email addresses and enrichment data
+- Connect to HubSpot, Apollo, Smartlead via Composio
+
+**Conversation Flow:**
+1. Understand their ICP (titles, company size, industry)
+2. Identify their tech stack (CRM, Data tool, Sequencer)
+3. Clarify trigger type (schedule, webhook, manual)
+4. Confirm approval policy (auto-send, draft, human review)
+
+Keep responses concise, actionable, and focused on gathering the 10 hard gates needed to build their automation.`;
 
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
-
-    if (process.env.OPENAI_API_KEY) {
-      try {
-        const result = streamText({
-          model: openai("gpt-4o-mini"),
-          system: `You are an elite GTM Automation Architect & n8n Systems Engineer for Prospect PAL.
-Your job is to conduct a fast, high-converting PAL Intake with the user to architect their 5-Pillar Prospect Automation Engine (PAE).
-Gather target ICP, tech stack (CRM, Data Enrichment, Sequencer, Trigger), and value prop.`,
-          messages,
-        });
-        return result.toTextStreamResponse();
-      } catch (err) {
-        console.warn("OpenAI chat failed, using fallback:", err);
-      }
-    }
-
-    // Fallback via DuckDuckGo AI
-    const lastUserMessage = messages[messages.length - 1]?.content || "Hi";
-    const systemPrompt = "You are an elite GTM Automation Architect for Prospect PAL. Help the user define their outbound prospecting workflow (ICP, CRM, Apollo/Clay, Smartlead, Trigger). Keep responses concise and under 3 sentences.";
     
-    let reply = "";
-    try {
-      reply = await askDDG(lastUserMessage, systemPrompt);
-    } catch {
-      reply = "Got it! Tell me more about your target ICP titles (e.g. VP of Sales) and your preferred CRM (HubSpot or Salesforce) so I can configure your 5-pillar n8n engine.";
-    }
+    // Validate messages shape
+    const coreMessages: UIMessage[] = messages.map((m: any) => ({
+      role: m.role,
+      content: m.content,
+    }));
 
-    return new Response(reply, {
-      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    // Use AI SDK stream text
+    return await streamChat(coreMessages, {
+      system: SYSTEM_PROMPT,
+      temperature: 0.7,
     });
-  } catch (e) {
-    return new Response("I received your input. When ready, click 'Compile GTM Engine'.", { status: 200 });
+
+  } catch (error) {
+    console.error("[Chat API] Error:", error);
+    
+    return new Response(
+      JSON.stringify({ 
+        error: "Chat service unavailable",
+        message: error instanceof Error ? error.message : "Unknown error"
+      }),
+      { 
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      }
+    );
   }
 }

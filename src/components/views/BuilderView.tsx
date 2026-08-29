@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, FormEvent } from "react";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport, type UIMessage } from "ai";
 import { Button, Card, Badge, Icon, PipelineRail, PipelineNode } from "@/components/ds";
 import { IntakeData } from "./WizardView";
 
@@ -88,15 +90,20 @@ export default function BuilderView({ wizardData, onCompiled }: BuilderViewProps
     ? `Got it! I've configured your workflow based on your inputs:\n\n• **CRM:** ${wizardData.crm}\n• **Outreach:** ${wizardData.outreach}\n• **Enrichment:** ${wizardData.dataTools}\n• **AI:** ${wizardData.llm}\n\nReady to compile? Click "Compile Workflow" or refine any settings below.`
     : "I'm your GTM automation architect. Tell me who you sell to, which tools hold your data, and how leads should enter the system.";
 
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "initial",
-      role: "assistant",
-      content: initialMessage,
-    },
-  ]);
+  const { messages, status, sendMessage, setMessages } = useChat({
+    transport: new DefaultChatTransport({ api: "/api/chat" }),
+    messages: [
+      {
+        id: "initial",
+        role: "assistant",
+        parts: [{ type: "text", text: initialMessage }],
+      } as unknown as UIMessage
+    ]
+  });
+
   const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const isLoading = status === "submitted" || status === "streaming";
+  
   const [config, setConfig] = useState<WorkflowConfig>(initialConfig);
   const [apiKey, setApiKey] = useState("");
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
@@ -112,52 +119,11 @@ export default function BuilderView({ wizardData, onCompiled }: BuilderViewProps
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    const userMessage: Message = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      content: input.trim(),
-    };
-
     // Extract ICP from chat input
     setConfig((prev) => ({ ...prev, icpPrompt: prev.icpPrompt || input.trim() }));
 
-    setMessages((prev) => [...prev, userMessage]);
+    sendMessage({ role: "user", parts: [{ type: "text", text: input.trim() }] } as any);
     setInput("");
-    setIsLoading(true);
-
-    try {
-      const res = await fetch("/api/agent/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [...messages, userMessage].map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-        }),
-      });
-
-      const data = await res.json();
-      const assistantMessage: Message = {
-        id: `assistant-${Date.now()}`,
-        role: "assistant",
-        content: data.content || data.message || "I can help you configure your workflow. What tools are you using?",
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error("Chat error:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `error-${Date.now()}`,
-          role: "assistant",
-          content: "Sorry, I encountered an error. Please try again.",
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   // Form mode: structured configuration
@@ -168,8 +134,8 @@ export default function BuilderView({ wizardData, onCompiled }: BuilderViewProps
         {
           id: `error-${Date.now()}`,
           role: "assistant",
-          content: "Please describe your ICP first (either in chat or form mode).",
-        },
+          parts: [{ type: "text", text: "Please describe your ICP first (either in chat or form mode)." }],
+        } as unknown as UIMessage,
       ]);
       return;
     }
@@ -196,8 +162,8 @@ export default function BuilderView({ wizardData, onCompiled }: BuilderViewProps
           {
             id: `compile-${Date.now()}`,
             role: "assistant",
-            content: `Workflow compiled successfully!\n\nPhase: ${data.trace?.phase}\nSkill: ${data.trace?.skill}\nNodes: ${data.metadata?.nodeCount || "9"}\nTime: ${data.trace?.executionTimeMs}ms\n\nClick "Download JSON" to get your n8n workflow.`,
-          },
+            parts: [{ type: "text", text: `Workflow compiled successfully!\n\nPhase: ${data.trace?.phase}\nSkill: ${data.trace?.skill}\nNodes: ${data.metadata?.nodeCount || "9"}\nTime: ${data.trace?.executionTimeMs}ms\n\nClick "Download JSON" to get your n8n workflow.` }],
+          } as unknown as UIMessage,
         ]);
         onCompiled?.();
       } else {
@@ -206,8 +172,8 @@ export default function BuilderView({ wizardData, onCompiled }: BuilderViewProps
           {
             id: `error-${Date.now()}`,
             role: "assistant",
-            content: data.error || "Compilation failed. Please check your API key and try again.",
-          },
+            parts: [{ type: "text", text: data.error || "Compilation failed. Please check your API key and try again." }],
+          } as unknown as UIMessage,
         ]);
       }
     } catch (error) {
@@ -217,8 +183,8 @@ export default function BuilderView({ wizardData, onCompiled }: BuilderViewProps
         {
           id: `error-${Date.now()}`,
           role: "assistant",
-          content: "Compilation failed. Check your API key or try again.",
-        },
+          parts: [{ type: "text", text: "Compilation failed. Check your API key or try again." }],
+        } as unknown as UIMessage,
       ]);
     } finally {
       setIsCompiling(false);
@@ -314,7 +280,7 @@ export default function BuilderView({ wizardData, onCompiled }: BuilderViewProps
                     borderBottomLeftRadius: msg.role === "assistant" ? "var(--radius-xs)" : undefined,
                   }}
                 >
-                  {msg.content}
+                  {msg.parts?.[0]?.type === "text" ? msg.parts[0].text : "..."}
                 </div>
               ))}
               {isLoading && (

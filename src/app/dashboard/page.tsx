@@ -12,6 +12,7 @@ import AnalystView from "@/components/views/AnalystView";
 import SettingsView from "@/components/views/SettingsView";
 import CoreSdrView from "@/components/views/CoreSdrView";
 import BlueprintsView from "@/components/views/ProjectsView";
+import TemplatesView from "@/components/views/TemplatesView";
 import { View } from "@/types/app";
 import { IntakeData } from "@/components/views/WizardView";
 
@@ -91,6 +92,7 @@ export default function DashboardPage() {
           {view === "analyst" && <AnalystView />}
           {view === "core-sdr" && <CoreSdrView />}
           {view === "blueprints" && <BlueprintsView />}
+          {view === "templates" && <TemplatesView onUseTemplate={(slug) => { console.log("Use template:", slug); setView("studio"); }} />}
           {view === "settings" && <SettingsView />}
         </main>
       </div>

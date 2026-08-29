@@ -15,9 +15,12 @@ const VIEW_META: Record<View, { title: string; crumb: string }> = {
   wizard: { title: "Campaign Wizard", crumb: "Configure your prospect automation" },
   builder: { title: "Workflow Builder", crumb: "Build your GTM automation workflow" },
   outputs: { title: "Outputs & Deploy", crumb: "Download or deploy your workflow" },
-  analyst: { title: "Campaign Analyst", crumb: "Track performance and optimize" },
+  analyst: { title: "Analyzer", crumb: "Diagnose workflow errors" },
   "core-sdr": { title: "Core SDR Agent", crumb: "Autonomous prospecting, deep research, and PAS outreach" },
-  blueprints: { title: "Templates", crumb: "Pre-built workflows for common stacks" },
+  blueprints: { title: "Agent Package", crumb: "Skills, instructions, and scaffolding" },
+  templates: { title: "Templates", crumb: "Proven engines for common use cases" },
+  reports: { title: "Reports", crumb: "Execution history and daily summary" },
+  "fix-editor": { title: "Fix Editor", crumb: "Paste an error, get the patch" },
   settings: { title: "Settings", crumb: "API keys and configuration" },
 };
 
