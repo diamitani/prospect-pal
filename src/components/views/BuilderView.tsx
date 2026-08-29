@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect, FormEvent } from "react";
+import { useState, useRef, useEffect, FormEvent, useMemo } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Button, Card, Badge, Icon, PipelineRail, PipelineNode } from "@/components/ds";
 import { IntakeData } from "./WizardView";
-
+import { WorkflowCanvas } from "@/components/canvas";
+import { DeployModal } from "@/components/ds/app/DeployModal";
+import { buildNodeSequence } from "@/lib/workflow-generator";
 interface BuilderViewProps {
   wizardData?: IntakeData | null;
   onCompiled?: () => void;
@@ -108,7 +110,10 @@ export default function BuilderView({ wizardData, onCompiled }: BuilderViewProps
   const [apiKey, setApiKey] = useState("");
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [result, setResult] = useState<OrchestrationResult | null>(null);
+  const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const { nodes: generatedNodes, connections: generatedConnections } = useMemo(() => buildNodeSequence({ ...config, companyUrls: [], companyPrompt: "" }), [config]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -483,9 +488,14 @@ export default function BuilderView({ wizardData, onCompiled }: BuilderViewProps
             {isCompiling ? "Compiling engine..." : "Compile GTM engine"}
           </Button>
           {result?.success && (
-            <Button variant="outline" fullWidth icon="Download" onClick={downloadWorkflow}>
-              Download n8n JSON
-            </Button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <Button variant="outline" size="sm" icon="Download" onClick={downloadWorkflow} disabled={!result?.success} style={{ flex: 1 }}>
+                Download JSON
+              </Button>
+              <Button variant="accent" size="sm" icon="Play" onClick={() => setIsDeployModalOpen(true)} disabled={!result?.success} style={{ flex: 1 }}>
+                Deploy to n8n
+              </Button>
+            </div>
           )}
         </div>
       </div>
@@ -514,90 +524,101 @@ export default function BuilderView({ wizardData, onCompiled }: BuilderViewProps
           )}
         </div>
 
-        <div style={{ flex: 1, overflow: "auto", padding: "22px 20px" }}>
-          <PipelineRail nodes={NINE_NODES} activeIndex={activeNode} onSelect={setActiveNode} onDeep />
-
-          <div style={{ marginTop: 20, display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 14 }}>
-            <div
-              style={{
-                background: "var(--surface-deep-raised)",
-                border: "1px solid var(--border-deep)",
-                borderRadius: "var(--radius-xl)",
-                padding: "18px 20px",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "var(--text-eyebrow)",
-                  fontWeight: "var(--weight-semibold)",
-                  textTransform: "uppercase",
-                  letterSpacing: "var(--tracking-eyebrow)",
-                  color: "var(--champagne-200)",
-                  marginBottom: 6,
-                }}
-              >
-                Node {String(activeNode + 1).padStart(2, "0")} specification
-              </div>
-              <div style={{ fontSize: "var(--text-h3)", fontWeight: "var(--weight-semibold)", color: "var(--paper-0)", marginBottom: 6 }}>
-                {NINE_NODES[activeNode].title}
-              </div>
-              <p style={{ margin: 0, fontSize: "var(--text-body-sm)", color: "var(--ink-300)", lineHeight: "var(--leading-relaxed)" }}>
-                {NINE_NODES[activeNode].subtitle}. Bound to{" "}
-                <span style={{ fontFamily: "var(--font-data)", color: "var(--ink-100)" }}>
-                  {NINE_NODES[activeNode].binding}
-                </span>
-                . Secrets stay as ENV references; nothing is written to Prospect PAL.
-              </p>
+        <div style={{ flex: 1, overflow: "auto", position: "relative", display: "flex", flexDirection: "column" }}>
+          {result?.success ? (
+            <div style={{ flex: 1, background: "#ffffff" }}>
+              <WorkflowCanvas
+                nodes={generatedNodes}
+                connections={generatedConnections}
+                selectedNodeId={null}
+                onNodeSelect={() => {}}
+              />
             </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <div
-                style={{
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid var(--border-deep)",
-                  borderRadius: "var(--radius-lg)",
-                  padding: "12px 14px",
-                }}
-              >
+          ) : (
+            <div style={{ padding: "22px 20px" }}>
+              <PipelineRail nodes={NINE_NODES} activeIndex={activeNode} onSelect={setActiveNode} onDeep />
+              
+              <div style={{ marginTop: 20, display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 14 }}>
                 <div
                   style={{
-                    fontSize: "var(--text-micro)",
-                    color: "var(--ink-400)",
-                    textTransform: "uppercase",
-                    letterSpacing: "var(--tracking-eyebrow)",
-                    fontWeight: "var(--weight-semibold)",
-                    marginBottom: 8,
+                    background: "var(--surface-deep-raised)",
+                    border: "1px solid var(--border-deep)",
+                    borderRadius: "var(--radius-xl)",
+                    padding: "18px 20px",
                   }}
                 >
-                  Requires connection
-                </div>
-                {[`ENV:${config.leadSource.toUpperCase()}_API_KEY`, `ENV:${config.sequencer.toUpperCase()}_API_KEY`].map((k) => (
                   <div
-                    key={k}
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 7,
-                      fontFamily: "var(--font-data)",
-                      fontSize: "var(--text-micro)",
-                      color: "var(--ink-200)",
-                      marginBottom: 5,
+                      fontSize: "var(--text-eyebrow)",
+                      fontWeight: "var(--weight-semibold)",
+                      textTransform: "uppercase",
+                      letterSpacing: "var(--tracking-eyebrow)",
+                      color: "var(--champagne-200)",
+                      marginBottom: 6,
                     }}
                   >
-                    <Icon name="KeyRound" size={12} color="var(--champagne-300)" />
-                    {k}
+                    Node {String(activeNode + 1).padStart(2, "0")} specification
                   </div>
-                ))}
-              </div>
+                  <div style={{ fontSize: "var(--text-h3)", fontWeight: "var(--weight-semibold)", color: "var(--paper-0)", marginBottom: 6 }}>
+                    {NINE_NODES[activeNode].title}
+                  </div>
+                  <p style={{ margin: 0, fontSize: "var(--text-body-sm)", color: "var(--ink-300)", lineHeight: "var(--leading-relaxed)" }}>
+                    {NINE_NODES[activeNode].subtitle}. Bound to{" "}
+                    <span style={{ fontFamily: "var(--font-data)", color: "var(--ink-100)" }}>
+                      {NINE_NODES[activeNode].binding}
+                    </span>
+                    . Secrets stay as ENV references; nothing is written to Prospect PAL.
+                  </p>
+                </div>
 
-              {/* Execution Trace */}
-              {result?.trace && (
-                <div
-                  style={{
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid var(--border-deep)",
-                    borderRadius: "var(--radius-lg)",
-                    padding: "12px 14px",
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div
+                    style={{
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid var(--border-deep)",
+                      borderRadius: "var(--radius-lg)",
+                      padding: "12px 14px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "var(--text-micro)",
+                        color: "var(--ink-400)",
+                        textTransform: "uppercase",
+                        letterSpacing: "var(--tracking-eyebrow)",
+                        fontWeight: "var(--weight-semibold)",
+                        marginBottom: 8,
+                      }}
+                    >
+                      Requires connection
+                    </div>
+                    {[`ENV:${config.leadSource.toUpperCase()}_API_KEY`, `ENV:${config.sequencer.toUpperCase()}_API_KEY`].map((k) => (
+                      <div
+                        key={k}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 7,
+                          fontFamily: "var(--font-data)",
+                          fontSize: "var(--text-micro)",
+                          color: "var(--ink-200)",
+                          marginBottom: 5,
+                        }}
+                      >
+                        <Icon name="KeyRound" size={12} color="var(--champagne-300)" />
+                        {k}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Execution Trace */}
+                  {result?.trace && (
+                    <div
+                      style={{
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid var(--border-deep)",
+                        borderRadius: "var(--radius-lg)",
+                        padding: "12px 14px",
                   }}
                 >
                   <div
@@ -623,7 +644,25 @@ export default function BuilderView({ wizardData, onCompiled }: BuilderViewProps
             </div>
           </div>
         </div>
-      </div>
+      )}
+    </div>
+  </div>
+      <DeployModal
+        isOpen={isDeployModalOpen}
+        onClose={() => setIsDeployModalOpen(false)}
+        workflowJson={result?.workflow}
+        onDeploySuccess={(res) => {
+          setIsDeployModalOpen(false);
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `deploy-${Date.now()}`,
+              role: "assistant",
+              parts: [{ type: "text", text: `🚀 Successfully pushed workflow to n8n!\n\nOpen your instance to activate the newly deployed workflow.` }],
+            } as unknown as UIMessage,
+          ]);
+        }}
+      />
 
       <style jsx>{`
         @keyframes bounce-dot {
