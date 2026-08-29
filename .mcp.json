@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching",
+      "env": {
+        "SUPABASE_URL": "https://jlwwyfdcdjcoepqjpnvi.supabase.co",
+        "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impsd3d5ZmRjZGpjb2VwcWpwbnZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3MTc5MzIsImV4cCI6MjEwMzI5MzkzMn0.etJqRYP1Qa0OlLkkW8K08-NTuhVlIkTS_G6RvPJVSXU",
+        "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impsd3d5ZmRjZGpjb2VwcWpwbnZpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzcxNzkzMiwiZXhwIjoyMTAzMjkzOTMyfQ.cdvJSFoopqmnlOO1l1VIWsFqO8-_GJlUy6_ZDpdeCG0"
+      }
+    }
+  }
+}
