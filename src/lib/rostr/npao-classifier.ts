@@ -1,6 +1,6 @@
 /**
- * NPAO (Navigate, Prioritize, Allocate, Orchestrate) Classifier
- * 5D Phase Taxonomy + 4D Priority Scoring
+ * NPAO (Necessity, Priority, Anxiety, Opportunity) Analysis Engine & Classifier
+ * Canonical ROSTR Strategic Planning & Execution Framework
  */
 
 import type { AgentManifest } from "./pal-compiler";
@@ -27,6 +27,107 @@ export interface TaskAllocation {
   agentId?: string;
   allocation_score: number;
   reasoning: string;
+}
+
+/**
+ * Canonical NPAO Strategic Decision Structure
+ */
+export interface NPAOAnalysis {
+  necessity: {
+    core_requirements: string[];
+    hard_gates: string[];
+    must_have_score: number; // 0-10
+    rationale: string;
+  };
+  priority: {
+    urgency_tier: "Now" | "Next" | "Later" | "Out";
+    critical_path_rank: number; // 1-10
+    score: PriorityScore;
+    rationale: string;
+  };
+  anxiety: {
+    risks: string[];
+    failure_modes: string[]; // e.g. CRM collision, domain burn, 429 rate limit
+    mitigation_strategies: string[];
+    risk_score: number; // 0-10 (higher = greater anxiety/risk)
+  };
+  opportunity: {
+    upside_leverage: string[];
+    revenue_potential: string;
+    efficiency_multiplier: number; // e.g. 10x
+    expansion_paths: string[];
+  };
+}
+
+/**
+ * Perform canonical NPAO Analysis
+ */
+export function analyzeNPAO(manifest: AgentManifest): NPAOAnalysis {
+  const phaseClass = classifyPhase(manifest);
+  const priorityScore = calculatePriority(phaseClass, manifest);
+
+  const desc = manifest.instructions.task_description.toLowerCase();
+
+  // Extract Necessity
+  const hardGates: string[] = [];
+  if (desc.includes("crm") || desc.includes("hubspot") || desc.includes("salesforce")) hardGates.push("CRM Deduplication Shield");
+  if (desc.includes("apollo") || desc.includes("clay") || desc.includes("enrich")) hardGates.push("Waterfall Contact Reveal");
+  if (desc.includes("email") || desc.includes("pas") || desc.includes("copy")) hardGates.push("3-Sentence PAS Copywriting");
+  if (desc.includes("smartlead") || desc.includes("instantly") || desc.includes("sequence")) hardGates.push("Sequencer Campaign Binding");
+
+  // Extract Anxiety & Risks
+  const risks: string[] = [];
+  const failureModes: string[] = [];
+  const mitigations: string[] = [];
+
+  if (desc.includes("outbound") || desc.includes("email")) {
+    risks.push("Domain reputation burn from unverified or spammy copy");
+    failureModes.push("Bounces > 3%", "Spam trap hits");
+    mitigations.push("Multi-step MX/SMTP verification & inbox warmup rotation");
+  }
+
+  if (desc.includes("crm") || desc.includes("lead")) {
+    risks.push("Accidental pitching of active pipeline deals or VIP customer accounts");
+    failureModes.push("CRM Lead Collision");
+    mitigations.push("Pre-flight CRM Dedupe Shield rejecting active deals < 60 days");
+  }
+
+  // Extract Opportunity
+  const upside: string[] = [
+    "Autonomous 5-pillar pipeline execution with zero human SDR manual copy-pasting",
+    "Instant high-converting 3-sentence PAS email generation tailored to live account pain points",
+  ];
+
+  let urgencyTier: "Now" | "Next" | "Later" | "Out" = "Now";
+  if (priorityScore.threshold === "backlog") urgencyTier = "Later";
+  else if (priorityScore.threshold === "queued") urgencyTier = "Next";
+
+  return {
+    necessity: {
+      core_requirements: manifest.instructions.completion_criteria,
+      hard_gates: hardGates.length > 0 ? hardGates : ["ICP Target Definition", "Offer & Proof Formulation"],
+      must_have_score: hardGates.length > 2 ? 9.5 : 8.0,
+      rationale: `Foundational requirements identified for ${phaseClass.phase} phase.`,
+    },
+    priority: {
+      urgency_tier: urgencyTier,
+      critical_path_rank: Math.round(priorityScore.total),
+      score: priorityScore,
+      rationale: `Ranked ${urgencyTier} with composite priority score of ${priorityScore.total}/10.`,
+    },
+    anxiety: {
+      risks: risks.length > 0 ? risks : ["API rate limits", "Cold start delays"],
+      failure_modes: failureModes.length > 0 ? failureModes : ["429 Too Many Requests"],
+      mitigation_strategies: mitigations.length > 0 ? mitigations : ["Exponential backoff & multi-provider AI Gateway fallback"],
+      risk_score: risks.length > 1 ? 7.5 : 4.0,
+    },
+    opportunity: {
+      upside_leverage: upside,
+      revenue_potential: "$10k-$50k pipeline acceleration per campaign",
+      efficiency_multiplier: 10,
+      expansion_paths: ["Voice agent warm transfers (SignalWire)", "Real-time intent hiring signals"],
+    },
+  };
 }
 
 /**
