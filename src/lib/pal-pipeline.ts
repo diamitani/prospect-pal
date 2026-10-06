@@ -26,7 +26,7 @@ export interface PalInput {
 export interface ToolStack {
   leadSource: "apollo" | "linkedin" | "upload_csv" | "hubspot_stage" | "manual";
   enrichment: ("clay" | "hunter" | "clearbit" | "apollo_enrich")[];
-  crm: "hubspot" | "salesforce" | "attio" | "pipedrive" | "none";
+  crm: "twenty" | "hubspot" | "salesforce" | "attio" | "pipedrive" | "none";
   sequencer: "smartlead" | "amplemarket" | "instantly" | "lemlist" | "hubspot_seq";
   approvalGate: boolean;
   slackNotifications: boolean;

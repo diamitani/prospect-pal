@@ -1,101 +1,104 @@
 /**
- * AWS Bedrock Client
- * Uses long-term Bearer token for the Mantle runtime (us-east-1)
+ * AI Execution Client & Multi-Provider Gateway
+ * Powered by Vercel AI SDK Core (Anthropic, OpenAI, Google Gemini)
+ * Completely eliminates AWS SDK dependencies.
  */
-import {
-  BedrockRuntimeClient,
-  InvokeModelWithResponseStreamCommand,
-  InvokeModelCommand,
-} from "@aws-sdk/client-bedrock-runtime";
-
-const BEARER_TOKEN = process.env.AWS_BEDROCK_BEARER_TOKEN!;
-const REGION = process.env.AWS_REGION || "us-east-1";
-const MODEL_ID = process.env.BEDROCK_MODEL_ID || "anthropic.claude-3-5-sonnet-20241022-v2:0";
-
-// Configure Bedrock client with Bearer token auth
-export const bedrockClient = new BedrockRuntimeClient({
-  region: REGION,
-  token: { token: BEARER_TOKEN },
-});
+import { generateText, streamText } from "ai";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createOpenAI } from "@ai-sdk/openai";
 
 export interface BedrockMessage {
   role: "user" | "assistant";
   content: string;
 }
 
+const DEFAULT_MODEL = "claude-3-5-sonnet-20241022";
+
 /**
- * Invoke Claude 3.5 Sonnet with streaming
+ * Get active AI client with automatic fallback
+ */
+function getClient() {
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const openAIKey = process.env.OPENAI_API_KEY;
+  const gatewayUrl = process.env.VERCEL_AI_GATEWAY_URL;
+
+  if (anthropicKey) {
+    const anthropic = createAnthropic({
+      apiKey: anthropicKey,
+      baseURL: gatewayUrl ? `${gatewayUrl}/anthropic` : undefined,
+    });
+    return { provider: "anthropic" as const, model: anthropic(DEFAULT_MODEL) };
+  }
+
+  if (openAIKey) {
+    const openai = createOpenAI({
+      apiKey: openAIKey,
+      baseURL: gatewayUrl ? `${gatewayUrl}/openai` : undefined,
+    });
+    return { provider: "openai" as const, model: openai("gpt-4o") };
+  }
+
+  // Fallback demo client
+  const openai = createOpenAI({ apiKey: "demo-key" });
+  return { provider: "openai" as const, model: openai("gpt-4o-mini") };
+}
+
+/**
+ * Invoke Claude / OpenAI with streaming
  */
 export async function invokeClaudeStream(
   messages: BedrockMessage[],
   systemPrompt: string,
-  maxTokens = 4096
+  _maxTokens = 4096
 ): Promise<ReadableStream<Uint8Array>> {
-  const payload = {
-    anthropic_version: "bedrock-2023-05-31",
-    max_tokens: maxTokens,
+  const { model } = getClient();
+
+  const result = streamText({
+    model,
     system: systemPrompt,
-    messages,
-  };
-
-  const command = new InvokeModelWithResponseStreamCommand({
-    modelId: MODEL_ID,
-    contentType: "application/json",
-    accept: "application/json",
-    body: JSON.stringify(payload),
+    messages: messages.map((m) => ({ role: m.role, content: m.content })),
   });
 
-  const response = await bedrockClient.send(command);
-
-  // Convert AsyncIterable to ReadableStream
-  const stream = new ReadableStream<Uint8Array>({
-    async start(controller) {
-      if (!response.body) {
-        controller.close();
-        return;
-      }
-      try {
-        for await (const chunk of response.body) {
-          if (chunk.chunk?.bytes) {
-            controller.enqueue(chunk.chunk.bytes);
-          }
-        }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.close();
-      }
-    },
-  });
-
-  return stream;
+  return result.textStream.pipeThrough(
+    new TransformStream<string, Uint8Array>({
+      transform(chunk, controller) {
+        controller.enqueue(new TextEncoder().encode(chunk));
+      },
+    })
+  );
 }
 
 /**
- * Invoke Claude 3.5 Sonnet (non-streaming, for structured JSON output)
+ * Invoke Claude / OpenAI for structured JSON output
  */
 export async function invokeClaude(
   messages: BedrockMessage[],
   systemPrompt: string,
-  maxTokens = 8192
+  _maxTokens = 8192
 ): Promise<string> {
-  const payload = {
-    anthropic_version: "bedrock-2023-05-31",
-    max_tokens: maxTokens,
-    system: systemPrompt,
-    messages,
-  };
+  const { model } = getClient();
 
-  const command = new InvokeModelCommand({
-    modelId: MODEL_ID,
-    contentType: "application/json",
-    accept: "application/json",
-    body: JSON.stringify(payload),
-  });
-
-  const response = await bedrockClient.send(command);
-  const body = JSON.parse(new TextDecoder().decode(response.body));
-  return body.content[0].text;
+  try {
+    const { text } = await generateText({
+      model,
+      system: systemPrompt,
+      messages: messages.map((m) => ({ role: m.role, content: m.content })),
+    });
+    return text;
+  } catch (error: any) {
+    console.error("[AI Gateway] Execution error:", error);
+    // Auto-fallback to OpenAI if Anthropic errored
+    if (process.env.OPENAI_API_KEY) {
+      const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const { text } = await generateText({
+        model: openai("gpt-4o"),
+        system: systemPrompt,
+        messages: messages.map((m) => ({ role: m.role, content: m.content })),
+      });
+      return text;
+    }
+    throw error;
+  }
 }
 
-export { MODEL_ID };
+export const MODEL_ID = DEFAULT_MODEL;

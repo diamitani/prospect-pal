@@ -124,7 +124,6 @@ export async function injectContext(
   projectId?: string,
   userId?: string
 ): Promise<any> {
-  // In production, fetch from DynamoDB/vector DB
   const context: any = {
     session: {
       projectId,
@@ -133,15 +132,68 @@ export async function injectContext(
     },
     project: null,
     org: null,
+    retrieved_knowledge: null,
   };
 
-  // Load project context if available
+  // Use RAG DAL to retrieve relevant context
   if (projectId) {
-    // Fetch from DynamoDB - stub for now
-    context.project = {
-      id: projectId,
-      // Would load: architecture, conventions, recent decisions
-    };
+    try {
+      // Import RAG DAL dynamically to avoid circular dependencies
+      const { retrieveKnowledge } = await import('./rag-dal');
+      const { getUserWorkspace } = await import('../supabase');
+
+      // Get workspace ID for the project
+      let workspaceId: string | undefined;
+      if (userId) {
+        const workspace = await getUserWorkspace(userId);
+        workspaceId = workspace?.id;
+      }
+
+      if (workspaceId) {
+        // Build retrieval query from intent
+        const retrieval = await retrieveKnowledge({
+          text: intent.primary_intent,
+          workspace_id: workspaceId,
+          project_id: projectId,
+          source_tiers: [1, 2, 3], // All tiers
+          top_k: 15,
+          confidence_threshold: 0.8,
+        });
+
+        context.retrieved_knowledge = {
+          entries: retrieval.entries.slice(0, 10), // Top 10 for context budget
+          confidence: retrieval.confidence,
+          coverage: retrieval.coverage,
+        };
+
+        // Extract project conventions from high-tier entries
+        const tier1Entries = retrieval.entries.filter(e => e.source_tier === 1);
+        if (tier1Entries.length > 0) {
+          context.project = {
+            id: projectId,
+            conventions: tier1Entries
+              .map(e => e.summary || e.content.slice(0, 200))
+              .join('\n'),
+            recent_decisions: tier1Entries.filter(e => e.source_type === 'decision'),
+          };
+        }
+
+        console.log(
+          `[PAL] Retrieved ${retrieval.entries.length} knowledge entries ` +
+            `with confidence ${retrieval.confidence.toFixed(2)}`
+        );
+      } else {
+        console.warn('[PAL] No workspace ID found, skipping knowledge retrieval');
+      }
+    } catch (error) {
+      console.error('[PAL] Failed to retrieve knowledge:', error);
+      // Continue without retrieved knowledge rather than failing
+      context.project = {
+        id: projectId,
+        conventions: 'Knowledge retrieval unavailable',
+        recent_decisions: [],
+      };
+    }
   }
 
   return context;

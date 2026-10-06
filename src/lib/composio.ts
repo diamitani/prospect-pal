@@ -26,6 +26,15 @@ export const COMPOSIO_APPS = [
     color:    "#3B82F6",
   },
   {
+    id:       "twenty",
+    appName:  "twenty",
+    name:     "Twenty CRM",
+    emoji:    "🎯",
+    desc:     "Open-source CRM sync & lead deduplication",
+    category: "crm",
+    color:    "#111827",
+  },
+  {
     id:       "hubspot",
     appName:  "hubspot",
     name:     "HubSpot",

@@ -1,25 +1,15 @@
 /**
- * S3 Client & Operations
+ * Storage Client & Operations
+ * Powered by Supabase Storage (Zero AWS dependencies)
  * Stores large artifacts (n8n JSON, skill files, deploy guides)
  */
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-  ListObjectsV2Command,
-} from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { v4 as uuidv4 } from "uuid";
 
-const s3Client = new S3Client({
-  region: process.env.S3_BUCKET_REGION || process.env.AWS_REGION || "us-east-1",
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-});
+import { supabase } from "./supabase";
 
-const BUCKET = process.env.S3_BUCKET_NAME || "prospect-pal-artifacts";
+const BUCKET = process.env.SUPABASE_STORAGE_BUCKET || "prospect-pal-artifacts";
+
+// In-memory fallback cache if Supabase storage is unconfigured
+const memoryStorage = new Map<string, string>();
 
 export async function uploadArtifact(
   projectId: string,
@@ -30,43 +20,72 @@ export async function uploadArtifact(
 ): Promise<string> {
   const key = `projects/${projectId}/${artifactType}/${filename}`;
 
-  await s3Client.send(new PutObjectCommand({
-    Bucket: BUCKET,
-    Key: key,
-    Body: content,
-    ContentType: contentType,
-    Metadata: {
-      projectId,
-      artifactType,
-      uploadedAt: new Date().toISOString(),
-    },
-  }));
+  try {
+    const client = supabase.client;
+    if (client) {
+      const { error } = await client.storage
+        .from(BUCKET)
+        .upload(key, content, {
+          contentType,
+          upsert: true,
+        });
 
+      if (!error) return key;
+    }
+  } catch (err) {
+    console.warn("[Storage] Supabase storage upload fallback to local memory:", err);
+  }
+
+  memoryStorage.set(key, content);
   return key;
 }
 
-export async function getArtifactUrl(key: string, expiresIn = 3600): Promise<string> {
-  const command = new GetObjectCommand({ Bucket: BUCKET, Key: key });
-  return getSignedUrl(s3Client, command, { expiresIn });
+export async function getArtifactUrl(key: string, _expiresIn = 3600): Promise<string> {
+  try {
+    const client = supabase.client;
+    if (client) {
+      const { data } = client.storage.from(BUCKET).getPublicUrl(key);
+      if (data?.publicUrl) return data.publicUrl;
+    }
+  } catch {
+    // fallback
+  }
+
+  return `/api/artifacts?key=${encodeURIComponent(key)}`;
 }
 
 export async function getArtifactContent(key: string): Promise<string> {
-  const response = await s3Client.send(new GetObjectCommand({
-    Bucket: BUCKET,
-    Key: key,
-  }));
-  const chunks: Uint8Array[] = [];
-  if (!response.Body) return "";
-  for await (const chunk of response.Body as AsyncIterable<Uint8Array>) {
-    chunks.push(chunk);
+  try {
+    const client = supabase.client;
+    if (client) {
+      const { data, error } = await client.storage.from(BUCKET).download(key);
+      if (!error && data) {
+        return await data.text();
+      }
+    }
+  } catch (err) {
+    console.warn("[Storage] Download failed, checking memory store:", err);
   }
-  return Buffer.concat(chunks).toString("utf-8");
+
+  return memoryStorage.get(key) || "";
 }
 
 export async function listProjectArtifacts(projectId: string): Promise<string[]> {
-  const result = await s3Client.send(new ListObjectsV2Command({
-    Bucket: BUCKET,
-    Prefix: `projects/${projectId}/`,
-  }));
-  return (result.Contents || []).map((obj) => obj.Key!);
+  try {
+    const client = supabase.client;
+    if (client) {
+      const { data, error } = await client.storage
+        .from(BUCKET)
+        .list(`projects/${projectId}`);
+
+      if (!error && data) {
+        return data.map((item: any) => `projects/${projectId}/${item.name}`);
+      }
+    }
+  } catch {
+    // fallback
+  }
+
+  const prefix = `projects/${projectId}/`;
+  return Array.from(memoryStorage.keys()).filter((k) => k.startsWith(prefix));
 }

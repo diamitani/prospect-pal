@@ -1,21 +1,13 @@
 /**
- * AWS Bedrock Agent Executor
- * Executes agent manifests using Claude via AWS Bedrock
+ * Vercel AI Suite Agent Executor
+ * Executes agent manifests using Claude / GPT-4o via Vercel AI SDK Core
+ * Zero AWS dependencies.
  */
 
-import {
-  BedrockRuntimeClient,
-  InvokeModelCommand,
-} from "@aws-sdk/client-bedrock-runtime";
+import { generateText } from "ai";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createOpenAI } from "@ai-sdk/openai";
 import type { AgentManifest } from "./pal-compiler";
-
-const client = new BedrockRuntimeClient({
-  region: process.env.AWS_REGION || "us-east-1",
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-});
 
 export interface AgentExecutionResult {
   success: boolean;
@@ -29,7 +21,7 @@ export interface AgentExecutionResult {
 }
 
 /**
- * Execute agent manifest using AWS Bedrock Claude
+ * Execute agent manifest using Vercel AI SDK
  */
 export async function executeAgentWithBedrock(
   manifest: AgentManifest
@@ -51,62 +43,52 @@ ${manifest.instructions.completion_criteria.map((c) => `- ${c}`).join("\n")}
 Output Format: ${manifest.output.format}
 `;
 
-    // Add context if available
     if (manifest.context?.project) {
       systemPrompt += `\n\nProject Context:\n${JSON.stringify(manifest.context.project, null, 2)}`;
     }
 
-    // Build user message
     const userMessage = manifest.instructions.task_description;
+    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    const openAIKey = process.env.OPENAI_API_KEY;
 
-    // Map model name to Bedrock model ID
-    const modelIdMap: Record<string, string> = {
-      "claude-sonnet-4": "us.anthropic.claude-sonnet-4-20250514-v1:0",
-      "claude-opus-4": "us.anthropic.claude-opus-4-20250514-v1:0",
-      "claude-haiku-4": "us.anthropic.claude-haiku-4-20250320-v1:0",
-    };
+    let responseText = "";
+    let usage = { input_tokens: 0, output_tokens: 0 };
 
-    const modelId =
-      modelIdMap[manifest.runtime.model] ||
-      "us.anthropic.claude-sonnet-4-20250514-v1:0";
-
-    // Build request payload
-    const payload = {
-      anthropic_version: "bedrock-2023-05-31",
-      max_tokens: 4096,
-      temperature: manifest.runtime.temperature,
-      system: systemPrompt,
-      messages: [
-        {
-          role: "user",
-          content: userMessage,
-        },
-      ],
-    };
-
-    // Invoke Bedrock
-    const command = new InvokeModelCommand({
-      modelId,
-      contentType: "application/json",
-      accept: "application/json",
-      body: JSON.stringify(payload),
-    });
-
-    const response = await client.send(command);
-    const responseBody = JSON.parse(new TextDecoder().decode(response.body));
+    if (anthropicKey) {
+      const anthropic = createAnthropic({ apiKey: anthropicKey });
+      const result = await generateText({
+        model: anthropic("claude-3-5-sonnet-20241022"),
+        system: systemPrompt,
+        messages: [{ role: "user", content: userMessage }],
+        temperature: manifest.runtime.temperature,
+      });
+      responseText = result.text;
+      usage = {
+        input_tokens: result.usage?.inputTokens || 0,
+        output_tokens: result.usage?.outputTokens || 0,
+      };
+    } else if (openAIKey) {
+      const openai = createOpenAI({ apiKey: openAIKey });
+      const result = await generateText({
+        model: openai("gpt-4o"),
+        system: systemPrompt,
+        messages: [{ role: "user", content: userMessage }],
+        temperature: manifest.runtime.temperature,
+      });
+      responseText = result.text;
+      usage = {
+        input_tokens: result.usage?.inputTokens || 0,
+        output_tokens: result.usage?.outputTokens || 0,
+      };
+    } else {
+      throw new Error("Missing ANTHROPIC_API_KEY or OPENAI_API_KEY for Vercel AI SDK execution.");
+    }
 
     const duration_ms = Date.now() - startTime;
 
-    // Extract response
-    const output = responseBody.content[0].text;
-    const usage = {
-      input_tokens: responseBody.usage.input_tokens,
-      output_tokens: responseBody.usage.output_tokens,
-    };
-
     return {
       success: true,
-      output,
+      output: responseText,
       usage,
       duration_ms,
     };
@@ -144,14 +126,12 @@ export async function executeWithRetry(
 
     lastError = result.error || "Unknown error";
 
-    // Exponential backoff
     if (attempt < maxRetries) {
       const delayMs = Math.pow(2, attempt) * 1000;
       await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
   }
 
-  // All retries failed
   return {
     success: false,
     output: "",

@@ -1,6 +1,7 @@
 /**
  * POST /api/swarm/stream
  * Streaming SSE endpoint for real-time agent responses
+ * Powered by Vercel AI SDK Core (Zero AWS SDK)
  *
  * Streams events:
  *   - phase: { stage: 'compiling' | 'classifying' | 'executing' | 'complete' }
@@ -10,10 +11,9 @@
  */
 
 import { NextRequest } from "next/server";
-import {
-  BedrockRuntimeClient,
-  InvokeModelWithResponseStreamCommand,
-} from "@aws-sdk/client-bedrock-runtime";
+import { streamText } from "ai";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createOpenAI } from "@ai-sdk/openai";
 import { compilePAL, type AgentManifest } from "@/lib/rostr/pal-compiler";
 import { classifyPhase, calculatePriority } from "@/lib/rostr/npao-classifier";
 import {
@@ -25,7 +25,6 @@ import {
 export const runtime = "nodejs";
 export const maxDuration = 120;
 
-// SSE event types
 type PhaseStage = "compiling" | "classifying" | "executing" | "complete";
 
 interface SSEPhaseEvent {
@@ -60,34 +59,6 @@ interface SSEErrorEvent {
 
 type SSEEvent = SSEPhaseEvent | SSETokenEvent | SSEResultEvent | SSEErrorEvent;
 
-// Bedrock client configuration
-function createBedrockClient(): BedrockRuntimeClient {
-  const region = process.env.AWS_REGION || "us-east-1";
-
-  if (process.env.AWS_BEDROCK_BEARER_TOKEN) {
-    return new BedrockRuntimeClient({
-      region,
-      token: { token: process.env.AWS_BEDROCK_BEARER_TOKEN },
-    });
-  }
-
-  return new BedrockRuntimeClient({
-    region,
-    credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-    },
-  });
-}
-
-// Map model names to Bedrock model IDs
-const MODEL_ID_MAP: Record<string, string> = {
-  "claude-sonnet-4": "us.anthropic.claude-sonnet-4-20250514-v1:0",
-  "claude-opus-4": "us.anthropic.claude-opus-4-20250514-v1:0",
-  "claude-haiku-4": "us.anthropic.claude-haiku-4-20250320-v1:0",
-  default: "us.anthropic.claude-sonnet-4-20250514-v1:0",
-};
-
 function formatSSE(event: SSEEvent): string {
   return `data: ${JSON.stringify(event)}\n\n`;
 }
@@ -117,10 +88,7 @@ async function* streamAgentExecution(
   manifest: AgentManifest,
   conversationHistory: Array<{ role: string; content: string }>
 ): AsyncGenerator<SSEEvent> {
-  const client = createBedrockClient();
   const startTime = Date.now();
-
-  const modelId = MODEL_ID_MAP[manifest.runtime.model] || MODEL_ID_MAP.default;
   const systemPrompt = buildSystemPrompt(manifest);
 
   const messages = [
@@ -134,61 +102,49 @@ async function* streamAgentExecution(
     },
   ];
 
-  const payload = {
-    anthropic_version: "bedrock-2023-05-31",
-    max_tokens: 4096,
-    temperature: manifest.runtime.temperature,
-    system: systemPrompt,
-    messages,
-  };
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const openAIKey = process.env.OPENAI_API_KEY;
+  let model: any;
 
-  const command = new InvokeModelWithResponseStreamCommand({
-    modelId,
-    contentType: "application/json",
-    accept: "application/json",
-    body: JSON.stringify(payload),
-  });
+  if (anthropicKey) {
+    const anthropic = createAnthropic({ apiKey: anthropicKey });
+    model = anthropic("claude-3-5-sonnet-20241022");
+  } else if (openAIKey) {
+    const openai = createOpenAI({ apiKey: openAIKey });
+    model = openai("gpt-4o");
+  } else {
+    const openai = createOpenAI({ apiKey: "demo-key" });
+    model = openai("gpt-4o-mini");
+  }
 
   let fullOutput = "";
-  let usage = { input_tokens: 0, output_tokens: 0 };
 
   try {
-    const response = await client.send(command);
+    const result = streamText({
+      model,
+      system: systemPrompt,
+      messages,
+      temperature: manifest.runtime.temperature,
+    });
 
-    if (!response.body) {
-      throw new Error("No response body from Bedrock");
-    }
-
-    for await (const chunk of response.body) {
-      if (chunk.chunk?.bytes) {
-        const decoded = new TextDecoder().decode(chunk.chunk.bytes);
-        const parsed = JSON.parse(decoded);
-
-        if (parsed.type === "content_block_delta") {
-          const text = parsed.delta?.text || "";
-          if (text) {
-            fullOutput += text;
-            yield { type: "token", text };
-          }
-        }
-
-        if (parsed.type === "message_delta" && parsed.usage) {
-          usage.output_tokens = parsed.usage.output_tokens || 0;
-        }
-
-        if (parsed.type === "message_start" && parsed.message?.usage) {
-          usage.input_tokens = parsed.message.usage.input_tokens || 0;
-        }
+    for await (const delta of result.textStream) {
+      if (delta) {
+        fullOutput += delta;
+        yield { type: "token", text: delta };
       }
     }
 
     const duration_ms = Date.now() - startTime;
+    const usage = await result.usage;
 
     yield {
       type: "result",
       task_id: manifest.manifestId,
       output: fullOutput,
-      usage,
+      usage: {
+        input_tokens: usage?.inputTokens || 0,
+        output_tokens: usage?.outputTokens || 0,
+      },
       phase: manifest.runtime.agent_type,
       agent_type: manifest.runtime.agent_type,
       duration_ms,
@@ -197,7 +153,7 @@ async function* streamAgentExecution(
     yield {
       type: "error",
       message: error instanceof Error ? error.message : String(error),
-      code: "BEDROCK_EXECUTION_ERROR",
+      code: "AI_EXECUTION_ERROR",
     };
   }
 }
@@ -274,7 +230,6 @@ export async function POST(req: NextRequest) {
       };
 
       try {
-        // Phase 1: Compiling
         enqueue({
           type: "phase",
           stage: "compiling",
@@ -289,7 +244,6 @@ export async function POST(req: NextRequest) {
           agent_type_hint
         );
 
-        // Phase 2: Classifying
         enqueue({
           type: "phase",
           stage: "classifying",
@@ -313,7 +267,6 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        // Load conversation history
         let conversationHistory: Array<{ role: string; content: string }> = [];
         try {
           const sessionMessages = await loadAgentSession(user_id, session_id);
@@ -325,7 +278,6 @@ export async function POST(req: NextRequest) {
           // No existing session
         }
 
-        // Phase 3: Executing
         enqueue({
           type: "phase",
           stage: "executing",
@@ -336,7 +288,6 @@ export async function POST(req: NextRequest) {
         });
 
         let finalOutput = "";
-        let finalUsage = { input_tokens: 0, output_tokens: 0 };
 
         for await (const event of streamAgentExecution(
           manifest,
@@ -346,7 +297,6 @@ export async function POST(req: NextRequest) {
 
           if (event.type === "result") {
             finalOutput = event.output;
-            finalUsage = event.usage;
           }
 
           if (event.type === "error") {
@@ -355,14 +305,12 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // Phase 4: Complete
         enqueue({
           type: "phase",
           stage: "complete",
           details: { session_id, task_id: manifest.manifestId },
         });
 
-        // Persist session
         try {
           const updatedMessages = [
             ...conversationHistory.map((m) => ({

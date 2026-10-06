@@ -23,7 +23,7 @@ interface WorkflowConfig {
   icpPrompt: string;
   leadSource: "apollo" | "linkedin" | "upload_csv" | "hubspot_stage" | "manual";
   enrichment: ("clay" | "hunter" | "clearbit" | "apollo_enrich")[];
-  crm: "hubspot" | "salesforce" | "attio" | "pipedrive" | "none";
+  crm: "twenty" | "hubspot" | "salesforce" | "attio" | "pipedrive" | "none";
   sequencer: "smartlead" | "amplemarket" | "instantly" | "lemlist" | "hubspot_seq";
   approvalGate: boolean;
   slackAlerts: boolean;
@@ -414,6 +414,7 @@ export default function BuilderView({ wizardData, onCompiled }: BuilderViewProps
                   onChange={(e) => setConfig((prev) => ({ ...prev, crm: e.target.value as any }))}
                   style={{ width: "100%", padding: "10px 14px", borderRadius: "var(--radius-md)", border: "1.5px solid var(--border-hairline)", fontFamily: "inherit" }}
                 >
+                  <option value="twenty">Twenty CRM</option>
                   <option value="hubspot">HubSpot</option>
                   <option value="salesforce">Salesforce</option>
                   <option value="attio">Attio</option>

@@ -1,103 +1,31 @@
-# Sitemap — Prospect PAL
-
-**Artifact:** 05-sitemap  
-**Version:** v1.0.0  
-**Status:** approved  
-**Framework:** DDC / ROSTR
-
----
-
-## Marketing Routes
-
-| Route | Page | Purpose |
-|-------|------|---------|
-| `/` | Landing | Hero + AIDA + pricing |
-| `/home` | Landing (alias) | Redirect to `/` |
-| `/pricing` | Pricing | Plan comparison |
-| `/how-it-works` | Process | DDC 9-stage explainer |
+# Complete Sitemap Specification — Prospect PAL v2.0
+**Document Type:** Sitemap & Route Contract  
+**Project:** Prospect PAL Full-Stack GTM Automation Engine  
+**Version:** v2.0.0-PROD  
+**Status:** Approved  
 
 ---
 
-## Auth Routes
+## 1. Route Table
 
-| Route | Page | Purpose |
-|-------|------|---------|
-| `/login` | Login | Email + password |
-| `/signup` | Signup | New user registration |
-| `/auth/callback` | OAuth callback | Supabase auth redirect |
-| `/auth/forgot-password` | Reset | Password recovery |
-
----
-
-## Dashboard Routes (Protected)
-
-| Route | Page | Purpose |
-|-------|------|---------|
-| `/dashboard` | Home | Project list + quick stats |
-| `/dashboard/[projectId]` | Project detail | Campaign config + workflow canvas |
-| `/dashboard/chat` | Engineer chat | PAE conversation interface |
-| `/dashboard/wizard` | Campaign wizard | 10-gate intake flow |
-| `/dashboard/outputs` | Output viewer | Workflow JSON + prompts |
-| `/dashboard/analyst` | Analyst view | Campaign performance |
-| `/dashboard/builder` | Builder canvas | Node configuration |
-| `/dashboard/settings` | Settings | Account + billing |
-
----
-
-## API Routes
-
-| Route | Method | Purpose |
-|-------|--------|---------|
-| `/api/auth/session` | GET | Current user session |
-| `/api/projects` | GET/POST | List/create projects |
-| `/api/projects/[id]` | GET/PUT/DELETE | Project CRUD |
-| `/api/projects/[id]/compile` | POST | Generate workflow |
-| `/api/projects/[id]/chat` | POST | PAE conversation |
-| `/api/stripe/checkout` | POST | Create checkout session |
-| `/api/stripe/portal` | POST | Customer portal redirect |
-| `/api/stripe/webhook` | POST | Stripe webhook handler |
-
----
-
-## Static Assets
-
-| Path | Type | Purpose |
-|------|------|---------|
-| `/og.png` | Image | Open Graph default |
-| `/favicon.ico` | Icon | Browser tab |
-| `/apple-touch-icon.png` | Icon | iOS bookmark |
-| `/logo.svg` | Image | Navbar logo |
-
----
-
-## URL Conventions
-
-- **Kebab-case** for all routes: `/how-it-works`, not `/howItWorks`
-- **No trailing slashes**: `/dashboard`, not `/dashboard/`
-- **Query params** for filters: `/dashboard?status=active`
-- **Fragments** for sections: `/home#pricing`
-
----
-
-## Protected Route Middleware
-
-All `/dashboard/*` routes require:
-1. Valid Supabase session
-2. Active subscription (Pro plan) OR
-3. One-time DIY purchase for `/dashboard/outputs` only
-
-Redirect unauthorized users to `/login?redirect=/intended/path`.
-
----
-
-## SEO Metadata
-
-| Route | Title | Description |
-|-------|-------|-------------|
-| `/` | Prospect PAL — Build Custom n8n Prospecting Workflows | Automate your GTM engine with AI-powered prospect research and personalized outreach. |
-| `/dashboard` | Dashboard — Prospect PAL | Manage your campaigns and workflows. |
-| `/login` | Login — Prospect PAL | Sign in to your account. |
-
----
-
-*Sitemap v1.0.0 — supersede with ADR.*
+| Path | Description & Purpose | Auth Requirement | Robots / SEO Index | Layout & Components |
+| :--- | :--- | :--- | :--- | :--- |
+| **`/`** | Pure White Premium Hero, Interactive Canvas Demo, Social Proof, Live Outbound ROI Calculator | Public | `index, follow` | Marketing Landing Layout |
+| **`/solutions/[segment]`** | Role-specific solutions (Founders, RevOps, Agencies) | Public | `index, follow` | Solutions Detail Template |
+| **`/pricing`** | 3-Tier Pricing (Free Trial, $99/mo Pro BYOK, $999 Enterprise) + FAQ | Public | `index, follow` | Pricing Matrix Layout |
+| **`/academy`** | Sales 101, Cold Outreach Mastery, Objection Handling Guides | Public | `index, follow` | Academy Resource Template |
+| **`/login`** | Supabase Auth Email + Google/GitHub OAuth | Public (redirect if session) | `noindex, follow` | Centered Glass Card |
+| **`/signup`** | Account creation & workspace onboarding | Public (redirect if session) | `noindex, follow` | Multi-step Onboarding Modal |
+| **`/app`** | Workspace redirector | Authenticated | `noindex, nofollow` | App Shell |
+| **`/app/[workspace]`** | Command Center & Dashboard Overview | Authenticated (Member) | `noindex, nofollow` | Dashboard Overview Layout |
+| **`/app/[workspace]/builder`** | 5-Pillar Outbound Builder & Live Interactive Canvas | Authenticated (Member) | `noindex, nofollow` | Split Chat / Canvas Studio |
+| **`/app/[workspace]/campaigns`** | Campaign Repository & Execution Status | Authenticated (Member) | `noindex, nofollow` | Table & Card Grid View |
+| **`/app/[workspace]/scripts`** | PAS Copywriting Lab & Variant Generator | Authenticated (Member) | `noindex, nofollow` | Multi-Tab Script Editor |
+| **`/app/[workspace]/signals`** | Live Hiring & Tech Stack Intent Scanner | Authenticated (Member) | `noindex, nofollow` | Search & Filter Matrix |
+| **`/app/[workspace]/analyst`** | n8n Execution Run Telemetry & Error Triage | Authenticated (Member) | `noindex, nofollow` | Log Viewer & Diagnostic Tree |
+| **`/app/[workspace]/settings`** | Workspace, BYOK Keys, Members, Billing | Authenticated (Admin/Owner)| `noindex, nofollow` | Settings Navigation Shell |
+| **`/checkout`** | Stripe Hosted Checkout Session Gateway | Authenticated | `noindex, nofollow` | Stripe Checkout Redirect |
+| **`/checkout/success`** | Verification of webhook status & plan unlock | Authenticated | `noindex, nofollow` | Success Confetti & Onboard CTA |
+| **`/api/chat`** | Streaming Chat API with Vercel AI SDK Core | Authenticated | `noindex, nofollow` | Edge Stream Route Handler |
+| **`/api/compile`** | 5-Pillar n8n JSON Graph Compiler | Authenticated | `noindex, nofollow` | REST POST Route Handler |
+| **`/api/webhooks/stripe`** | Stripe Webhook Listener & Signature Verifier | Public (Signed) | `noindex, nofollow` | Webhook Consumer Route |
