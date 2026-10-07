@@ -1,0 +1,74 @@
+{
+  "slug": "prospect-pal-overview-60s",
+  "title": "Prospect PAL — Autonomous GTM Automation Engine",
+  "aspect_ratio": "16:9",
+  "voice": "pro",
+  "captions": true,
+  "scenes": [
+    {
+      "id": "s1_crisis",
+      "layout": "hook",
+      "theme": "dark",
+      "duration": 10,
+      "eyebrow": "THE OUTBOUND CRISIS",
+      "headline": "Five disconnected tools. <em>Burnt sender domains.</em>",
+      "subhead": "Sales reps spend 70% of their day copying data and accidentally pitching active CRM deals.",
+      "narration": "Modern outbound is broken. Revenue teams juggle five disconnected tools, burn their domain reputations with generic AI slop, and waste hours manually copying leads."
+    },
+    {
+      "id": "s2_rostr_npao",
+      "layout": "points",
+      "theme": "light",
+      "duration": 12,
+      "eyebrow": "THE STRATEGIC ENGINE",
+      "headline": "Powered by ROSTR v2 & <em>Canonical NPAO.</em>",
+      "points": [
+        "Necessity — 10 Non-Negotiable Hard Gates",
+        "Priority — Urgency Tiers on the Critical Path",
+        "Anxiety — 100% Zero-Collision CRM Protection",
+        "Opportunity — 10x Pipeline Acceleration Leverage"
+      ],
+      "narration": "Meet Prospect PAL. Powered by the ROSTR v2 runtime and canonical NPAO: Necessity, Priority, Anxiety, and Opportunity. Turning raw ICP briefs into production automation."
+    },
+    {
+      "id": "s3_pipeline",
+      "layout": "statement",
+      "theme": "brand",
+      "duration": 15,
+      "eyebrow": "5-PILLAR ARCHITECTURE",
+      "headline": "From Ingest to <em>Zero-Collision Enrollment.</em>",
+      "subhead": "Trigger Ingest → CRM Dedupe Shield → Waterfall Reveal → 3-Sentence PAS Copy → Smartlead Enrollment.",
+      "narration": "Our five pillar engine discovers prospects, validates them across Apollo and Clay waterfalls, shields your CRM from duplicates, and generates verified three-sentence Problem-Agitate-Solution copy."
+    },
+    {
+      "id": "s4_gateway",
+      "layout": "points",
+      "theme": "dark",
+      "duration": 11,
+      "eyebrow": "CLOUD-NATIVE & RESILIENT",
+      "headline": "Vercel AI Suite with <em>Self-Healing Failover.</em>",
+      "points": [
+        "Anthropic Claude 3.5 Sonnet & Haiku",
+        "Google Gemini 2.5 & 3.7 Flash",
+        "OpenAI GPT-4o & Reasoning Models",
+        "Instant Fallback — Zero Downtime"
+      ],
+      "narration": "Built on the Vercel AI Suite and Supabase cloud-native stack. Multi-provider AI Gateway failover guarantees zero downtime and lightning fast streaming."
+    },
+    {
+      "id": "s5_impact_cta",
+      "layout": "stats",
+      "theme": "light",
+      "duration": 12,
+      "eyebrow": "UNLEASH YOUR PIPELINE",
+      "headline": "Deploy your engine in <em>under three minutes.</em>",
+      "stats": [
+        { "value": "10x", "label": "SDR Efficiency Gain" },
+        { "value": "0%", "label": "CRM Collisions" },
+        { "value": "< 3m", "label": "Time to Value" }
+      ],
+      "cta": "prospectpal.ai — Start Building Free",
+      "narration": "Ten x your SDR velocity with zero CRM collisions. Deploy your autonomous GTM automation engine in under three minutes at prospectpal dot ai."
+    }
+  ]
+}

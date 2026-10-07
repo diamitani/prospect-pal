@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600;700&family=Space+Grotesk:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        width: 1920px;
+        height: 1080px;
+        background: #09090b;
+        color: #ffffff;
+        font-family: "Inter", sans-serif;
+        overflow: hidden;
+      }
+      #root {
+        width: 1920px;
+        height: 1080px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+      }
+      .eyebrow {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 16px;
+        font-weight: 700;
+        color: #a855f7;
+        background: rgba(168, 85, 247, 0.15);
+        border: 1px solid rgba(168, 85, 247, 0.4);
+        padding: 8px 24px;
+        border-radius: 9999px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+        opacity: 0;
+      }
+      .headline {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 58px;
+        font-weight: 700;
+        line-height: 1.15;
+        text-align: center;
+        max-width: 1300px;
+        margin-bottom: 50px;
+        opacity: 0;
+      }
+      .headline em {
+        font-style: normal;
+        color: #c084fc;
+        text-shadow: 0 0 35px rgba(192, 132, 252, 0.6);
+      }
+      .gateway-diagram {
+        display: flex;
+        align-items: center;
+        gap: 60px;
+        position: relative;
+      }
+      .center-router {
+        width: 260px;
+        height: 260px;
+        background: radial-gradient(circle, #27272a 0%, #18181b 100%);
+        border: 2px solid #a855f7;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        box-shadow: 0 0 60px rgba(168, 85, 247, 0.4);
+        opacity: 0;
+        position: relative;
+        z-index: 2;
+      }
+      .router-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 22px;
+        font-weight: 700;
+        color: #ffffff;
+      }
+      .router-sub {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        color: #c084fc;
+      }
+      .models-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .model-card {
+        background: rgba(24, 24, 27, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 16px;
+        padding: 16px 28px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        width: 440px;
+        backdrop-filter: blur(12px);
+        opacity: 0;
+      }
+      .model-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: #27272a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+      }
+      .model-info {
+        flex: 1;
+      }
+      .model-name {
+        font-weight: 600;
+        font-size: 16px;
+        color: #ffffff;
+      }
+      .model-role {
+        font-size: 12px;
+        color: #a1a1aa;
+      }
+      .status-pill {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 6px;
+      }
+      .pill-active {
+        background: rgba(34, 197, 94, 0.15);
+        color: #4ade80;
+        border: 1px solid rgba(34, 197, 94, 0.4);
+      }
+      .pill-failover {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.4);
+      }
+      .failover-banner {
+        position: absolute;
+        bottom: 70px;
+        background: rgba(34, 197, 94, 0.12);
+        border: 1px solid #22c55e;
+        padding: 14px 32px;
+        border-radius: 12px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 16px;
+        color: #86efac;
+        box-shadow: 0 0 35px rgba(34, 197, 94, 0.25);
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="04-gateway-host"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div class="eyebrow" id="eyebrow">CLOUD-NATIVE & RESILIENT</div>
+      <h1 class="headline" id="headline">
+        Vercel AI Suite with <em>Self-Healing Failover.</em>
+      </h1>
+
+      <div class="gateway-diagram">
+        <div class="center-router" id="router">
+          <div style="font-size: 36px">⚡</div>
+          <div class="router-title">AI Gateway</div>
+          <div class="router-sub">Smart Auto-Routing</div>
+        </div>
+
+        <div class="models-stack">
+          <!-- Anthropic -->
+          <div class="model-card" id="m-1">
+            <div class="model-icon">🧠</div>
+            <div class="model-info">
+              <div class="model-name">Anthropic Claude 3.5 Sonnet</div>
+              <div class="model-role">Deep Reasoner & PAS Copywriter</div>
+            </div>
+            <div class="status-pill pill-active">PRIMARY</div>
+          </div>
+
+          <!-- Google Gemini -->
+          <div class="model-card" id="m-2">
+            <div class="model-icon">✨</div>
+            <div class="model-info">
+              <div class="model-name">Google Gemini 2.5/3.7 Flash</div>
+              <div class="model-role">1M+ Token Intake & Web Research</div>
+            </div>
+            <div class="status-pill pill-active">ACTIVE</div>
+          </div>
+
+          <!-- OpenAI -->
+          <div class="model-card" id="m-3">
+            <div class="model-icon">🟢</div>
+            <div class="model-info">
+              <div class="model-name">OpenAI GPT-4o</div>
+              <div class="model-role">Strict JSON Schema Validation</div>
+            </div>
+            <div class="status-pill pill-active">READY</div>
+          </div>
+
+          <!-- AWS Bedrock -->
+          <div class="model-card" id="m-4">
+            <div class="model-icon">☁️</div>
+            <div class="model-info">
+              <div class="model-name">AWS Bedrock</div>
+              <div class="model-role">Enterprise IAM Wrapper</div>
+            </div>
+            <div class="status-pill pill-failover">AUTO-FALLBACK</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="failover-banner" id="banner">
+        ✓ ZERO DOWNTIME GUARANTEE: Automatic Failover across 4 Frontier LLM Providers
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["04-gateway-host"] = tl;
+
+      tl.fromTo("#eyebrow", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.2)
+        .fromTo("#headline", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, ease: "power4.out" }, 0.5)
+        .fromTo("#router", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.8, ease: "back.out(1.5)" }, 0.9)
+        .fromTo(".model-card", { opacity: 0, x: 40 }, {
+          opacity: 1,
+          x: 0,
+          duration: 0.6,
+          stagger: 0.15,
+          ease: "power3.out",
+        }, 1.2)
+        .fromTo("#banner", { opacity: 0 }, { opacity: 1, duration: 0.6, ease: "power2.out" }, 3.5)
+        .to("#router", {
+          boxShadow: "0 0 80px rgba(168, 85, 247, 0.7)",
+          repeat: 3,
+          yoyo: true,
+          duration: 0.8,
+        }, 4.0);
+    </script>
+  </body>
+</html>

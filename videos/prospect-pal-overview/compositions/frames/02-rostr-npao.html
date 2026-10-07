@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600;700&family=Space+Grotesk:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        width: 1920px;
+        height: 1080px;
+        background: #09090b;
+        color: #ffffff;
+        font-family: "Inter", sans-serif;
+        overflow: hidden;
+      }
+      #root {
+        width: 1920px;
+        height: 1080px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+      }
+      .bg-glow {
+        position: absolute;
+        width: 800px;
+        height: 800px;
+        background: radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, transparent 70%);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+      }
+      .eyebrow {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 16px;
+        font-weight: 700;
+        color: #60a5fa;
+        background: rgba(37, 99, 235, 0.15);
+        border: 1px solid rgba(37, 99, 235, 0.4);
+        padding: 8px 24px;
+        border-radius: 9999px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+        opacity: 0;
+      }
+      .headline {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 58px;
+        font-weight: 700;
+        line-height: 1.15;
+        text-align: center;
+        max-width: 1300px;
+        margin-bottom: 50px;
+        opacity: 0;
+      }
+      .headline em {
+        font-style: normal;
+        color: #3b82f6;
+        text-shadow: 0 0 35px rgba(59, 130, 246, 0.6);
+      }
+      .npao-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 24px;
+        max-width: 1500px;
+        width: 100%;
+        padding: 0 40px;
+      }
+      .npao-card {
+        background: rgba(24, 24, 27, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 20px;
+        padding: 32px 28px;
+        backdrop-filter: blur(16px);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
+        opacity: 0;
+      }
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .letter-badge {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+      }
+      .card-n .letter-badge {
+        background: rgba(37, 99, 235, 0.2);
+        color: #60a5fa;
+        border: 1px solid #3b82f6;
+      }
+      .card-p .letter-badge {
+        background: rgba(168, 85, 247, 0.2);
+        color: #c084fc;
+        border: 1px solid #a855f7;
+      }
+      .card-a .letter-badge {
+        background: rgba(244, 63, 94, 0.2);
+        color: #fb7185;
+        border: 1px solid #f43f5e;
+      }
+      .card-o .letter-badge {
+        background: rgba(34, 197, 94, 0.2);
+        color: #4ade80;
+        border: 1px solid #22c55e;
+      }
+      .card-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+        color: #ffffff;
+      }
+      .card-desc {
+        font-size: 15px;
+        color: #a1a1aa;
+        line-height: 1.5;
+      }
+      .card-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: auto;
+      }
+      .tag {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.06);
+        color: #d4d4d8;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="02-rostr-npao-host"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div class="bg-glow"></div>
+      <div class="eyebrow" id="eyebrow">THE STRATEGIC ENGINE</div>
+      <h1 class="headline" id="headline">
+        Powered by ROSTR v2 & <em>Canonical NPAO.</em>
+      </h1>
+
+      <div class="npao-grid">
+        <!-- N: Necessity -->
+        <div class="npao-card card-n" id="card-n">
+          <div class="card-header">
+            <div class="letter-badge">N</div>
+            <span class="tag">10 Hard Gates</span>
+          </div>
+          <div class="card-title">Necessity</div>
+          <div class="card-desc">
+            Non-negotiable foundational requirements: ICP definitions, persona targets, and connected data sources.
+          </div>
+          <div class="card-tags">
+            <span class="tag">ICP Target</span>
+            <span class="tag">Data Tools</span>
+            <span class="tag">Core Offer</span>
+          </div>
+        </div>
+
+        <!-- P: Priority -->
+        <div class="npao-card card-p" id="card-p">
+          <div class="card-header">
+            <div class="letter-badge">P</div>
+            <span class="tag">Execution Sequence</span>
+          </div>
+          <div class="card-title">Priority</div>
+          <div class="card-desc">
+            Urgency tiering on the critical path: Now, Next, Later. Sequencing the highest-impact outbound moves.
+          </div>
+          <div class="card-tags">
+            <span class="tag">Now / Next / Later</span>
+            <span class="tag">Critical Path</span>
+          </div>
+        </div>
+
+        <!-- A: Anxiety -->
+        <div class="npao-card card-a" id="card-a">
+          <div class="card-header">
+            <div class="letter-badge">A</div>
+            <span class="tag">Risk Shield</span>
+          </div>
+          <div class="card-title">Anxiety</div>
+          <div class="card-desc">
+            Disaster mitigation: 100% Zero-Collision CRM shield, SMTP verification, and domain reputation protection.
+          </div>
+          <div class="card-tags">
+            <span class="tag">0% Collisions</span>
+            <span class="tag">Bounce Shield</span>
+          </div>
+        </div>
+
+        <!-- O: Opportunity -->
+        <div class="npao-card card-o" id="card-o">
+          <div class="card-header">
+            <div class="letter-badge">O</div>
+            <span class="tag">Scale Multiplier</span>
+          </div>
+          <div class="card-title">Opportunity</div>
+          <div class="card-desc">
+            Revenue leverage: 10x SDR velocity, automated 3-sentence PAS copy, and instant pipeline expansion.
+          </div>
+          <div class="card-tags">
+            <span class="tag">10x Velocity</span>
+            <span class="tag">PAS Copy</span>
+            <span class="tag">Fast Scale</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["02-rostr-npao-host"] = tl;
+
+      tl.fromTo("#eyebrow", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.2)
+        .fromTo("#headline", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, ease: "power4.out" }, 0.5)
+        .fromTo(".npao-card", { opacity: 0, y: 40 }, {
+          opacity: 1,
+          y: 0,
+          duration: 0.7,
+          stagger: 0.2,
+          ease: "back.out(1.4)",
+        }, 1.0)
+        .to(".card-n", { boxShadow: "0 0 40px rgba(59, 130, 246, 0.4)", duration: 0.5 }, 3.5)
+        .to(".card-p", { boxShadow: "0 0 40px rgba(168, 85, 247, 0.4)", duration: 0.5 }, 5.0)
+        .to(".card-a", { boxShadow: "0 0 40px rgba(244, 63, 94, 0.4)", duration: 0.5 }, 6.5)
+        .to(".card-o", { boxShadow: "0 0 40px rgba(34, 197, 94, 0.4)", duration: 0.5 }, 8.0);
+    </script>
+  </body>
+</html>

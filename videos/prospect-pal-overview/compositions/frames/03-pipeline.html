@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600;700&family=Space+Grotesk:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        width: 1920px;
+        height: 1080px;
+        background: #09090b;
+        color: #ffffff;
+        font-family: "Inter", sans-serif;
+        overflow: hidden;
+      }
+      #root {
+        width: 1920px;
+        height: 1080px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+      }
+      .eyebrow {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 16px;
+        font-weight: 700;
+        color: #34d399;
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.4);
+        padding: 8px 24px;
+        border-radius: 9999px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+        opacity: 0;
+      }
+      .headline {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 54px;
+        font-weight: 700;
+        line-height: 1.15;
+        text-align: center;
+        max-width: 1200px;
+        margin-bottom: 40px;
+        opacity: 0;
+      }
+      .headline em {
+        font-style: normal;
+        color: #10b981;
+        text-shadow: 0 0 35px rgba(16, 185, 129, 0.6);
+      }
+      .pipeline-canvas {
+        position: relative;
+        width: 1700px;
+        height: 480px;
+        background: rgba(18, 18, 22, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 30px;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+        opacity: 0;
+      }
+      .svg-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+      .spline-path {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.15);
+        stroke-width: 3;
+        stroke-dasharray: 6 6;
+      }
+      .nodes-container {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 30px;
+        height: 100%;
+        position: relative;
+        z-index: 2;
+        align-items: center;
+      }
+      .node-card {
+        background: #18181b;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 16px;
+        padding: 20px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        opacity: 0;
+      }
+      .node-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .node-num {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 12px;
+        font-weight: 700;
+        color: #71717a;
+      }
+      .node-badge {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 4px;
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+      }
+      .node-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 17px;
+        font-weight: 700;
+        color: #f4f4f5;
+      }
+      .node-sub {
+        font-size: 12px;
+        color: #a1a1aa;
+        line-height: 1.4;
+      }
+      .active-pulse {
+        border-color: #10b981;
+        box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="03-pipeline-host"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div class="eyebrow" id="eyebrow">5-PILLAR ARCHITECTURE</div>
+      <h1 class="headline" id="headline">
+        From Ingest to <em>Zero-Collision Enrollment.</em>
+      </h1>
+
+      <div class="pipeline-canvas" id="canvas">
+        <svg class="svg-canvas">
+          <path class="spline-path" d="M 170 240 L 480 240 L 790 240 L 1100 240 L 1410 240" />
+        </svg>
+
+        <div class="nodes-container">
+          <!-- Node 1 -->
+          <div class="node-card" id="node-1">
+            <div class="node-header">
+              <span class="node-num">01</span>
+              <span class="node-badge">TRIGGER</span>
+            </div>
+            <div class="node-title">Intake & Cron</div>
+            <div class="node-sub">Daily ICP search query & CSV webhook intake.</div>
+          </div>
+
+          <!-- Node 2 -->
+          <div class="node-card" id="node-2">
+            <div class="node-header">
+              <span class="node-num">02</span>
+              <span class="node-badge">SHIELD</span>
+            </div>
+            <div class="node-title">CRM Dedupe Shield</div>
+            <div class="node-sub">Real-time check against active HubSpot/Salesforce deals.</div>
+          </div>
+
+          <!-- Node 3 -->
+          <div class="node-card" id="node-3">
+            <div class="node-header">
+              <span class="node-num">03</span>
+              <span class="node-badge">REVEAL</span>
+            </div>
+            <div class="node-title">Waterfall Reveal</div>
+            <div class="node-sub">Apollo → Clay → SMTP/MX handshake verification.</div>
+          </div>
+
+          <!-- Node 4 -->
+          <div class="node-card" id="node-4">
+            <div class="node-header">
+              <span class="node-num">04</span>
+              <span class="node-badge">RESEARCH</span>
+            </div>
+            <div class="node-title">AI PAS Copywriting</div>
+            <div class="node-sub">3-Sentence Problem-Agitate-Solution email tailored to account.</div>
+          </div>
+
+          <!-- Node 5 -->
+          <div class="node-card" id="node-5">
+            <div class="node-header">
+              <span class="node-num">05</span>
+              <span class="node-badge">ENROLL</span>
+            </div>
+            <div class="node-title">Smartlead Sequence</div>
+            <div class="node-sub">Warmup inbox rotation + Slack approval review alert.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["03-pipeline-host"] = tl;
+
+      tl.fromTo("#eyebrow", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.2)
+        .fromTo("#headline", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8, ease: "power4.out" }, 0.5)
+        .fromTo("#canvas", { opacity: 0, scale: 0.95 }, { opacity: 1, scale: 1, duration: 0.8, ease: "power3.out" }, 0.9)
+        .fromTo(".node-card", { opacity: 0, y: 20 }, {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          stagger: 0.2,
+          ease: "back.out(1.4)",
+        }, 1.3)
+        // Simulate packet flow through nodes
+        .to("#node-1", { className: "node-card active-pulse", duration: 0.4 }, 3.5)
+        .to("#node-1", { className: "node-card", duration: 0.3 }, 5.5)
+        .to("#node-2", { className: "node-card active-pulse", duration: 0.4 }, 5.5)
+        .to("#node-2", { className: "node-card", duration: 0.3 }, 7.5)
+        .to("#node-3", { className: "node-card active-pulse", duration: 0.4 }, 7.5)
+        .to("#node-3", { className: "node-card", duration: 0.3 }, 9.5)
+        .to("#node-4", { className: "node-card active-pulse", duration: 0.4 }, 9.5)
+        .to("#node-4", { className: "node-card", duration: 0.3 }, 11.5)
+        .to("#node-5", { className: "node-card active-pulse", duration: 0.4 }, 11.5);
+    </script>
+  </body>
+</html>

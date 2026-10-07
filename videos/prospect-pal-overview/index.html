@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Prospect PAL — Overview Video</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #09090b;
+        font-family: "Inter", sans-serif;
+      }
+      .clip {
+        position: absolute;
+        width: 1920px;
+        height: 1080px;
+        top: 0;
+        left: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="60"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- Scene 1: The Outbound Crisis (0-10s) -->
+      <div
+        id="scene-1-crisis"
+        class="clip"
+        data-start="0"
+        data-duration="10"
+        data-composition-id="01-crisis-host"
+        data-composition-src="compositions/frames/01-crisis.html"
+        data-transition-in="cut"
+        data-transition-out="crossfade"
+        data-transition-out-duration="0.6"
+      ></div>
+
+      <!-- Scene 2: ROSTR v2 & Canonical NPAO (10-22s) -->
+      <div
+        id="scene-2-rostr-npao"
+        class="clip"
+        data-start="10"
+        data-duration="12"
+        data-composition-id="02-rostr-npao-host"
+        data-composition-src="compositions/frames/02-rostr-npao.html"
+        data-transition-in="crossfade"
+        data-transition-in-duration="0.6"
+        data-transition-out="crossfade"
+        data-transition-out-duration="0.6"
+      ></div>
+
+      <!-- Scene 3: 5-Pillar Zero-Collision Live DAG (22-37s) -->
+      <div
+        id="scene-3-pipeline"
+        class="clip"
+        data-start="22"
+        data-duration="15"
+        data-composition-id="03-pipeline-host"
+        data-composition-src="compositions/frames/03-pipeline.html"
+        data-transition-in="crossfade"
+        data-transition-in-duration="0.6"
+        data-transition-out="push-slide"
+        data-transition-out-direction="left"
+        data-transition-out-duration="0.7"
+      ></div>
+
+      <!-- Scene 4: Vercel AI Suite & Multi-Provider Gateway (37-48s) -->
+      <div
+        id="scene-4-gateway"
+        class="clip"
+        data-start="37"
+        data-duration="11"
+        data-composition-id="04-gateway-host"
+        data-composition-src="compositions/frames/04-gateway.html"
+        data-transition-in="push-slide"
+        data-transition-in-direction="left"
+        data-transition-in-duration="0.7"
+        data-transition-out="crossfade"
+        data-transition-out-duration="0.6"
+      ></div>
+
+      <!-- Scene 5: 10x Pipeline Impact & Launch CTA (48-60s) -->
+      <div
+        id="scene-5-impact-cta"
+        class="clip"
+        data-start="48"
+        data-duration="12"
+        data-composition-id="05-impact-cta-host"
+        data-composition-src="compositions/frames/05-impact-cta.html"
+        data-transition-in="crossfade"
+        data-transition-in-duration="0.6"
+      ></div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
