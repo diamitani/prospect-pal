@@ -1,0 +1,405 @@
+{
+  "name": "Prospect Automation Engine - Master Production Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Prospect Automation Engine - Master Pipeline\nIngests intent/companies, enriches data via custom HTTP adapters, checks CRM deduplication (HubSpot/Salesforce/Attio), runs AI research & PAS copy generation, syncs CRM, and enrolls in sequence (HubSpot Sales/Amplemarket/Smartlead)."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -100,
+        100
+      ],
+      "typeVersion": 1,
+      "id": "sticky-note-master-01",
+      "name": "Pipeline Documentation Sticky Note"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "triggerAtHour": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -100,
+        300
+      ],
+      "id": "node-01-cron-trigger",
+      "name": "01 Daily Schedule Trigger (2 AM)"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "prospect-automation-intake",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -100,
+        480
+      ],
+      "id": "node-01-webhook-trigger",
+      "name": "01 Claude Skill Webhook Intake",
+      "webhookId": "prospect-automation-intake-id"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst now = new Date();\nconst startTs = new Date(now.getTime() - 24 * 60 * 60 * 1000).getTime();\nconst endTs = now.getTime();\n\nreturn items.map(item => {\n  const payload = item.json.body || item.json;\n  return {\n    json: {\n      ...payload,\n      startTs,\n      endTs,\n      ingest_timestamp: now.toISOString(),\n      source: payload.source || 'claude_skill_webhook'\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        380
+      ],
+      "id": "node-02-time-range",
+      "name": "02 Calculate Date Ranges & Normalize Input"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/companies/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.HUBSPOT_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"filterGroups\": [\n    {\n      \"filters\": [\n        {\n          \"propertyName\": \"zoominfo___most_recent_workflow_date\",\n          \"operator\": \"GTE\",\n          \"value\": {{ $json.startTs }}\n        }\n      ]\n    }\n  ],\n  \"limit\": 100,\n  \"properties\": [\n    \"name\",\n    \"domain\",\n    \"industry\",\n    \"numberofemployees\",\n    \"linkedin_company_page\",\n    \"state\"\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        340,
+        380
+      ],
+      "id": "node-03-hubspot-intent",
+      "name": "03 Query HubSpot Intent & Dedupe Companies"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.amplemarket.com/people/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AMPLEMARKET_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ ({\n  person_titles: [\"CEO\", \"Founder\", \"VP Sales\", \"Chief Revenue Officer\", \"Head of Growth\"],\n  person_departments: [\"Executive\", \"Sales\", \"Growth\"],\n  company_names: [$json.name || $json.company_name],\n  page_size: 25,\n  page: 1\n}).toJsonString() }}",
+        "options": {
+          "pagination": {
+            "pagination": {
+              "parameters": {
+                "parameters": [
+                  {
+                    "name": "page",
+                    "value": "={{ $pageCount + 1 }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ ($response.body.results?.length || 0) < $request.body.page_size }}"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        560,
+        380
+      ],
+      "id": "node-04-data-tool-adapter",
+      "name": "04 Universal Data Tool Adapter (Amplemarket/ZoomInfo/Clay)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.ANTHROPIC_API_KEY }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"claude-3-5-sonnet-20241022\",\n  \"max_tokens\": 1024,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"You are an elite B2B sales strategist. Conduct a rapid pain point analysis for prospect {{ $json.first_name }} {{ $json.last_name }} ({{ $json.title }}) at company {{ $json.company_name }} (Domain: {{ $json.domain }}). Product offering: {{ $env.CLIENT_OFFERING_SUMMARY }}. Write a compelling 3-sentence email using the Problem-Observation-Offer (PAS) copywriting framework. Return valid JSON with keys: 'pain_point', 'email_subject', 'email_body', 'linkedin_dm'.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        780,
+        380
+      ],
+      "id": "node-05-ai-research-copy",
+      "name": "05 AI Pain Point Research & Copy Generator"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-approval-gate",
+              "leftValue": "={{ $env.REQUIRE_HUMAN_APPROVAL || false }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        380
+      ],
+      "id": "node-06-approval-gate",
+      "name": "06 Human Approval Gate"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.HUBSPOT_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"properties\": {\n    \"email\": \"{{ $json.email }}\",\n    \"firstname\": \"{{ $json.first_name }}\",\n    \"lastname\": \"{{ $json.last_name }}\",\n    \"jobtitle\": \"{{ $json.title }}\",\n    \"company\": \"{{ $json.company_name }}\",\n    \"hs_lead_status\": \"IN_PROGRESS\",\n    \"ai_generated_copy\": \"{{ $node['05 AI Pain Point Research & Copy Generator'].json.content[0].text }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1220,
+        280
+      ],
+      "id": "node-07-crm-upsert",
+      "name": "07 CRM Upsert (HubSpot / Salesforce / Attio)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.amplemarket.com/sequences/enroll",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AMPLEMARKET_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"sequence_id\": \"{{ $env.OUTREACH_SEQUENCE_ID }}\",\n  \"contact_email\": \"{{ $json.email }}\",\n  \"custom_variables\": {\n    \"personalized_email_body\": \"{{ $node['05 AI Pain Point Research & Copy Generator'].json.content[0].text }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1440,
+        280
+      ],
+      "id": "node-08-sequence-enroll",
+      "name": "08 Sequence Enrollment (HubSpot Sales / Amplemarket / Smartlead)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://hooks.slack.com/services/{{ $env.SLACK_WEBHOOK_PATH }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"⚠️ *Prospect Automation Review Queue*: Lead {{ $json.email }} at {{ $json.company_name }} requires manual copy review before sequence dispatch.\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1220,
+        480
+      ],
+      "id": "node-09-approval-notify",
+      "name": "09 Send Approval Review Notification"
+    }
+  ],
+  "connections": {
+    "01 Daily Schedule Trigger (2 AM)": {
+      "main": [
+        [
+          {
+            "node": "02 Calculate Date Ranges & Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "01 Claude Skill Webhook Intake": {
+      "main": [
+        [
+          {
+            "node": "02 Calculate Date Ranges & Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02 Calculate Date Ranges & Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "03 Query HubSpot Intent & Dedupe Companies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03 Query HubSpot Intent & Dedupe Companies": {
+      "main": [
+        [
+          {
+            "node": "04 Universal Data Tool Adapter (Amplemarket/ZoomInfo/Clay)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04 Universal Data Tool Adapter (Amplemarket/ZoomInfo/Clay)": {
+      "main": [
+        [
+          {
+            "node": "05 AI Pain Point Research & Copy Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05 AI Pain Point Research & Copy Generator": {
+      "main": [
+        [
+          {
+            "node": "06 Human Approval Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06 Human Approval Gate": {
+      "main": [
+        [
+          {
+            "node": "09 Send Approval Review Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "07 CRM Upsert (HubSpot / Salesforce / Attio)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07 CRM Upsert (HubSpot / Salesforce / Attio)": {
+      "main": [
+        [
+          {
+            "node": "08 Sequence Enrollment (HubSpot Sales / Amplemarket / Smartlead)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

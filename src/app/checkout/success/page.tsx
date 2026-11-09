@@ -51,7 +51,7 @@ function SuccessContent() {
         </h1>
 
         <p style={{ fontSize: 16, color: "#6B7280", lineHeight: 1.6, margin: "0 0 32px" }}>
-          Welcome to <strong>{planName}</strong>. Your account has been upgraded and you're ready to start building.
+          Welcome to <strong>{planName}</strong>. Your account has been upgraded and you&apos;re ready to start building.
         </p>
 
         {/* Order Summary Card */}

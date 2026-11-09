@@ -1,0 +1,255 @@
+{
+  "name": "automation-health-monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "health-trigger",
+      "name": "01: Health Check Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.N8N_BASE_URL}}/api/v1/executions?status=error&limit=100",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-N8n-Api-Key",
+              "value": "={{$env.N8N_API_KEY}}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "fetch-executions",
+      "name": "02: Fetch Failed Executions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 03: Cluster Errors \u2014 aggregate failed n8n executions into error clusters.\n// Input: n8n API executions list (one item: { data: [...] } or a bare array).\n// Output: ONE item { clusterCount, clusters: [...], checkedAt, windowHours }.\nconst raw = $input.first().json;\nconst execs = Array.isArray(raw) ? raw : (raw.data || raw.executions || []);\n\nfunction signature(msg) {\n  return String(msg || \"\")\n    .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, \"<id>\")\n    .replace(/\\b\\d{4,}\\b/g, \"<n>\")\n    .replace(/\\d{4}-\\d{2}-\\d{2}[T ]\\d{2}:\\d{2}:\\d{2}[^\"'\\s]*/g, \"<ts>\")\n    .slice(0, 140);\n}\n\nfunction classify(msg) {\n  const m = String(msg || \"\");\n  if (/credential|unauthorized|\\b401\\b|\\b403\\b|auth|invalid api key/i.test(m)) return \"auth/credential failure\";\n  if (/429|rate limit|too many requests|throttl/i.test(m)) return \"rate limit\";\n  if (/timeout|ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|\\b5\\d\\d\\b|bad gateway|service unavailable/i.test(m)) return \"downstream outage\";\n  if (/cannot read|undefined is not|is not a function|validation|schema|unexpected token|JSON/i.test(m)) return \"data-shape drift\";\n  return \"logic bug\";\n}\n\nconst map = new Map();\nfor (const e of execs) {\n  const wf = e.workflowData || e.workflow || {};\n  const workflowId = String(e.workflowId || wf.id || \"unknown\");\n  const workflowName = e.workflowName || wf.name || workflowId;\n  // find the failing node: last node in runData with an error, else stoppedAt\n  let nodeName = e.stoppedAt || \"unknown\";\n  let errMsg = \"\";\n  const runData = (e.data && e.data.resultData && e.data.resultData.runData) || e.runData || {};\n  for (const [name, runs] of Object.entries(runData)) {\n    const last = Array.isArray(runs) ? runs[runs.length - 1] : null;\n    if (last && last.error) { nodeName = name; errMsg = last.error.message || JSON.stringify(last.error).slice(0, 300); break; }\n  }\n  if (!errMsg) errMsg = (e.error && (e.error.message || e.error)) || e.lastNodeExecuted || \"execution failed\";\n  const sig = signature(errMsg);\n  const key = workflowId + \" :: \" + nodeName + \" :: \" + sig;\n  const started = e.startedAt || e.createdAt || null;\n  if (!map.has(key)) {\n    map.set(key, {\n      workflowId, workflowName, nodeName,\n      errorType: classify(errMsg), errorSignature: sig,\n      count: 0, firstSeen: started, lastSeen: started,\n      executionIds: [], sampleError: String(errMsg).slice(0, 500),\n    });\n  }\n  const c = map.get(key);\n  c.count += 1;\n  if (e.id != null && !c.executionIds.includes(String(e.id))) c.executionIds.push(String(e.id));\n  if (started && (!c.firstSeen || started < c.firstSeen)) c.firstSeen = started;\n  if (started && (!c.lastSeen || started > c.lastSeen)) c.lastSeen = started;\n}\n\nconst clusters = [...map.values()].sort((a, b) => b.count - a.count);\nreturn [{ json: {\n  clusterCount: clusters.length,\n  clusters,\n  checkedAt: new Date().toISOString(),\n  windowHours: 6,\n  executionsScanned: execs.length,\n} }];\n",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "cluster-errors",
+      "name": "03: Cluster Errors",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-clusters",
+              "leftValue": "={{ $json.clusterCount }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "larger",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "failures-found",
+      "name": "04: Failures Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        840,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "clusters",
+        "options": {
+          "include": "all"
+        }
+      },
+      "id": "split-clusters",
+      "name": "05: Split Clusters",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1060,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 06: Draft Suggested Fix \u2014 per error cluster, classify and propose the fix.\n// Runs once per cluster item (SplitOut output). Emits Jira-ready fields.\nconst c = $input.first().json;\n\nconst FIXES = {\n  \"auth/credential failure\": {\n    fix: \"Rotate or re-enter the credential on the failing node (n8n Credentials panel), then re-run one failed execution. If the credential is shared across workflows, fix it once at the credential level, not per node.\",\n    priority: \"High\",\n  },\n  \"rate limit\": {\n    fix: \"Add a Wait node (or Batch node with rate limiting) before the failing node, and/or lower the workflow concurrency. If the limit is on the vendor side, request a quota increase or spread runs across the 6h window.\",\n    priority: \"Medium\",\n  },\n  \"downstream outage\": {\n    fix: \"Confirm the downstream service status page. Add a Retry on Fail (3 attempts, exponential backoff) to the failing node and an IF branch that opens this Jira issue only after retries are exhausted.\",\n    priority: \"Medium\",\n  },\n  \"data-shape drift\": {\n    fix: \"Inspect the sample payload against what the node expects. Add a defensive Code/Set node upstream that normalizes the field (default empty values, coerce types) and log a warning instead of throwing when the field is absent.\",\n    priority: \"High\",\n  },\n  \"logic bug\": {\n    fix: \"Open the workflow in the n8n editor, re-run the failing execution with pinned data, and step through the failing node. Patch the node logic, then re-run the pinned execution to confirm before reactivating.\",\n    priority: \"Medium\",\n  },\n};\n\nconst f = FIXES[c.errorType] || FIXES[\"logic bug\"];\nconst chronic = c.count >= 10;\nconst priority = chronic ? \"Highest\" : f.priority;\nconst summary = \"[automation-health] \" + c.workflowName + \": \" + c.errorType + \" in '\" + c.nodeName + \"' (\" + c.count + \"x)\";\n\nfunction para(text) {\n  return { type: \"paragraph\", content: [{ type: \"text\", text }] };\n}\nconst adf = {\n  type: \"doc\", version: 1,\n  content: [\n    para(\"Owner: execution-analyst (Praecipio GTM agent). This issue was opened automatically by the automation-health-monitor workflow. A human approves every fix before it ships.\"),\n    { type: \"heading\", attrs: { level: 3 }, content: [{ type: \"text\", text: \"Diagnosis\" }] },\n    para(\"Workflow: \" + c.workflowName + \" (\" + c.workflowId + \"). Failing node: \" + c.nodeName + \". Error type: \" + c.errorType + \". Occurrences in window: \" + c.count + \".\"),\n    para(\"Signature: \" + c.errorSignature),\n    { type: \"heading\", attrs: { level: 3 }, content: [{ type: \"text\", text: \"Suggested fix\" }] },\n    para(f.fix + (chronic ? \" This failure is CHRONIC (\" + c.count + \" occurrences) \u2014 treat as a reliability incident, not a one-off.\" : \"\")),\n    { type: \"heading\", attrs: { level: 3 }, content: [{ type: \"text\", text: \"Evidence\" }] },\n    para(\"First seen: \" + (c.firstSeen || \"unknown\") + \". Last seen: \" + (c.lastSeen || \"unknown\") + \".\"),\n    para(\"Execution IDs: \" + (c.executionIds.slice(0, 20).join(\", \") || \"none captured\") + (c.executionIds.length > 20 ? \" (+\" + (c.executionIds.length - 20) + \" more)\" : \"\")),\n    para(\"Sample error: \" + c.sampleError),\n    { type: \"heading\", attrs: { level: 3 }, content: [{ type: \"text\", text: \"Next step\" }] },\n    para(\"The execution-analyst agent picks up this issue (label automation-health), verifies the root cause against the execution logs, proposes the concrete workflow patch, transitions this issue, and emails the summary to Patrick. Fixes ship through n8n-engineer only after explicit approval.\"),\n  ],\n};\n\nreturn [{ json: { ...c, jiraSummary: summary, jiraPriority: priority, jiraDescriptionAdf: adf, suggestedFix: f.fix } }];\n",
+        "mode": "runOnceForEachItem"
+      },
+      "id": "draft-fix",
+      "name": "06: Draft Suggested Fix",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.ATLASSIAN_SITE}}/rest/api/3/issue",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Basic {{$env.ATLASSIAN_AUTH_B64}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: { project: { key: $env.ATLASSIAN_PROJECT_KEY ? $env.ATLASSIAN_PROJECT_KEY : \"GTM\" }, issuetype: { name: \"Task\" }, summary: $json.jiraSummary, description: $json.jiraDescriptionAdf, labels: [\"automation-health\"], priority: { name: $json.jiraPriority } } }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "create-jira",
+      "name": "07: Create Jira Issue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1500,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## automation-health-monitor \u2014 setup\n\nRequired environment variables (n8n: Settings > Variables, or instance env):\n\n- `N8N_BASE_URL` \u2014 e.g. https://praecipio.app.n8n.cloud (no trailing slash)\n- `N8N_API_KEY` \u2014 n8n API key (Settings > n8n API). Read-only use: GET executions only.\n- `ATLASSIAN_SITE` \u2014 e.g. https://praecipio.atlassian.net (no trailing slash)\n- `ATLASSIAN_AUTH_B64` \u2014 base64(\"email:api_token\") from https://id.atlassian.com/manage-profile/security/api-tokens\n- `ATLASSIAN_PROJECT_KEY` \u2014 Jira project key, default GTM\n\nWhat it does: every 6h it pulls errored executions, clusters them by workflow + node + error signature, drafts a suggested fix per cluster, and opens one Jira issue per cluster labeled `automation-health`. The execution-analyst agent picks those issues up, verifies root cause, proposes the patch, transitions the issue, and emails Patrick.\n\nNo secrets are embedded in this workflow \u2014 credentials come from env only.",
+        "height": 560,
+        "width": 420,
+        "color": 4
+      },
+      "id": "setup-notes",
+      "name": "08: Setup Notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        180,
+        560
+      ]
+    }
+  ],
+  "connections": {
+    "01: Health Check Trigger": {
+      "main": [
+        [
+          {
+            "node": "02: Fetch Failed Executions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02: Fetch Failed Executions": {
+      "main": [
+        [
+          {
+            "node": "03: Cluster Errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03: Cluster Errors": {
+      "main": [
+        [
+          {
+            "node": "04: Failures Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04: Failures Found?": {
+      "main": [
+        [
+          {
+            "node": "05: Split Clusters",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "05: Split Clusters": {
+      "main": [
+        [
+          {
+            "node": "06: Draft Suggested Fix",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06: Draft Suggested Fix": {
+      "main": [
+        [
+          {
+            "node": "07: Create Jira Issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

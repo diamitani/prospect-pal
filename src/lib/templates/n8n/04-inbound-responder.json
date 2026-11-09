@@ -1,0 +1,267 @@
+{
+  "name": "SalesGency \u2014 04 Inbound Responder (Sub-Minute Triage)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sg-inbound-lead",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "inbound-trigger",
+      "name": "01: Trigger Ingest",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        180,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const headers = $input.first().json.headers || {};\nconst provided = headers.authorization || headers.Authorization || '';\nconst expected = 'Bearer ' + ($env.WEBHOOK_SECRET || '');\nif (provided !== expected) {\n  throw new Error('Invalid webhook secret \u2014 rejecting inbound lead');\n}\nconst body = $input.first().json.body || $input.first().json;\nreturn [{ json: {\n  email: (body.email || '').toLowerCase().trim(),\n  first_name: body.first_name || '',\n  company: body.company || '',\n  company_domain: (body.company_domain || (body.email || '').split('@')[1] || '').toLowerCase().trim(),\n  source: body.source || 'form'\n} }];"
+      },
+      "id": "inbound-verify",
+      "name": "02: Verify Secret & Normalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.apollo.io/v1/mixed_people/search",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"api_key\": \"{{ $env.APOLLO_API_KEY }}\",\n  \"q_person_email\": \"{{ $json.email }}\",\n  \"page\": 1,\n  \"per_page\": 1\n}",
+        "options": {}
+      },
+      "id": "inbound-enrich",
+      "name": "03: Persona Enrichment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        620,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const person = ($input.first().json.people || [])[0] || {};\nconst title = (person.title || '').toLowerCase();\nconst employees = person.organization?.estimated_num_employees || 0;\nlet score = 20;\nif (/founder|ceo|cro|cmo|vp|director|head/.test(title)) score += 35;\nif (employees >= 500) score += 30;\nelse if (employees >= 100) score += 20;\nelse if (employees >= 20) score += 10;\nconst src = $('02: Verify Secret & Normalize').item.json.source;\nif (src === 'demo_form') score += 15;\nscore = Math.min(100, score);\nreturn [{ json: { ...$input.first().json,\n  icp_score: score, path: score >= 80 ? 'hot' : 'nurture',\n  enriched_title: person.title || '', enriched_org: person.organization?.name || '' } }];"
+      },
+      "id": "inbound-score",
+      "name": "04: ICP Score (deterministic)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.icp_score }}",
+              "operation": "largerEqual",
+              "value2": 80
+            }
+          ]
+        }
+      },
+      "id": "inbound-gate",
+      "name": "05: Urgency Gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1060,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SLACK_ALERTS_WEBHOOK }}",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \":rotating_light: *HOT inbound lead (score {{ $json.icp_score }} / 100)*\\n*{{ $('02: Verify Secret & Normalize').item.json.first_name }}* ({{ $('02: Verify Secret & Normalize').item.json.email }})\\n*{{ $json.enriched_org }}* \u2014 {{ $json.enriched_title }}\\nBook: {{ $env.CALENDAR_BOOKING_URL }}\"\n}",
+        "options": {}
+      },
+      "id": "inbound-hot",
+      "name": "06: Slack Hot-Lead Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.HUBSPOT_ACCESS_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"properties\": {\n    \"email\": \"{{ $('02: Verify Secret & Normalize').item.json.email }}\",\n    \"firstname\": \"{{ $('02: Verify Secret & Normalize').item.json.first_name }}\",\n    \"company\": \"{{ $json.enriched_org }}\",\n    \"jobtitle\": \"{{ $json.enriched_title }}\",\n    \"hs_lead_status\": \"NEW\",\n    \"sg_icp_score\": \"{{ $json.icp_score }}\",\n    \"sg_lead_path\": \"{{ $json.path }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "inbound-crm",
+      "name": "07: CRM Contact Writeback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1",
+              "name": "responded_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "b2",
+              "name": "icp_score",
+              "value": "={{ $json.icp_score }}",
+              "type": "number"
+            },
+            {
+              "id": "b3",
+              "name": "path",
+              "value": "={{ $json.path }}",
+              "type": "string"
+            },
+            {
+              "id": "b4",
+              "name": "owner_task_created",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "id": "inbound-receipt",
+      "name": "08: Response Receipt",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1720,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "01: Trigger Ingest": {
+      "main": [
+        [
+          {
+            "node": "02: Verify Secret & Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02: Verify Secret & Normalize": {
+      "main": [
+        [
+          {
+            "node": "03: Persona Enrichment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03: Persona Enrichment": {
+      "main": [
+        [
+          {
+            "node": "04: ICP Score (deterministic)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04: ICP Score (deterministic)": {
+      "main": [
+        [
+          {
+            "node": "05: Urgency Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05: Urgency Gate": {
+      "main": [
+        [
+          {
+            "node": "06: Slack Hot-Lead Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06: Slack Hot-Lead Alert": {
+      "main": [
+        [
+          {
+            "node": "07: CRM Contact Writeback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07: CRM Contact Writeback": {
+      "main": [
+        [
+          {
+            "node": "08: Response Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08: Response Receipt": {
+      "main": []
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

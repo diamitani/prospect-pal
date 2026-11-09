@@ -1,0 +1,292 @@
+{
+  "name": "SalesGency \u2014 03 CRM Hygiene & Scorer (Weekly Audit)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": 1,
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "hyg-schedule",
+      "name": "01: Weekly Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.hubapi.com/crm/v3/objects/companies/search",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.HUBSPOT_ACCESS_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"limit\": 100,\n  \"properties\": [\"name\", \"domain\", \"createdate\"],\n  \"after\": \"{{ $json.after || '' }}\"\n}",
+        "options": {}
+      },
+      "id": "hyg-fetch",
+      "name": "02: Fetch Companies (paginated)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = $input.all().flatMap(i => i.json.results || []);\nconst byDomain = {};\nfor (const r of results) {\n  const domain = (r.properties?.domain || '').toLowerCase().trim();\n  if (!domain) continue;\n  (byDomain[domain] = byDomain[domain] || []).push({ id: r.id, ...r.properties });\n}\nconst dupes = Object.entries(byDomain)\n  .filter(([, v]) => v.length > 1)\n  .map(([domain, records]) => {\n    const ranked = [...records].sort((a, b) =>\n      Object.values(b).filter(Boolean).length - Object.values(a).filter(Boolean).length);\n    return { domain, primary_candidate: ranked[0], merge_candidates: ranked.slice(1) };\n  });\nreturn [{ json: { companies_scanned: results.length,\n  duplicate_domains: dupes.length, merge_proposals: dupes } }];"
+      },
+      "id": "hyg-dupes",
+      "name": "03: Duplicate Detector",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "run_id",
+              "value": "={{ 'hygiene-' + $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "merge_mode",
+              "value": "proposal_only",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "hyg-proposal",
+      "name": "04: Merge Proposal Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        840,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SLACK_ALERTS_WEBHOOK }}",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \":broom: *Weekly CRM hygiene audit complete*\\n*Run:* {{ $json.run_id }}\\n*Companies scanned:* {{ $('03: Duplicate Detector').item.json.companies_scanned }}\\n*Duplicate domains:* {{ $('03: Duplicate Detector').item.json.duplicate_domains }}\\nMerge mode: *proposal only* \u2014 no records changed. Approve merges in the CRM.\"\n}",
+        "options": {}
+      },
+      "id": "hyg-report",
+      "name": "05: Slack RevOps Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1060,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.hubapi.com/crm/v3/objects/deals/search",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.HUBSPOT_ACCESS_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"limit\": 100,\n  \"properties\": [\"dealname\", \"dealstage\", \"hubspot_owner_id\", \"notes_last_updated\"],\n  \"filterGroups\": [{\n    \"filters\": [{\n      \"propertyName\": \"dealstage\", \"operator\": \"NOT_IN\",\n      \"values\": [\"closedwon\", \"closedlost\"]\n    }]\n  }]\n}",
+        "options": {}
+      },
+      "id": "hyg-deals",
+      "name": "06: Fetch Open Deals",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const deals = $input.all().flatMap(i => i.json.results || []);\nconst scored = deals.map(d => {\n  const last = d.properties?.notes_last_updated;\n  const daysStale = last ? (Date.now() - Date.parse(last)) / 86400000 : 999;\n  let score = 0;\n  if (daysStale > 21) score += 40;\n  else if (daysStale > 14) score += 25;\n  else if (daysStale > 7) score += 10;\n  const noNextStep = !d.properties?.next_step;\n  if (noNextStep) score += 30;\n  return { id: d.id, name: d.properties?.dealname || '',\n    owner: d.properties?.hubspot_owner_id || '',\n    days_stale: Math.round(daysStale), no_next_step: noNextStep, risk_score: score };\n});\nconst highRisk = scored.filter(d => d.risk_score >= 70);\nreturn [{ json: { deals_scanned: deals.length, high_risk_deals: highRisk } }];"
+      },
+      "id": "hyg-score",
+      "name": "07: Ghosting Risk Scorer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.high_risk_deals.length }}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "hyg-gate",
+      "name": "08: Risk Gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1720,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SLACK_ALERTS_WEBHOOK }}",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \":warning: *Ghosting-risk deals need attention*\\n{{ JSON.stringify($json.high_risk_deals, null, 2) }}\"\n}",
+        "options": {}
+      },
+      "id": "hyg-alert",
+      "name": "09: Slack Risk Alerts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1940,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "01: Weekly Schedule": {
+      "main": [
+        [
+          {
+            "node": "02: Fetch Companies (paginated)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02: Fetch Companies (paginated)": {
+      "main": [
+        [
+          {
+            "node": "03: Duplicate Detector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03: Duplicate Detector": {
+      "main": [
+        [
+          {
+            "node": "04: Merge Proposal Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04: Merge Proposal Payload": {
+      "main": [
+        [
+          {
+            "node": "05: Slack RevOps Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05: Slack RevOps Report": {
+      "main": [
+        [
+          {
+            "node": "06: Fetch Open Deals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06: Fetch Open Deals": {
+      "main": [
+        [
+          {
+            "node": "07: Ghosting Risk Scorer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07: Ghosting Risk Scorer": {
+      "main": [
+        [
+          {
+            "node": "08: Risk Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08: Risk Gate": {
+      "main": [
+        [
+          {
+            "node": "09: Slack Risk Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09: Slack Risk Alerts": {
+      "main": []
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

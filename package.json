@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^5.0.62",
@@ -50,6 +52,8 @@
     "eslint-config-next": "16.3.1",
     "pg": "^8.23.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
-  }
+    "typescript": "^5",
+    "vitest": "^3.2.4"
+  },
+  "description": "Prospect Pal by Salesgency — internal GTM prospecting app"
 }

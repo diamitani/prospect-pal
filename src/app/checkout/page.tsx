@@ -145,7 +145,7 @@ function CheckoutContent() {
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", position: "relative", zIndex: 1 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#B8C6FE", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>
-            You're getting
+            You&apos;re getting
           </div>
           <h2 style={{ fontSize: 28, fontWeight: 900, color: "white", letterSpacing: "-0.5px", lineHeight: 1.2, margin: "0 0 8px" }}>
             {plan.name}

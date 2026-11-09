@@ -1,3 +1,22 @@
+# Prospect Pal by Salesgency
+
+Internal GTM prospecting app for [Salesgency](https://www.salesgency.com).
+
+- **App URL (target):** https://prospect.salesgency.com
+- **Current Vercel:** https://prospect-pal-two.vercel.app
+- **Enrichment:** free path (DuckDuckGo + X + MX) and/or BYOK via Composio
+- **Agent process:** `src/skills/prospect-automation/` (prospector-skill)
+- **Setup:** see `docs/SALESGENCY_INTERNAL.md` and `.env.example`
+
+```bash
+npm install
+npm run dev      # http://localhost:3000
+npm test
+npm run build
+```
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

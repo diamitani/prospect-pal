@@ -24,7 +24,7 @@ export default function WizardIntroPage() {
 
         {/* What to expect */}
         <div className="space-y-4">
-          <h3 className="font-semibold text-slate-800">What we'll configure:</h3>
+          <h3 className="font-semibold text-slate-800">What we&apos;ll configure:</h3>
           
           <div className="grid gap-3">
             <StepItem number={1} title="Company basics" desc="What you do and who you help" />
