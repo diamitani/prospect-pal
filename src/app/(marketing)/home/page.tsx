@@ -287,17 +287,21 @@ export default function HomePage() {
                 margin: 0,
               }}
             >
-              Autonomous ROSTR agents find target accounts, extract decision-makers, write PAS emails, and sync to your CRM and sequencer.
+              Six steps from signal to sequence. Everything else is a connector, prompt, tool. Run live below or download the 62-node n8n template and 8 AI skills.
             </p>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <Link href="/wizard" style={{ textDecoration: "none" }}>
-                <Button variant="accent" size="md" iconRight="ArrowRight">
-                  Compile outbound engine
+              <a
+                href="/pae-package/prospect-outreach-n8n-template.zip"
+                download
+                style={{ textDecoration: "none" }}
+              >
+                <Button variant="accent" size="md" icon="Download">
+                  Download 62-node n8n template
                 </Button>
-              </Link>
+              </a>
               <Link href="/packages" style={{ textDecoration: "none" }}>
                 <Button variant="outline" size="md" icon="Package">
-                  Download agent kits
+                  MCP &amp; Agent Marketplace
                 </Button>
               </Link>
             </div>

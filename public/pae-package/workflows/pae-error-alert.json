@@ -1,0 +1,208 @@
+{
+  "name": "PAE - Error Alert",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "0a6b0a59-e60b-56d3-803f-667f2e473243",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "33b7fbfb-58b5-5122-9b33-2acc2f9fd4c5",
+              "name": "alert_webhook_url",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "e6a0ac1f-d6b6-5862-8e71-c9019be92447",
+              "name": "allow_private_urls",
+              "value": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "1a140345-18dc-5d15-a273-929ed916a34c",
+      "name": "Alert Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== PAE shared helpers (the generator pastes this block into each Code node that needs it) =====\nconst PAE = {\n  isPrivateHost(h) {\n    h = String(h || '').toLowerCase().replace(/^\\[|\\]$/g, '');\n    if (!h) return true;\n    if (h === 'localhost' || /\\.(localhost|local|internal|lan|home\\.arpa)$/.test(h)) return true;\n    if (/^\\d+$/.test(h) || /^0x[0-9a-f]+$/i.test(h)) return true;\n    const m = h.match(/^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$/);\n    if (m) {\n      const a = +m[1], b = +m[2];\n      if (a === 0 || a === 10 || a === 127 || a >= 224) return true;\n      if (a === 169 && b === 254) return true;\n      if (a === 172 && b >= 16 && b <= 31) return true;\n      if (a === 192 && b === 168) return true;\n      if (a === 100 && b >= 64 && b <= 127) return true;\n      return false;\n    }\n    if (h.includes(':')) return h === '::1' || h === '::' || /^f[cd]/.test(h) || /^fe[89ab]/.test(h) || h.startsWith('::ffff:');\n    if (!h.includes('.')) return true;\n    return false;\n  },\n  httpsUrl(u, allowPrivate) {\n    const s = String(u || '').trim();\n    if (!s) return '';\n    const m = s.match(/^(https?):\\/\\/([^\\/?#]*)([\\/?#][^]*)?$/i);\n    if (!m) throw new Error('Not a valid URL: ' + s.slice(0, 80));\n    const scheme = m[1].toLowerCase();\n    const authority = m[2];\n    if (!(scheme === 'https' || (allowPrivate && scheme === 'http'))) throw new Error('URL must start with https:// : ' + s.slice(0, 80));\n    if (authority.includes('@')) throw new Error('URL must not contain a username or password');\n    if (/\\s/.test(s)) throw new Error('URL must not contain spaces');\n    let host = authority;\n    if (host.startsWith('[')) host = host.slice(0, host.indexOf(']') + 1);\n    else host = host.replace(/:\\d*$/, '');\n    if (!host) throw new Error('URL has no host');\n    if (!allowPrivate && PAE.isPrivateHost(host)) throw new Error('URL host is private or not allowed: ' + host);\n    return s;\n  },\n  list(v, max) {\n    const a = Array.isArray(v) ? v : String(v == null ? '' : v).split(/[\\n;|]+/);\n    return a.map(x => String(x).trim()).filter(Boolean).slice(0, max || 50);\n  },\n  uniq(a) { return Array.from(new Set(a)); },\n  domain(v) {\n    const s = String(v || '').trim().toLowerCase().replace(/^https?:\\/\\//, '').replace(/^www\\./, '').split(/[\\/?#]/)[0];\n    return /^[a-z0-9-]+(\\.[a-z0-9-]+)*\\.[a-z]{2,}$/.test(s) ? s : '';\n  },\n  strip(s) {\n    return String(s == null ? '' : s).replace(/<script[\\s\\S]*?<\\/script>/gi, ' ').replace(/<style[\\s\\S]*?<\\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/\\s+/g, ' ').trim();\n  },\n  num(v, lo, hi, d) { const n = Number(v); return isFinite(n) && v !== '' && v !== null ? Math.min(hi, Math.max(lo, n)) : d; },\n  bool(v, d) { return v === true || v === 'true' ? true : (v === false || v === 'false' ? false : d); },\n  validEmail(e) { const s = String(e || '').trim(); return s.length <= 254 && /^[^\\s@<>()\\[\\],;:\"]+@[a-z0-9-]+(\\.[a-z0-9-]+)+$/i.test(s); },\n  ascii(s) { return String(s || '').normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z]/g, ''); },\n  errText(e) { return String((e && (e.message || e.description)) || e || '').slice(0, 200); },\n  nrm(s) { return String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); }\n};\n// ===== end helpers =====\n\n// Builds a short alert. It never includes lead data, only where the run failed and why.\nconst j = $input.first().json || {};\nconst ex = j.execution || {};\nconst wf = j.workflow || {};\nconst err = ex.error || {};\n// n8n can cut err.message at the first colon, so prefer the first line of the stack, which holds the full text.\nconst stackLine = String(err.stack || '').split('\\n')[0].replace(/^[A-Za-z]*Error:\\s*/, '');\nconst errText = stackLine || String(err.message || 'unknown');\nconst lines = [\n  'PAE run failed',\n  'Workflow: ' + String(wf.name || 'unknown').slice(0, 120),\n  'Failed at node: ' + String(err.node && err.node.name || ex.lastNodeExecuted || 'unknown').slice(0, 120),\n  'Error: ' + errText.replace(/\\s+/g, ' ').slice(0, 300),\n  'Execution id: ' + String(ex.id || 'n/a').slice(0, 40)\n];\nlet url = '';\nconst raw = String(j.alert_webhook_url || '').trim();\nif (raw) {\n  try {\n    url = PAE.httpsUrl(raw, j.allow_private_urls === true);\n  } catch (e) {\n    lines.push('(alert_webhook_url was rejected: ' + PAE.errText(e) + ')');\n  }\n}\nreturn [{ json: { text: lines.join('\\n'), alert_url: url } }];\n"
+      },
+      "id": "e5fcb00e-89f7-5138-bd56-7d83c40770b1",
+      "name": "Format Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "37d720e3-5bb4-5514-b85f-36c48bb00ff4",
+              "leftValue": "={{ $json.alert_url }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "55f4eba2-440d-5424-a47c-115217a51c55",
+      "name": "Alert Target Set?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.alert_url }}",
+        "authentication": "none",
+        "options": {
+          "timeout": 20000
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: $json.text, content: $json.text }) }}"
+      },
+      "id": "14d84a51-4530-5d60-93d7-f727e7550cc8",
+      "name": "Send Alert (HTTP)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        896,
+        -70.0
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {},
+      "id": "9c3b1e64-0dff-5f9f-9a11-aed58303a50b",
+      "name": "No Alert Target",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        896,
+        70.0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## PAE error alert\nPaste a Slack or Discord incoming-webhook URL into **Alert Config** (alert_webhook_url).\nThen open the main workflow, Settings, and choose this workflow as the **Error Workflow**.\nThe alert never includes lead data.",
+        "height": 190,
+        "width": 420,
+        "color": 4
+      },
+      "id": "bf3afd0e-cdb3-577d-a6b6-bcd62171d000",
+      "name": "Note: Alert",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -280
+      ]
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Alert Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert Config": {
+      "main": [
+        [
+          {
+            "node": "Format Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Alert": {
+      "main": [
+        [
+          {
+            "node": "Alert Target Set?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert Target Set?": {
+      "main": [
+        [
+          {
+            "node": "Send Alert (HTTP)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Alert Target",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "executionTimeout": 3600
+  },
+  "pinData": {}
+}
