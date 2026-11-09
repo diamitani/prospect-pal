@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Prospect Pal by Salesgency — Internal GTM",
+  title: "SalesGency Prospect Automation Engine - 1 ICP to Full Outbound Workflow",
   description:
-    "Internal GTM prospecting app for Salesgency. Evidence-backed prospect research, scoring, and HubSpot sync with human approval.",
+    "Scale qualified outbound pipeline with an autonomous sales engine. 1 ICP or buying signal to a full 6-step outbound workflow powered by ROSTR, PAL, Vercel AI Stack, Cloudflare, and MCP.",
   openGraph: {
-    title: "Prospect Pal by Salesgency",
-    description: "Internal GTM prospecting — free path + BYOK connectors.",
+    title: "SalesGency Prospect Automation Engine",
+    description:
+      "1 ICP or signal to full outbound workflow. Built on ROSTR Multi-Agent System, PAL Compiler, n8n, and Model Context Protocol (MCP).",
     type: "website",
     url: "https://prospect.salesgency.com",
   },
@@ -23,18 +24,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-          rel="stylesheet"
-        />
-      </head>
       <body className="antialiased">{children}</body>
     </html>
   );

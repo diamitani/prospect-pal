@@ -8,192 +8,163 @@ import {
   Badge,
   Icon,
   StatTile,
-  SectionHeading,
   PricingCard,
   PipelineRail,
   PipelineNode,
 } from "@/components/ds";
+import { VerticalOutboundWorkbench } from "@/components/outbound/VerticalOutboundWorkbench";
+import {
+  ARCHITECTURE_BLUEPRINT_NODES,
+  C4_SYSTEM_CONTEXT_LINKS,
+  ROSTR_AGENTS,
+  ROSTR_RUNTIME_MODULES,
+  SIX_STEP_AUTOMATION_FLOW,
+} from "@/lib/rostr/agents-registry";
+import { DEMO_API_KEY } from "@/lib/mcp/auth";
 
-const PIPELINE_NODES: PipelineNode[] = [
-  {
-    title: "Trigger & Cron",
-    subtitle: "Lead ingest",
-    icon: "Zap",
-    stage: "trigger",
-    binding: "n8n-nodes-base.cron",
-    tooltip: "Dynamic trigger: scheduled pulls, CRM webhooks, or direct prompt ingestion for continuous prospect discovery without manual imports.",
-  },
-  {
-    title: "Data Normalizer",
-    subtitle: "Schema clean",
-    icon: "FileCode",
-    stage: "logic",
-    binding: "n8n-nodes-base.set",
-    tooltip: "Standardizes messy input schemas, sanitizes company URLs, formats domains, and validates required variables for downstream agents.",
-  },
-  {
-    title: "CRM Dedupe Shield",
-    subtitle: "Deal safety",
-    icon: "ShieldCheck",
-    stage: "shield",
-    binding: "n8n-nodes-base.hubspot",
-    tooltip: "Checks contacts against Twenty CRM, HubSpot, and Salesforce in real-time. Automatically excludes existing accounts, open deals, and opt-outs.",
-  },
-  {
-    title: "Contact Reveal",
-    subtitle: "Data adapter",
-    icon: "Search",
-    stage: "data",
-    binding: "n8n-nodes-base.apollo",
-    tooltip: "Surfaces verified work emails and direct phones matching target ICP personas (VP RevOps, Head of Growth, CTO) via Apollo, Clay, and ZoomInfo.",
-  },
-  {
-    title: "Company Intel",
-    subtitle: "Deep research",
-    icon: "Globe",
-    stage: "ai",
-    binding: "n8n-nodes-base.openai",
-    tooltip: "Autonomous AI agent analyzes company filings, tech stacks, open job postings, and recent PR to identify specific buying triggers.",
-  },
-  {
-    title: "PAS Copywriter",
-    subtitle: "Hyper-personal",
-    icon: "Sparkles",
-    stage: "ai",
-    binding: "n8n-nodes-base.openai",
-    tooltip: "Drafts high-converting Problem-Agitate-Solution cold copy personalized to individual pain points with zero generic AI tropes.",
-  },
-  {
-    title: "CRM Contact Sync",
-    subtitle: "Auto upsert",
-    icon: "Database",
-    stage: "shield",
-    binding: "n8n-nodes-base.hubspot",
-    tooltip: "Creates or updates records in Twenty CRM or HubSpot with full enrichment attributes, research summaries, and message drafts.",
-  },
-  {
-    title: "Sequence Enrollment",
-    subtitle: "Smart send",
-    icon: "Send",
-    stage: "sequence",
-    binding: "n8n-nodes-base.smartlead",
-    tooltip: "Enrolls contacts into Smartlead, Instantly, or native sequences with scheduled intervals, mailbox warm-up safety, and reply tracking.",
-  },
-];
+const PIPELINE_NODES: PipelineNode[] = ARCHITECTURE_BLUEPRINT_NODES.map((n, idx) => ({
+  step: idx + 1,
+  title: n.node.replace(/^\d+\s+/, ""),
+  subtitle: n.platforms,
+  icon: n.icon,
+  stage: n.stage,
+  binding: n.binding,
+  tooltip: n.function,
+}));
 
-const ECOSYSTEM_STACK = [
-  { name: "Twenty CRM", category: "Open Source CRM", badge: "Live Sync", icon: "Database" as const },
-  { name: "HubSpot", category: "CRM & Sequences", badge: "Native", icon: "Layers" as const },
-  { name: "n8n", category: "Self-Hosted & Cloud", badge: "Engine", icon: "Workflow" as const },
-  { name: "Apollo.io", category: "275M+ Contacts", badge: "Adapter", icon: "Search" as const },
-  { name: "Clay", category: "Data Enrichment", badge: "Waterfall", icon: "Sparkles" as const },
-  { name: "Smartlead", category: "Cold Outreach", badge: "Sequencer", icon: "Send" as const },
-  { name: "AWS Bedrock", category: "Claude & Titan", badge: "BYOK AI", icon: "Cpu" as const },
-  { name: "OpenAI", category: "GPT-4o & Embeddings", badge: "BYOK AI", icon: "Zap" as const },
-];
+const HARNESS_SNIPPETS: Record<
+  string,
+  { label: string; filename: string; code: string; caption: string }
+> = {
+  cursor: {
+    label: "Claude Code & Cursor",
+    filename: ".mcp.json",
+    caption:
+      "Connect Claude Code, Cursor, or Windsurf directly to the Streamable HTTP MCP endpoint. Every step enforces license and human approval checks.",
+    code: `{
+  "mcpServers": {
+    "salesgency-outbound": {
+      "url": "https://prospect.salesgency.com/api/mcp",
+      "headers": {
+        "Authorization": "Bearer ${DEMO_API_KEY}"
+      }
+    }
+  }
+}`,
+  },
+  antigravity: {
+    label: "Antigravity & ROSTR Harness",
+    filename: "agents/prospect-automation-engine/manifest.json",
+    caption:
+      "Drop the ROSTR agent manifest and skill pack into your agent directory. Tools with external side effects are gated by human approval.",
+    code: `{
+  "name": "Prospect Automation Engine",
+  "slug": "prospect-automation-engine",
+  "version": "1.0.0",
+  "runtime": "rostr-v1",
+  "mcpEndpoint": "https://prospect.salesgency.com/api/mcp",
+  "skill": "skills/prospect-automation-engine-skill.md",
+  "tools": [
+    "scrape_buying_signals",
+    "dedupe_crm_contact",
+    "generate_pas_outreach",
+    "enroll_in_sequencer"
+  ],
+  "humanApprovalGates": ["enroll_in_sequencer"]
+}`,
+  },
+  vercel: {
+    label: "Vercel AI SDK",
+    filename: "lib/outbound-agent.ts",
+    caption:
+      "Call the 6-step SalesGency MCP tools inside any Next.js route or Vercel AI SDK streamText / generateText call.",
+    code: `import { generateText } from "ai";
+import { anthropic } from "@ai-sdk/anthropic";
 
-const BENTO_FEATURES = [
-  {
-    title: "Zero-Knowledge BYOK Security",
-    category: "Architecture",
-    desc: "Your API keys and credentials live entirely in your private environment or self-hosted instance. Prospect PAL never stores keys or sends emails on your behalf.",
-    icon: "Lock" as const,
-    stat: "100%",
-    statLabel: "Local key isolation",
-    colSpan: "col-span-1 md:col-span-2",
+const mcpResponse = await fetch("https://prospect.salesgency.com/api/mcp", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer ${DEMO_API_KEY}"
   },
-  {
-    title: "CRM Dedupe & Deal Protection",
-    category: "Safety Shield",
-    desc: "Active shields query Twenty CRM, HubSpot, and Salesforce before outreach to prevent reaching existing clients or live pipeline deals.",
-    icon: "ShieldCheck" as const,
-    stat: "0",
-    statLabel: "Double-touch incidents",
-    colSpan: "col-span-1",
+  body: JSON.stringify({
+    jsonrpc: "2.0",
+    id: 1,
+    method: "tools/call",
+    params: {
+      name: "research_prospect",
+      arguments: {
+        company: "NexusFlow Data",
+        prospect: { name: "Marcus Vance", title: "VP RevOps" },
+        yourProducts: "SalesGency Prospect Automation Engine",
+        valueProposition: "1 ICP to full outbound workflow in 30 days"
+      }
+    }
+  })
+});`,
   },
-  {
-    title: "Autonomous 9-Node Compilation",
-    category: "Compiler Engine",
-    desc: "Compile production-grade workflow JSON from natural language prompts. Validated against real node schemas for n8n, Make, and Gumloop.",
-    icon: "Workflow" as const,
-    stat: "3 sec",
-    statLabel: "Prompt-to-JSON",
-    colSpan: "col-span-1",
+  cloudflare: {
+    label: "Cloudflare Workers OAuth",
+    filename: "worker-mcp-oauth.ts",
+    caption:
+      "Wrap the stateless MCP server with Cloudflare workers-oauth-provider for web-based Claude and ChatGPT OAuth 2.1 connectors.",
+    code: `import OAuthProvider from "@cloudflare/workers-oauth-provider";
+
+export default new OAuthProvider({
+  apiRoute: "/api/mcp",
+  apiHandler: {
+    async fetch(request: Request, env: Env) {
+      return fetch("https://prospect.salesgency.com/api/mcp", {
+        method: request.method,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": \`Bearer \${env.SALESGENCY_MASTER_KEY}\`
+        },
+        body: request.body
+      });
+    }
   },
-  {
-    title: "Real-Time Execution Diagnostics",
-    category: "Ops & Telemetry",
-    desc: "Execution agents scan workflow runs by ID, detect node failure points, diagnose API rate limits, and provide automatic repair instructions.",
-    icon: "Activity" as const,
-    stat: "99.9%",
-    statLabel: "Execution reliability",
-    colSpan: "col-span-1 md:col-span-2",
+  authorizeEndpoint: "/oauth/authorize",
+  tokenEndpoint: "/oauth/token"
+});`,
   },
-];
+};
 
 export default function HomePage() {
   const [activeNodeIndex, setActiveNodeIndex] = useState<number>(0);
-  const selectedNode = PIPELINE_NODES[activeNodeIndex] || PIPELINE_NODES[0];
+  const [activeHarness, setActiveHarness] = useState<string>("cursor");
+  const [copiedSnippet, setCopiedSnippet] = useState(false);
+
+  const selectedNode =
+    ARCHITECTURE_BLUEPRINT_NODES[activeNodeIndex] ||
+    ARCHITECTURE_BLUEPRINT_NODES[0];
+  const currentSnippet = HARNESS_SNIPPETS[activeHarness] || HARNESS_SNIPPETS.cursor;
+
+  const copySnippet = () => {
+    navigator.clipboard.writeText(currentSnippet.code);
+    setCopiedSnippet(true);
+    setTimeout(() => setCopiedSnippet(false), 1800);
+  };
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--surface-page)", color: "var(--text-primary)", overflowX: "hidden" }}>
-      
-      {/* ── Top Announcement Banner ── */}
-      <div
-        style={{
-          background: "linear-gradient(90deg, #0B0F16 0%, #101B2D 50%, #0B0F16 100%)",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
-          padding: "10px 24px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 12,
-          fontSize: "13px",
-          color: "#E2E6EE",
-        }}
-      >
-        <span
-          style={{
-            background: "rgba(58, 86, 228, 0.25)",
-            border: "1px solid rgba(141, 162, 251, 0.4)",
-            color: "#8DA2FB",
-            fontSize: "11px",
-            fontWeight: 700,
-            padding: "2px 8px",
-            borderRadius: "100px",
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-          }}
-        >
-          v2.4 Release
-        </span>
-        <span>
-          <strong>Twenty CRM & n8n Cloud Integration Live.</strong> Compile verified outbound flows in seconds.
-        </span>
-        <a
-          href="#process"
-          style={{
-            color: "#D9B968",
-            fontWeight: 600,
-            textDecoration: "none",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-          }}
-        >
-          Explore architecture →
-        </a>
-      </div>
-
-      {/* ── Floating Minimalist Navigation ── */}
+    <div
+      style={{
+        minHeight: "100dvh",
+        background: "var(--surface-page)",
+        color: "var(--text-primary)",
+        overflowX: "hidden",
+      }}
+    >
+      {/* Sticky Single-Line Navigation (<= 80px height) */}
       <header
         style={{
           position: "sticky",
           top: 0,
           zIndex: 50,
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          background: "rgba(251, 250, 248, 0.88)",
+          height: "68px",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+          background: "rgba(251, 250, 248, 0.90)",
           borderBottom: "1px solid var(--border-hairline)",
         }}
       >
@@ -201,501 +172,926 @@ export default function HomePage() {
           style={{
             maxWidth: "1280px",
             margin: "0 auto",
-            height: "70px",
-            padding: "0 32px",
+            height: "100%",
+            padding: "0 24px",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            gap: 16,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <Link href="/home" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
-              <Logo size={32} />
-            </Link>
-            <span
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Link
+              href="/home"
               style={{
-                fontSize: "11px",
-                fontWeight: 600,
-                color: "var(--cobalt-600)",
-                background: "var(--cobalt-50)",
-                border: "1px solid var(--cobalt-200)",
-                padding: "3px 9px",
-                borderRadius: "100px",
-                letterSpacing: "0.02em",
+                display: "flex",
+                alignItems: "center",
+                textDecoration: "none",
               }}
             >
-              BYOK Engine
-            </span>
+              <Logo size={30} />
+            </Link>
+            <Badge tone="brand">SalesGency × Diamitani</Badge>
           </div>
 
-          {/* Nav links */}
-          <nav style={{ display: "flex", alignItems: "center", gap: 28 }} className="hidden md:flex">
+          <nav
+            className="hidden lg:flex"
+            style={{ alignItems: "center", gap: 24 }}
+          >
             {[
-              { label: "Pipeline", href: "#pipeline" },
-              { label: "Integrations", href: "#integrations" },
-              { label: "How It Works", href: "#process" },
-              { label: "Capabilities", href: "#capabilities" },
+              { label: "Vertical App", href: "#vertical-app" },
+              { label: "6-Step Flow", href: "#flow" },
+              { label: "Architecture", href: "#architecture" },
+              { label: "MCP & Marketplace", href: "#marketplace" },
+              { label: "Templates", href: "/templates" },
               { label: "Pricing", href: "#pricing" },
             ].map((item) => (
-              <a
+              <Link
                 key={item.label}
                 href={item.href}
                 style={{
-                  fontSize: "14px",
+                  fontSize: "13.5px",
                   fontWeight: 500,
                   color: "var(--text-secondary)",
                   textDecoration: "none",
-                  transition: "color 0.15s ease",
+                  whiteSpace: "nowrap",
                 }}
-                className="hover:text-[#0B0F16]"
               >
                 {item.label}
-              </a>
+              </Link>
             ))}
           </nav>
 
-          {/* Action CTAs */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Link href="/login" style={{ textDecoration: "none" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Link href="/dashboard" style={{ textDecoration: "none" }}>
               <Button variant="outline" size="sm">
-                Sign in
+                Open workspace
               </Button>
             </Link>
-            <Link href="/checkout?plan=pro" style={{ textDecoration: "none" }}>
+            <Link href="/wizard" style={{ textDecoration: "none" }}>
               <Button variant="accent" size="sm" iconRight="ArrowRight">
-                Get started free
+                Compile outbound engine
               </Button>
             </Link>
           </div>
         </div>
       </header>
 
-      {/* ── SaaS Minimal Hero Section ── */}
+      {/* HERO + VERTICAL APP WORKBENCH */}
       <section
-        id="pipeline"
+        id="vertical-app"
         style={{
-          position: "relative",
-          padding: "72px 24px 84px",
+          padding: "56px 24px 72px",
           maxWidth: "1280px",
           margin: "0 auto",
         }}
       >
-        {/* Subtle Ambient Radial Lighting */}
+        {/* Asymmetric Top Hero Header (4 elements max: Eyebrow, Headline, Subtext, CTAs) */}
         <div
-          style={{
-            position: "absolute",
-            top: "-10%",
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: "800px",
-            height: "450px",
-            background: "radial-gradient(ellipse at center, rgba(58, 86, 228, 0.12), transparent 70%)",
-            filter: "blur(60px)",
-            pointerEvents: "none",
-            zIndex: 0,
-          }}
-        />
-
-        <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: "860px", margin: "0 auto 56px" }}>
-          
-          {/* Eyebrow Pill */}
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 14px", borderRadius: "100px", background: "var(--surface-card)", border: "1px solid var(--border-strong)", boxShadow: "var(--shadow-hairline)", marginBottom: "24px" }}>
-            <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#10B981", boxShadow: "0 0 8px #10B981" }} />
-            <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--ink-700)", letterSpacing: "0.02em" }}>
-              Autonomous Outbound GTM Architecture
-            </span>
-          </div>
-
-          {/* Display Headline */}
-          <h1
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(38px, 5.5vw, 64px)",
-              fontWeight: 800,
-              lineHeight: 1.08,
-              letterSpacing: "-0.035em",
-              color: "var(--ink-900)",
-              margin: "0 0 20px",
-            }}
-          >
-            The GTM Automation Engine for{" "}
-            <span style={{ color: "var(--cobalt-600)", display: "inline-block" }}>
-              Modern Outbound
-            </span>
-          </h1>
-
-          {/* Subheadline (Restrained, max 20 words) */}
-          <p
-            style={{
-              fontSize: "clamp(16px, 2vw, 19px)",
-              lineHeight: 1.6,
-              color: "var(--text-secondary)",
-              maxWidth: "640px",
-              margin: "0 auto 36px",
-            }}
-          >
-            Your custom AI agents compile, test, and sync 9-node production workflows directly to your <strong>n8n</strong>, <strong>Make</strong>, or <strong>Twenty CRM</strong> instance.
-          </p>
-
-          {/* Dual CTAs */}
-          <div style={{ display: "flex", gap: 14, justifyContent: "center", alignItems: "center", flexWrap: "wrap" }}>
-            <Link href="/checkout?plan=pro" style={{ textDecoration: "none" }}>
-              <Button variant="accent" size="lg" iconRight="ArrowRight">
-                Build your workflow
-              </Button>
-            </Link>
-            <Link href="#how" style={{ textDecoration: "none" }}>
-              <Button variant="outline" size="lg" icon="Workflow">
-                View workflow template
-              </Button>
-            </Link>
-          </div>
-
-          {/* Security Note */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 22, fontSize: "12px", color: "var(--text-muted)" }}>
-            <Icon name="ShieldCheck" size={14} color="var(--signal-verified)" />
-            <span>100% BYOK · Zero credential exposure · Instant JSON export</span>
-          </div>
-        </div>
-
-        {/* ── Interactive Hero Canvas: 9-Node Pipeline Preview ── */}
-        <div
-          style={{
-            position: "relative",
-            zIndex: 2,
-            background: "var(--surface-card)",
-            borderRadius: "24px",
-            border: "1px solid var(--border-strong)",
-            boxShadow: "0 24px 60px -12px rgba(11, 15, 22, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04)",
-            overflow: "hidden",
-          }}
+          className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end"
+          style={{ marginBottom: "36px" }}
         >
-          {/* Mock Window Chrome */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "14px 24px",
-              background: "var(--surface-sunken)",
-              borderBottom: "1px solid var(--border-hairline)",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#FF5F56" }} />
-              <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#FFBD2E" }} />
-              <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#27C93F" }} />
-              <span style={{ marginLeft: 12, fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", fontFamily: "var(--font-mono, monospace)" }}>
-                prospect-engine-pipeline.json
-              </span>
+          <div className="lg:col-span-8">
+            <div style={{ marginBottom: "16px" }}>
+              <Badge tone="brand" icon="Zap">
+                SALESGENCY × DIAMITANI INDUSTRIES · ROSTR + PAL + MCP
+              </Badge>
             </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  color: "#059669",
-                  background: "rgba(16, 185, 129, 0.12)",
-                  padding: "3px 10px",
-                  borderRadius: "100px",
-                }}
-              >
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
-                Compiler Ready
+            <h1
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(36px, 4.8vw, 58px)",
+                fontWeight: 800,
+                lineHeight: 1.06,
+                letterSpacing: "-0.035em",
+                color: "var(--ink-900)",
+                margin: 0,
+              }}
+            >
+              One ICP or buying signal to a{" "}
+              <span style={{ color: "var(--cobalt-600)" }}>
+                full outbound workflow.
               </span>
-            </div>
+            </h1>
           </div>
 
-          {/* Interactive Pipeline Rail */}
-          <div style={{ padding: "28px 24px 18px" }}>
-            <PipelineRail
-              nodes={PIPELINE_NODES}
-              activeIndex={activeNodeIndex}
-              onSelect={(index: number) => setActiveNodeIndex(index)}
-              onDeep={false}
-            />
-          </div>
-
-          {/* Active Node Detail Inspector Panel */}
           <div
-            style={{
-              padding: "20px 28px",
-              background: "linear-gradient(180deg, var(--surface-sunken) 0%, var(--surface-card) 100%)",
-              borderTop: "1px solid var(--border-hairline)",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: 16,
-            }}
+            className="lg:col-span-4"
+            style={{ display: "flex", flexDirection: "column", gap: 20 }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div
-                style={{
-                  width: "42px",
-                  height: "42px",
-                  borderRadius: "10px",
-                  background: "var(--cobalt-500)",
-                  color: "#FFFFFF",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: "0 4px 12px rgba(58, 86, 228, 0.25)",
-                }}
-              >
-                <Icon name={selectedNode.icon} size={20} />
-              </div>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--ink-900)" }}>
-                    Step 0{activeNodeIndex + 1}: {selectedNode.title}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      fontFamily: "var(--font-mono, monospace)",
-                      color: "var(--cobalt-600)",
-                      background: "var(--cobalt-50)",
-                      padding: "2px 6px",
-                      borderRadius: "4px",
-                    }}
-                  >
-                    {selectedNode.binding}
-                  </span>
-                </div>
-                <p style={{ margin: "3px 0 0", fontSize: "13px", color: "var(--text-secondary)", maxWidth: "680px", lineHeight: 1.5 }}>
-                  {selectedNode.tooltip}
-                </p>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: 8 }}>
-              <Link href="/templates" style={{ textDecoration: "none" }}>
-                <Button variant="outline" size="sm" iconRight="ArrowUpRight">
-                  Inspect JSON
+            <p
+              style={{
+                fontSize: "16px",
+                lineHeight: 1.55,
+                color: "var(--text-secondary)",
+                margin: 0,
+              }}
+            >
+              Autonomous ROSTR agents find target accounts, extract decision-makers, write PAS emails, and sync to your CRM and sequencer.
+            </p>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <Link href="/wizard" style={{ textDecoration: "none" }}>
+                <Button variant="accent" size="md" iconRight="ArrowRight">
+                  Compile outbound engine
+                </Button>
+              </Link>
+              <Link href="/packages" style={{ textDecoration: "none" }}>
+                <Button variant="outline" size="md" icon="Package">
+                  Download agent kits
                 </Button>
               </Link>
             </div>
           </div>
         </div>
+
+        {/* Interactive Vertical Outbound Workbench */}
+        <VerticalOutboundWorkbench />
+
+        {/* Proof Metrics Bar (From Page 1 of the SalesGency PDF) */}
+        <div
+          className="grid grid-cols-2 md:grid-cols-4 gap-3"
+          style={{ marginTop: "24px" }}
+        >
+          <StatTile
+            value="3.4x"
+            label="Higher reply rate across personalized PAS cadences"
+            tone="brand"
+          />
+          <StatTile
+            value="20+ hrs"
+            label="Saved per rep / week on research and CRM upkeep"
+            tone="verified"
+          />
+          <StatTile
+            value="100%"
+            label="Native CRM sync with active deal deduplication"
+            tone="neutral"
+          />
+          <StatTile
+            value="6 MCP"
+            unit="tools"
+            label="Streamable HTTP API for Claude, Cursor & n8n"
+            tone="premium"
+          />
+        </div>
       </section>
 
-      {/* ── Ecosystem Integrations Strip ── */}
+      {/* SECTION 2: THE 6-STEP AUTOMATION FLOW (3 PHASES FROM PDF) */}
       <section
-        id="integrations"
+        id="flow"
         style={{
+          padding: "88px 24px",
+          background: "var(--surface-sunken)",
           borderTop: "1px solid var(--border-hairline)",
           borderBottom: "1px solid var(--border-hairline)",
-          background: "var(--surface-sunken)",
-          padding: "48px 24px",
         }}
       >
         <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
-          <p
-            style={{
-              textAlign: "center",
-              fontSize: "12px",
-              fontWeight: 600,
-              textTransform: "uppercase",
-              letterSpacing: "0.12em",
-              color: "var(--text-muted)",
-              margin: "0 0 28px",
-            }}
-          >
-            Connects seamlessly with your self-hosted & cloud stack
-          </p>
+          <div style={{ maxWidth: "720px", marginBottom: "48px" }}>
+            <h2
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(28px, 3.6vw, 42px)",
+                fontWeight: 700,
+                letterSpacing: "-0.03em",
+                lineHeight: 1.15,
+                color: "var(--ink-900)",
+                margin: "0 0 12px",
+              }}
+            >
+              The 6-step autonomous outbound flow
+            </h2>
+            <p
+              style={{
+                fontSize: "16px",
+                lineHeight: 1.6,
+                color: "var(--text-secondary)",
+                margin: 0,
+              }}
+            >
+              Everything in the ecosystem, whether an AI agent, data scraper, or CRM integration, is a connector designed to execute these six structured steps.
+            </p>
+          </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
-              gap: "16px",
-              alignItems: "center",
-            }}
-          >
-            {ECOSYSTEM_STACK.map((tool) => (
+          {/* 3 Phases Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {[
+              {
+                phaseTitle: "Phase 1: Identification & Targeting",
+                phaseSub: "Isolate high-intent accounts before spending enrichment credits",
+                steps: SIX_STEP_AUTOMATION_FLOW.slice(0, 2),
+              },
+              {
+                phaseTitle: "Phase 2: Sourcing & Intelligence",
+                phaseSub: "Verify decision-maker deliverability and uncover induced + deduced signals",
+                steps: SIX_STEP_AUTOMATION_FLOW.slice(2, 4),
+              },
+              {
+                phaseTitle: "Phase 3: Messaging & Execution",
+                phaseSub: "Generate Full-Body or Modular CRM Token copy behind a human approval gate",
+                steps: SIX_STEP_AUTOMATION_FLOW.slice(4, 6),
+              },
+            ].map((phaseGroup, pIdx) => (
               <div
-                key={tool.name}
+                key={phaseGroup.phaseTitle}
                 style={{
-                  background: "var(--surface-card)",
-                  border: "1px solid var(--border-hairline)",
-                  borderRadius: "12px",
-                  padding: "14px 16px",
+                  background: pIdx === 2 ? "var(--surface-deep)" : "var(--surface-card)",
+                  color: pIdx === 2 ? "var(--paper-0)" : "var(--text-primary)",
+                  borderRadius: "var(--radius-xl)",
+                  border: `1px solid ${
+                    pIdx === 2 ? "var(--border-deep)" : "var(--border-hairline)"
+                  }`,
+                  padding: "28px 24px",
                   display: "flex",
                   flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center",
-                  transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                  gap: 20,
+                  boxShadow: "var(--shadow-card)",
                 }}
-                className="hover:-translate-y-0.5 hover:shadow-sm"
               >
-                <Icon name={tool.icon} size={20} color="var(--cobalt-600)" style={{ marginBottom: 8 }} />
-                <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--ink-900)" }}>{tool.name}</span>
-                <span style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: 2 }}>{tool.category}</span>
+                <div
+                  style={{
+                    paddingBottom: "16px",
+                    borderBottom: `1px solid ${
+                      pIdx === 2 ? "var(--border-deep)" : "var(--border-hairline)"
+                    }`,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "17px",
+                      fontWeight: 700,
+                      color: pIdx === 2 ? "var(--paper-0)" : "var(--ink-900)",
+                      marginBottom: 4,
+                    }}
+                  >
+                    {phaseGroup.phaseTitle}
+                  </div>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: "13px",
+                      color: pIdx === 2 ? "var(--ink-300)" : "var(--text-secondary)",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {phaseGroup.phaseSub}
+                  </p>
+                </div>
+
+                {phaseGroup.steps.map((st) => (
+                  <div
+                    key={st.step}
+                    style={{
+                      padding: "16px",
+                      borderRadius: "var(--radius-lg)",
+                      background:
+                        pIdx === 2
+                          ? "rgba(255,255,255,0.04)"
+                          : "var(--surface-sunken)",
+                      border: `1px solid ${
+                        pIdx === 2
+                          ? "rgba(255,255,255,0.08)"
+                          : "var(--border-hairline)"
+                      }`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        marginBottom: 8,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: "var(--font-data)",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          color:
+                            pIdx === 2
+                              ? "var(--champagne-200)"
+                              : "var(--cobalt-600)",
+                        }}
+                      >
+                        {st.step} · {st.title}
+                      </span>
+                      <code
+                        style={{
+                          fontFamily: "var(--font-data)",
+                          fontSize: "11px",
+                          color:
+                            pIdx === 2 ? "var(--ink-200)" : "var(--text-muted)",
+                          background:
+                            pIdx === 2
+                              ? "rgba(0,0,0,0.3)"
+                              : "var(--surface-card)",
+                          padding: "2px 6px",
+                          borderRadius: "4px",
+                        }}
+                      >
+                        {st.mcpTool}
+                      </code>
+                    </div>
+
+                    <p
+                      style={{
+                        margin: "0 0 12px",
+                        fontSize: "13px",
+                        lineHeight: 1.55,
+                        color:
+                          pIdx === 2
+                            ? "var(--ink-200)"
+                            : "var(--text-secondary)",
+                      }}
+                    >
+                      {st.summary}
+                    </p>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 6,
+                      }}
+                    >
+                      {st.bullets.map((b) => (
+                        <div
+                          key={b}
+                          style={{
+                            display: "flex",
+                            alignItems: "flex-start",
+                            gap: 8,
+                            fontSize: "12px",
+                            lineHeight: 1.45,
+                            color:
+                              pIdx === 2
+                                ? "var(--ink-100)"
+                                : "var(--ink-700)",
+                          }}
+                        >
+                          <Icon
+                            name="Check"
+                            size={13}
+                            color={
+                              pIdx === 2
+                                ? "var(--champagne-300)"
+                                : "var(--cobalt-600)"
+                            }
+                            style={{ marginTop: 2 }}
+                          />
+                          <span>{b}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── 3-Step Compilation Process ── */}
+      {/* SECTION 3: ARCHITECTURE BLUEPRINT (7-NODE PRODUCTION PIPELINE + ROSTR C4) */}
       <section
-        id="process"
+        id="architecture"
         style={{
-          padding: "96px 24px",
+          padding: "88px 24px",
           maxWidth: "1280px",
           margin: "0 auto",
         }}
       >
-        <SectionHeading
-          eyebrow="Workflow Compiler"
-          title="Three simple inputs. One production pipeline you own."
-          description="The master agent transforms your ICP criteria, CRM schema, and messaging strategy into standard JSON ready for one-click import."
-        />
+        <div style={{ maxWidth: "720px", marginBottom: "40px" }}>
+          <h2
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "clamp(28px, 3.6vw, 42px)",
+              fontWeight: 700,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.15,
+              color: "var(--ink-900)",
+              margin: "0 0 12px",
+            }}
+          >
+            Production architecture blueprint
+          </h2>
+          <p
+            style={{
+              fontSize: "16px",
+              lineHeight: 1.6,
+              color: "var(--text-secondary)",
+              margin: 0,
+            }}
+          >
+            How the workflow nodes, CRM deduplication shield, PAL prompt compiler, and ROSTR entitlement engine connect in a live production environment.
+          </p>
+        </div>
 
+        {/* Interactive Pipeline Rail Card */}
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-            gap: "24px",
-            marginTop: "48px",
+            background: "var(--surface-deep)",
+            borderRadius: "var(--radius-2xl)",
+            border: "1px solid var(--border-deep)",
+            padding: "24px",
+            marginBottom: "28px",
           }}
         >
-          {[
-            {
-              num: "01",
-              title: "Connect Your Stack",
-              badge: "Twenty CRM · HubSpot · n8n",
-              desc: "Choose whether you run on Twenty CRM, HubSpot, or Salesforce, and specify your execution environment (n8n Cloud, Docker self-hosted, Make, or Gumloop).",
-            },
-            {
-              num: "02",
-              title: "Define ICP & Strategy",
-              badge: "Personas · Pain Points · Triggers",
-              desc: "Provide target personas, buyer signals, and value props. The system compiles dedicated AI research and Problem-Agitate-Solution copy templates.",
-            },
-            {
-              num: "03",
-              title: "Deploy & Execute Locally",
-              badge: "100% BYOK · Zero Lock-In",
-              desc: "Receive production workflow JSON. Import directly into your automation engine, configure API keys locally, and run without per-lead markups.",
-            },
-          ].map((step) => (
-            <div
-              key={step.num}
-              style={{
-                background: "var(--surface-card)",
-                borderRadius: "20px",
-                border: "1px solid var(--border-strong)",
-                padding: "32px 28px",
-                display: "flex",
-                flexDirection: "column",
-                position: "relative",
-              }}
-            >
-              <div
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 12,
+              marginBottom: "18px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span
                 style={{
-                  fontFamily: "var(--font-mono, monospace)",
-                  fontSize: "32px",
-                  fontWeight: 800,
-                  color: "var(--cobalt-500)",
-                  lineHeight: 1,
-                  marginBottom: "16px",
+                  fontFamily: "var(--font-data)",
+                  fontSize: "var(--text-caption)",
+                  color: "var(--ink-200)",
                 }}
               >
-                {step.num}
-              </div>
-              <h3 style={{ fontSize: "18px", fontWeight: 700, color: "var(--ink-900)", margin: "0 0 8px" }}>
-                {step.title}
-              </h3>
-              <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--cobalt-600)", background: "var(--cobalt-50)", padding: "3px 8px", borderRadius: "6px", width: "fit-content", marginBottom: "14px" }}>
-                {step.badge}
-              </div>
-              <p style={{ fontSize: "14px", lineHeight: 1.6, color: "var(--text-secondary)", margin: 0 }}>
-                {step.desc}
-              </p>
+                prospect-automation-engine.n8n.json
+              </span>
+              <Badge tone="verified" icon="Check">
+                24/24 Automated Tests Passing
+              </Badge>
             </div>
-          ))}
-        </div>
-      </section>
+            <Link href="/templates" style={{ textDecoration: "none" }}>
+              <Button variant="inverse" size="sm" iconRight="ArrowUpRight">
+                Inspect full workflow JSON
+              </Button>
+            </Link>
+          </div>
 
-      {/* ── Bento Grid Capabilities ── */}
-      <section
-        id="capabilities"
-        style={{
-          background: "var(--surface-sunken)",
-          padding: "96px 24px",
-          borderTop: "1px solid var(--border-hairline)",
-        }}
-      >
-        <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
-          <SectionHeading
-            eyebrow="Architectural Integrity"
-            title="Engineered for high-volume, precision outbound."
-            description="Eliminate deal collisions, automate research, and keep your credentials securely on your own servers."
+          <PipelineRail
+            nodes={PIPELINE_NODES}
+            activeIndex={activeNodeIndex}
+            onSelect={setActiveNodeIndex}
+            onDeep
           />
 
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-              gap: "20px",
-              marginTop: "48px",
+              marginTop: "18px",
+              padding: "16px 20px",
+              borderRadius: "var(--radius-lg)",
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid var(--border-deep)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 16,
             }}
           >
-            {BENTO_FEATURES.map((feat) => (
+            <div>
               <div
-                key={feat.title}
                 style={{
-                  background: "var(--surface-card)",
-                  borderRadius: "20px",
-                  border: "1px solid var(--border-hairline)",
-                  padding: "32px 28px",
+                  fontFamily: "var(--font-data)",
+                  fontSize: "var(--text-micro)",
+                  color: "var(--champagne-200)",
+                  marginBottom: 4,
+                }}
+              >
+                {selectedNode.node} · {selectedNode.binding}
+              </div>
+              <div
+                style={{
+                  fontSize: "var(--text-body-sm)",
+                  color: "var(--paper-0)",
+                  fontWeight: 600,
+                }}
+              >
+                {selectedNode.function}
+              </div>
+              <div
+                style={{
+                  fontSize: "var(--text-caption)",
+                  color: "var(--ink-300)",
+                  marginTop: 2,
+                }}
+              >
+                Platform bindings: {selectedNode.platforms}
+              </div>
+            </div>
+
+            <Badge tone="deep" mono>
+              {selectedNode.node.includes("06")
+                ? "Human-in-the-loop Gate"
+                : "Automated Node"}
+            </Badge>
+          </div>
+        </div>
+
+        {/* 2-Column Architecture Grid: C4 System Context + ROSTR Runtime Modules */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div
+            style={{
+              background: "var(--surface-card)",
+              borderRadius: "var(--radius-xl)",
+              border: "1px solid var(--border-hairline)",
+              padding: "26px",
+              boxShadow: "var(--shadow-hairline)",
+            }}
+          >
+            <h3
+              style={{
+                margin: "0 0 6px",
+                fontSize: "var(--text-h3)",
+                fontWeight: 700,
+              }}
+            >
+              System Context (C4 Level 1 & 2)
+            </h3>
+            <p
+              style={{
+                margin: "0 0 18px",
+                fontSize: "var(--text-caption)",
+                color: "var(--text-secondary)",
+              }}
+            >
+              Vercel serverless runtime, encrypted file vault, and Supabase RLS database connected to five external systems.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {C4_SYSTEM_CONTEXT_LINKS.map((item) => (
+                <div
+                  key={item.link}
+                  style={{
+                    padding: "11px 14px",
+                    borderRadius: "var(--radius-md)",
+                    background: "var(--surface-sunken)",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    gap: 12,
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 600,
+                        color: "var(--ink-900)",
+                      }}
+                    >
+                      {item.link}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        color: "var(--text-secondary)",
+                        marginTop: 2,
+                      }}
+                    >
+                      {item.flows}
+                    </div>
+                  </div>
+                  <Badge tone="brand" mono shape="rounded">
+                    {item.protocol}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div
+            style={{
+              background: "var(--surface-card)",
+              borderRadius: "var(--radius-xl)",
+              border: "1px solid var(--border-hairline)",
+              padding: "26px",
+              boxShadow: "var(--shadow-hairline)",
+            }}
+          >
+            <h3
+              style={{
+                margin: "0 0 6px",
+                fontSize: "var(--text-h3)",
+                fontWeight: 700,
+              }}
+            >
+              ROSTR Runtime & Packaging Engine
+            </h3>
+            <p
+              style={{
+                margin: "0 0 18px",
+                fontSize: "var(--text-caption)",
+                color: "var(--text-secondary)",
+              }}
+            >
+              Five modules take each agent folder from validated manifest to licensed, human-gated execution and a downloadable archive.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {ROSTR_RUNTIME_MODULES.map((mod) => (
+                <div
+                  key={mod.module}
+                  style={{
+                    padding: "11px 14px",
+                    borderRadius: "var(--radius-md)",
+                    background: "var(--surface-sunken)",
+                  }}
+                >
+                  <code
+                    style={{
+                      fontFamily: "var(--font-data)",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      color: "var(--cobalt-700)",
+                    }}
+                  >
+                    {mod.module}
+                  </code>
+                  <div
+                    style={{
+                      fontSize: "12.5px",
+                      color: "var(--text-secondary)",
+                      marginTop: 3,
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    {mod.purpose}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 4: MCP LAYER, HARNESS INTEGRATION & AGENT MARKETPLACE (Eyebrow #2) */}
+      <section
+        id="marketplace"
+        style={{
+          padding: "88px 24px",
+          background: "var(--surface-deep)",
+          color: "var(--paper-0)",
+        }}
+      >
+        <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+          <div style={{ maxWidth: "740px", marginBottom: "44px" }}>
+            <div
+              style={{
+                fontFamily: "var(--font-data)",
+                fontSize: "11px",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                color: "var(--champagne-200)",
+                marginBottom: "12px",
+              }}
+            >
+              MCP & AGENT MARKETPLACE
+            </div>
+            <h2
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(28px, 3.6vw, 42px)",
+                fontWeight: 700,
+                letterSpacing: "-0.03em",
+                lineHeight: 1.15,
+                color: "var(--paper-0)",
+                margin: "0 0 12px",
+              }}
+            >
+              Use in your own agent harness or download from the marketplace
+            </h2>
+            <p
+              style={{
+                fontSize: "16px",
+                lineHeight: 1.6,
+                color: "var(--ink-300)",
+                margin: 0,
+              }}
+            >
+              Connect Claude Code, Cursor, Antigravity, Vercel AI SDK, or Cloudflare Workers to our Streamable HTTP MCP server, or download standalone ROSTR agent kits.
+            </p>
+          </div>
+
+          {/* Harness Integration Code Switcher */}
+          <div
+            style={{
+              background: "var(--surface-deep-raised)",
+              borderRadius: "var(--radius-xl)",
+              border: "1px solid var(--border-deep)",
+              overflow: "hidden",
+              marginBottom: "40px",
+            }}
+          >
+            <div
+              style={{
+                padding: "12px 20px",
+                borderBottom: "1px solid var(--border-deep)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 10,
+              }}
+            >
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {Object.entries(HARNESS_SNIPPETS).map(([key, item]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setActiveHarness(key)}
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: "var(--radius-sm)",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      border: "none",
+                      cursor: "pointer",
+                      background:
+                        activeHarness === key
+                          ? "var(--cobalt-600)"
+                          : "rgba(255,255,255,0.05)",
+                      color:
+                        activeHarness === key
+                          ? "var(--paper-0)"
+                          : "var(--ink-200)",
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+
+              <Button
+                variant="inverse"
+                size="sm"
+                icon={copiedSnippet ? "Check" : "Copy"}
+                onClick={copySnippet}
+              >
+                {copiedSnippet ? "Copied config" : `Copy ${currentSnippet.filename}`}
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12">
+              <div
+                className="lg:col-span-5"
+                style={{
+                  padding: "24px",
+                  borderRight: "1px solid var(--border-deep)",
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "space-between",
+                  gap: 16,
                 }}
               >
                 <div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-                    <div
-                      style={{
-                        width: "36px",
-                        height: "36px",
-                        borderRadius: "8px",
-                        background: "var(--cobalt-50)",
-                        color: "var(--cobalt-600)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Icon name={feat.icon} size={18} />
-                    </div>
-                    <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                      {feat.category}
-                    </span>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-data)",
+                      fontSize: "12px",
+                      color: "var(--champagne-200)",
+                      marginBottom: 8,
+                    }}
+                  >
+                    {currentSnippet.filename}
                   </div>
-
-                  <h3 style={{ fontSize: "18px", fontWeight: 700, color: "var(--ink-900)", margin: "0 0 10px" }}>
-                    {feat.title}
-                  </h3>
-                  <p style={{ fontSize: "14px", lineHeight: 1.6, color: "var(--text-secondary)", margin: 0 }}>
-                    {feat.desc}
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: "14px",
+                      lineHeight: 1.6,
+                      color: "var(--ink-200)",
+                    }}
+                  >
+                    {currentSnippet.caption}
                   </p>
                 </div>
 
-                <div style={{ marginTop: "28px", paddingTop: "18px", borderTop: "1px solid var(--border-hairline)", display: "flex", alignItems: "baseline", gap: 8 }}>
-                  <span style={{ fontSize: "24px", fontWeight: 800, color: "var(--cobalt-600)", fontFamily: "var(--font-display)" }}>
-                    {feat.stat}
-                  </span>
-                  <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
-                    {feat.statLabel}
-                  </span>
+                <div
+                  style={{
+                    padding: "14px",
+                    borderRadius: "var(--radius-md)",
+                    background: "rgba(0,0,0,0.25)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    fontSize: "12px",
+                    color: "var(--ink-200)",
+                  }}
+                >
+                  <strong style={{ color: "var(--paper-0)", display: "block", marginBottom: 4 }}>
+                    Human-Approval Safety Contract
+                  </strong>
+                  When an MCP client invokes <code>enroll_outreach</code>, the server returns <code>pending_approval</code> and an <code>approvalId</code>. Only your operator dashboard or Slack webhook can approve the send.
+                </div>
+              </div>
+
+              <div className="lg:col-span-7" style={{ padding: "20px 24px", background: "#080C12" }}>
+                <pre
+                  style={{
+                    margin: 0,
+                    fontFamily: "var(--font-data)",
+                    fontSize: "12.5px",
+                    lineHeight: 1.6,
+                    color: "var(--ink-100)",
+                    overflowX: "auto",
+                  }}
+                >
+                  <code>{currentSnippet.code}</code>
+                </pre>
+              </div>
+            </div>
+          </div>
+
+          {/* 3 Shipping ROSTR Agent Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {ROSTR_AGENTS.map((agent) => (
+              <div
+                key={agent.slug}
+                style={{
+                  background: "var(--surface-deep-raised)",
+                  borderRadius: "var(--radius-xl)",
+                  border: "1px solid var(--border-deep)",
+                  padding: "24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  gap: 18,
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 8,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <Badge tone="deep" mono>
+                      {agent.category}
+                    </Badge>
+                    {agent.humanApprovalGate ? (
+                      <Badge tone="premium" icon="Lock">
+                        Gate: {agent.humanApprovalGate}
+                      </Badge>
+                    ) : (
+                      <Badge tone="verified">Auto-proceed</Badge>
+                    )}
+                  </div>
+
+                  <h3
+                    style={{
+                      margin: "0 0 8px",
+                      fontSize: "19px",
+                      fontWeight: 700,
+                      color: "var(--paper-0)",
+                    }}
+                  >
+                    {agent.name}
+                  </h3>
+                  <p
+                    style={{
+                      margin: "0 0 16px",
+                      fontSize: "13.5px",
+                      lineHeight: 1.55,
+                      color: "var(--ink-200)",
+                    }}
+                  >
+                    {agent.description}
+                  </p>
+
+                  <div
+                    style={{
+                      padding: "12px",
+                      borderRadius: "var(--radius-md)",
+                      background: "#080C12",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                      fontFamily: "var(--font-data)",
+                      fontSize: "11px",
+                      lineHeight: 1.6,
+                      color: "var(--ink-200)",
+                      marginBottom: 14,
+                    }}
+                  >
+                    {agent.directoryTree.map((line) => (
+                      <div key={line}>{line}</div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 10 }}>
+                  <a
+                    href={`/api/rostr/agents?slug=${agent.slug}&download=1`}
+                    style={{ textDecoration: "none", flex: 1 }}
+                  >
+                    <Button variant="inverse" size="sm" fullWidth icon="Download">
+                      Download Kit ({agent.price})
+                    </Button>
+                  </a>
+                  <Link href="/packages" style={{ textDecoration: "none" }}>
+                    <Button variant="outline" size="sm">
+                      Specs
+                    </Button>
+                  </Link>
                 </div>
               </div>
             ))}
@@ -703,46 +1099,163 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Pricing Matrix ── */}
+      {/* SECTION 5: WHY HIGH-GROWTH TEAMS CHOOSE SALESGENCY (FROM PAGE 7 OF PDF) */}
+      <section
+        id="why"
+        style={{
+          padding: "88px 24px",
+          background: "var(--surface-sunken)",
+          borderBottom: "1px solid var(--border-hairline)",
+        }}
+      >
+        <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+          <div style={{ maxWidth: "700px", marginBottom: "44px" }}>
+            <h2
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(28px, 3.6vw, 42px)",
+                fontWeight: 700,
+                letterSpacing: "-0.03em",
+                lineHeight: 1.15,
+                color: "var(--ink-900)",
+                margin: "0 0 12px",
+              }}
+            >
+              Why high-growth teams choose SalesGency
+            </h2>
+            <p
+              style={{
+                fontSize: "16px",
+                lineHeight: 1.6,
+                color: "var(--text-secondary)",
+                margin: 0,
+              }}
+            >
+              We do not sell bloated software subscriptions. We build and deploy custom revenue engines for your team inside the tools you already own.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: "Zap" as const,
+                title: "Live in 30 Days",
+                body: "We do not do 6-month consulting roadmaps. We audit your funnel, design the architecture, and deploy functioning AI engines in weeks.",
+              },
+              {
+                icon: "KeyRound" as const,
+                title: "You Own the Engine",
+                body: "Built directly on top of your CRM and data tools. No vendor lock-in; you own the workflows, prompts, MCP servers, and data pipelines.",
+              },
+              {
+                icon: "Send" as const,
+                title: "Built for Reps",
+                body: "Emails send directly from your reps' inboxes or sequencers with high deliverability. Reps only step in to handle warm replies and run demos.",
+              },
+            ].map((card) => (
+              <div
+                key={card.title}
+                style={{
+                  background: "var(--surface-card)",
+                  borderRadius: "var(--radius-xl)",
+                  border: "1px solid var(--border-hairline)",
+                  padding: "28px 26px",
+                  boxShadow: "var(--shadow-card)",
+                }}
+              >
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: "var(--radius-md)",
+                    background: "var(--cobalt-50)",
+                    color: "var(--cobalt-600)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 16,
+                  }}
+                >
+                  <Icon name={card.icon} size={20} />
+                </div>
+                <h3
+                  style={{
+                    margin: "0 0 8px",
+                    fontSize: "18px",
+                    fontWeight: 700,
+                    color: "var(--ink-900)",
+                  }}
+                >
+                  {card.title}
+                </h3>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "14px",
+                    lineHeight: 1.6,
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  {card.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 6: TRANSPARENT PRICING */}
       <section
         id="pricing"
         style={{
-          padding: "96px 24px",
+          padding: "88px 24px",
           maxWidth: "1280px",
           margin: "0 auto",
         }}
       >
-        <SectionHeading
-          eyebrow="Transparent Pricing"
-          title="Bring your own keys. Own your workflows forever."
-          description="Zero per-lead surcharges. Full access to the master agent compiler, skills, and export templates."
-        />
+        <div style={{ maxWidth: "680px", marginBottom: "44px" }}>
+          <h2
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "clamp(28px, 3.6vw, 42px)",
+              fontWeight: 700,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.15,
+              color: "var(--ink-900)",
+              margin: "0 0 12px",
+            }}
+          >
+            Own your outbound engine forever
+          </h2>
+          <p
+            style={{
+              fontSize: "16px",
+              lineHeight: 1.6,
+              color: "var(--text-secondary)",
+              margin: 0,
+            }}
+          >
+            Bring your own keys. Zero per-lead surcharges. Deploy via MCP, n8n, Vercel AI Stack, or Cloudflare.
+          </p>
+        </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-            gap: "24px",
-            marginTop: "48px",
-            alignItems: "stretch",
-          }}
-        >
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
           <PricingCard
-            name="DIY Skill Package"
+            name="ROSTR Agent & MCP Kit"
             price="$19.99"
-            note="One-time payment · Local setup"
-            description="Agent directory, sub-agents, SKILL.md specs, and prompt templates to run inside your own coding harness."
+            note="One-time download · Full source"
+            description="Standalone ROSTR agent packages, 6-tool Streamable HTTP MCP server, Supabase migration, and n8n workflow JSON for your own harness."
             features={[
-              "Full agent skill package & templates",
-              "9-node prospect workflow guides",
-              "Custom build prompt generator",
-              "Zero runtime dependencies",
-              "Configure keys locally",
+              "Prospect Automation Engine + MCP Kit (.zip)",
+              "6 MCP tools with human approval gate",
+              "Canonical 7-node and 9-node n8n JSON",
+              "Delivery Framework A & B prompt templates",
+              "Works in Claude Code, Cursor & Antigravity",
             ]}
             cta={
               <Link href="/packages" style={{ textDecoration: "none" }}>
                 <Button variant="outline" fullWidth>
-                  Get DIY Package — $19.99
+                  Download agent kits
                 </Button>
               </Link>
             }
@@ -750,23 +1263,23 @@ export default function HomePage() {
 
           <PricingCard
             featured
-            name="Team Edition"
+            name="Vertical Outbound Platform"
             price="$99"
             cadence="/ month"
             note="Cancel anytime · 100% BYOK"
-            description="For growth teams and agencies scaling outbound. Unlimited campaign generation with master compiler and live execution reporting."
+            description="Full interactive vertical outbound studio, hosted MCP endpoint, PAL workflow compiler, and unlimited campaign builds."
             features={[
-              "Agent copilot tailored to stack & ICP",
-              "Twenty CRM, HubSpot & Salesforce sync",
-              "Continuous daily execution triage",
-              "Multi-platform JSON generator",
-              "Daily execution & reply reports",
-              "Unlimited custom campaigns",
+              "1 ICP / Signal to full 6-step outbound flow",
+              "Hosted Streamable HTTP MCP key (sg_live_...)",
+              "HubSpot, Salesforce, Clay & Apollo adapters",
+              "1-click Slack & dashboard approval gate",
+              "All 3 ROSTR agents (Outbound, Inbound, Hygiene)",
+              "Direct push to your n8n or Cloudflare instance",
             ]}
             cta={
               <Link href="/checkout?plan=pro" style={{ textDecoration: "none" }}>
                 <Button variant="accent" fullWidth iconRight="ArrowRight">
-                  Start Team Plan
+                  Compile outbound engine
                 </Button>
               </Link>
             }
@@ -774,21 +1287,21 @@ export default function HomePage() {
 
           <PricingCard
             tone="sunken"
-            name="Enterprise Custom"
+            name="Custom Revenue Engine"
             price="Custom"
-            note="White-glove architecture"
-            description="For organizations requiring customized agent platform harnesses, private VPC deployment, and hands-on GTM engineering."
+            note="Live in 30 days · White-glove build"
+            description="We audit your funnel, design the architecture, and deploy functioning AI outbound engines inside your CRM and sequencer."
             features={[
-              "Everything in Team Edition",
-              "Dedicated GTM automation setup",
-              "Custom connector development",
-              "Private VPC / Air-gapped deployment",
-              "Priority engineering SLAs",
+              "Complete 30-day SalesGency architecture build",
+              "Custom Clay, ZoomInfo & Apollo waterfalls",
+              "CRM deduplication shield & historical cleanup",
+              "Dedicated Slack approval & rep inbox routing",
+              "Full handover of prompts, workflows & keys",
             ]}
             cta={
               <Link href="/checkout?plan=core" style={{ textDecoration: "none" }}>
                 <Button variant="outline" fullWidth>
-                  Contact Enterprise
+                  Book architecture audit
                 </Button>
               </Link>
             }
@@ -796,67 +1309,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Closing Magnetic CTA ── */}
-      <section
-        style={{
-          background: "linear-gradient(180deg, var(--surface-sunken) 0%, #0B0F16 100%)",
-          color: "#FFFFFF",
-          padding: "96px 24px",
-          textAlign: "center",
-        }}
-      >
-        <div style={{ maxWidth: "680px", margin: "0 auto" }}>
-          <div
-            style={{
-              fontSize: "12px",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.15em",
-              color: "#8DA2FB",
-              marginBottom: "16px",
-            }}
-          >
-            Ready to Automate?
-          </div>
-          <h2
-            style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(32px, 4.5vw, 48px)",
-              fontWeight: 800,
-              letterSpacing: "-0.03em",
-              lineHeight: 1.15,
-              margin: "0 0 18px",
-            }}
-          >
-            Build your high-converting sales motion in minutes
-          </h2>
-          <p
-            style={{
-              fontSize: "16px",
-              color: "#98A2B3",
-              lineHeight: 1.6,
-              margin: "0 auto 36px",
-              maxWidth: "520px",
-            }}
-          >
-            Research target accounts, filter out existing pipeline, write bespoke emails, and sync automatically to your CRM.
-          </p>
-
-          <Link href="/checkout?plan=pro" style={{ textDecoration: "none" }}>
-            <Button variant="accent" size="lg" iconRight="ArrowRight">
-              Build your first workflow
-            </Button>
-          </Link>
-        </div>
-      </section>
-
-      {/* ── Minimalist SaaS Footer ── */}
+      {/* FOOTER */}
       <footer
         style={{
-          background: "#0B0F16",
-          borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+          background: "var(--surface-deep)",
+          borderTop: "1px solid var(--border-deep)",
           padding: "48px 24px",
-          color: "#98A2B3",
+          color: "var(--ink-300)",
           fontSize: "13px",
         }}
       >
@@ -872,35 +1331,35 @@ export default function HomePage() {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Logo size={24} />
-            <span>© 2026 Prospect PAL. Sovereign GTM automation engine.</span>
+            <Logo size={26} onDeep />
+            <span>
+              SalesGency × Diamitani Industries · Built by Patrick Diamitani
+            </span>
           </div>
 
-          <div style={{ display: "flex", gap: 24 }}>
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
             {[
-              { label: "Pipeline", href: "#pipeline" },
-              { label: "Integrations", href: "#integrations" },
-              { label: "Pricing", href: "#pricing" },
-              { label: "Templates", href: "/templates" },
-              { label: "Security", href: "#" },
+              { label: "Vertical App", href: "#vertical-app" },
+              { label: "6-Step Flow", href: "#flow" },
+              { label: "Architecture", href: "/how-it-works" },
+              { label: "Agent Marketplace", href: "/packages" },
+              { label: "Workflow JSON", href: "/templates" },
+              { label: "MCP Discovery API", href: "/api/mcp" },
             ].map((link) => (
-              <a
+              <Link
                 key={link.label}
                 href={link.href}
                 style={{
-                  color: "#98A2B3",
+                  color: "var(--ink-300)",
                   textDecoration: "none",
-                  transition: "color 0.15s ease",
                 }}
-                className="hover:text-white"
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
           </div>
         </div>
       </footer>
-
     </div>
   );
 }

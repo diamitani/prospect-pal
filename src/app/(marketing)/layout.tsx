@@ -2,14 +2,33 @@ import "../globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Prospect PAL — Build your outbound automation",
-  description: "Answer eight questions. Get a nine-node n8n workflow you own, with AI-written 3-sentence PAS emails. Deploys to your instance.",
-  keywords: ["n8n", "outbound automation", "sales automation", "GTM", "cold email", "lead generation"],
+  title: "SalesGency Prospect Automation Engine - 1 ICP to Full Outbound Workflow",
+  description:
+    "Scale qualified outbound pipeline with an autonomous sales engine that finds ICP accounts, extracts decision-makers, and writes hyper-personalized emails on behalf of your reps.",
+  keywords: [
+    "outbound automation",
+    "GTM engineering",
+    "ROSTR agent",
+    "PAL compiler",
+    "MCP server",
+    "n8n workflow",
+    "SalesGency",
+  ],
 };
 
-export default function MarketingLayout({ children }: { children: React.ReactNode }) {
+export default function MarketingLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <div style={{ fontFamily: "var(--font-body)", background: "var(--surface-page)", minHeight: "100vh" }}>
+    <div
+      style={{
+        fontFamily: "var(--font-body)",
+        background: "var(--surface-page)",
+        minHeight: "100dvh",
+      }}
+    >
       {children}
     </div>
   );

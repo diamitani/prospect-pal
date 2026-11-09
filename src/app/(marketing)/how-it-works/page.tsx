@@ -8,110 +8,66 @@ import {
   Icon,
   SectionHeading,
 } from "@/components/ds";
+import {
+  SIX_STEP_AUTOMATION_FLOW,
+  ARCHITECTURE_BLUEPRINT_NODES,
+  ROSTR_AGENTS,
+  ROSTR_RUNTIME_MODULES,
+} from "@/lib/rostr/agents-registry";
 
-const COMPILE_STEPS = [
+const TEST_SUITE_GROUPS = [
   {
-    step: "01",
-    title: "Gather User Input",
-    action: "Collect instruction pack",
-    runtime: "ICP, persona, product, company, tools",
-    details: "Company background, product/offer, ICP criteria (firmographics, signals, disqualifiers), persona titles and departments, and stack bindings.",
+    suite: "Manifest & Schema Validation",
+    stats: "6/6 Passed",
+    checks: [
+      "Validates all 3 agent manifests (prospect-automation-engine, inbound-responder, crm-hygiene)",
+      "Rejects missing required fields and invalid semver versions",
+      "Blocks plaintext API keys or raw credentials in any manifest or workflow",
+      "Enforces approvalGates subset against tools with requiresApproval=true",
+    ],
   },
   {
-    step: "02",
-    title: "Create Trigger Node",
-    action: "Schedule search OR CSV webhook",
-    runtime: "CRM stage filter to exclude deals/opps",
-    details: "Daily ICP search via data tool, or webhook endpoint for CSV uploads. Filters out companies already in active deals or opportunities.",
+    suite: "Agent Registry & Discovery",
+    stats: "5/5 Passed",
+    checks: [
+      "Discovers and indexes all 3 agents from disk and memory",
+      "Returns public catalog summary with pricing, tools, and node counts",
+      "Loads full agent bundle including agent.json, soul.md, SKILL.md, tools.json, workflow.n8n.json",
+    ],
   },
   {
-    step: "03",
-    title: "Configure Data Node",
-    action: "Company enrich + people search",
-    runtime: "HTTP/connector → contact table",
-    details: "Map company to data tool API. Filter by departments, titles, and signals. Cap contacts per company (default: 3).",
+    suite: "Licensing & Entitlements",
+    stats: "5/5 Passed",
+    checks: [
+      "Verifies HMAC-SHA256 signed license tokens and expiration timestamps",
+      "Rejects tampered signatures and expired tokens",
+      "Checks per-agent entitlement for one-time, pro, and agency tiers",
+    ],
   },
   {
-    step: "04",
-    title: "Configure CRM Node",
-    action: "Batch create-or-update contacts",
-    runtime: "Match on email or domain",
-    details: "Never duplicate existing records. Attach source, persona, and campaign tags. Create company first, then contacts.",
+    suite: "Streamable HTTP MCP & Approval Gates",
+    stats: "13/13 Passed",
+    checks: [
+      "Executes all 6 outbound step tools over JSON-RPC 2.0",
+      "Blocks unapproved enroll_outreach calls with status=requires_approval",
+      "Prevents AI clients from self-approving without human HMAC secret",
+      "Dispatches exact approved payload once and rejects replay attempts",
+    ],
   },
-  {
-    step: "05",
-    title: "Configure Research",
-    action: "AI + web search",
-    runtime: "→ pain_hypothesis, value_prop",
-    details: "Compile system prompt from intake. Gather live company intel. Draft value proposition and talking points.",
-  },
-  {
-    step: "06",
-    title: "Configure Messaging",
-    action: "AI → emails 1-7 + LinkedIn",
-    runtime: "PAS framework",
-    details: "Problem-Agitate-Solve templates. Subject + body per email. Connection note, DM, and InMail variants.",
-  },
-  {
-    step: "07",
-    title: "Configure Sequence",
-    action: "Enroll/add-to-list/mailbox send",
-    runtime: "Map contact + copy to outreach",
-    details: "Connect to rep's mailbox. Route through approval gate or direct enroll based on policy.",
-  },
-];
-
-const NINE_NODES = [
-  { id: "01", name: "Intake & Cron", binding: "n8n-nodes-base.cron", description: "Schedule trigger (daily ICP search) OR webhook (CSV upload)" },
-  { id: "02", name: "Normalizer", binding: "n8n-nodes-base.set", description: "Schema transform, field mapping, validation" },
-  { id: "03", name: "CRM Dedupe", binding: "n8n-nodes-base.hubspot", description: "Check existing contacts/deals, skip if already in pipeline" },
-  { id: "04", name: "Data Adapter", binding: "n8n-nodes-base.httpRequest", description: "HTTP Request to data tool for company enrich + people search" },
-  { id: "05", name: "Research + PAS", binding: "n8n-nodes-base.openai", description: "AI node: company research → pain hypothesis → value prop" },
-  { id: "06", name: "Approval Switch", binding: "n8n-nodes-base.switch", description: "Route to human approval or auto-proceed based on policy" },
-  { id: "07", name: "CRM Upsert", binding: "n8n-nodes-base.hubspot", description: "Create or update contact + company in CRM" },
-  { id: "08", name: "Sequence Enroll", binding: "n8n-nodes-base.httpRequest", description: "Add to outreach sequence or direct mailbox send" },
-  { id: "09", name: "Review Alert", binding: "n8n-nodes-base.slack", description: "Slack/email notification of enrolled prospects" },
-];
-
-const TOOL_REGISTRY = {
-  crms: ["HubSpot", "Salesforce", "Zoho", "Pipedrive", "Attio"],
-  llms: ["Anthropic Claude", "OpenAI", "Azure OpenAI", "AWS Bedrock", "OpenRouter", "Google Gemini"],
-  data: ["Clay", "Apollo", "ZoomInfo", "Amplemarket", "Reply.io"],
-  outreach: ["HubSpot Sales", "Salesforce", "Amplemarket", "Instantly", "Smartlead", "Zoho", "Resend", "Gmail"],
-};
-
-const OUTPUT_FILES = [
-  { file: "workflow.json", description: "Importable n8n workflow with all 9 nodes wired" },
-  { file: "ai/research.system_prompt.md", description: "AI system prompt for research node" },
-  { file: "ai/email.system_prompt.md", description: "AI system prompt for email generation" },
-  { file: "CREDENTIALS.md", description: "Setup instructions for each credential (no secrets)" },
-  { file: "TEST.md", description: "QA checklist to validate before going live" },
-  { file: "ack.json", description: "Compile receipt with status, bindings, and requires_connection[]" },
-];
-
-const HARD_GATES = [
-  { gate: "Company background", example: "What does the company do?" },
-  { gate: "Product / offer / proof", example: "What are they selling? Any banned claims?" },
-  { gate: "ICP", example: "Firmographics, signals, disqualifiers" },
-  { gate: "Persona", example: "Job titles, departments" },
-  { gate: "Data tool", example: "Apollo, Clay, ZoomInfo, Amplemarket" },
-  { gate: "LLM provider", example: "Anthropic, OpenAI, Azure, Bedrock" },
-  { gate: "Trigger type", example: "search (daily) or csv (webhook)" },
-  { gate: "Approval policy", example: "auto-send, human approval, draft-only" },
 ];
 
 export default function HowItWorksPage() {
   return (
-    <>
-      {/* Navigation */}
+    <div style={{ minHeight: "100vh", background: "var(--surface-page)" }}>
+      {/* Top Navigation (<= 80px single-line) */}
       <nav
         style={{
           position: "sticky",
           top: 0,
           zIndex: 40,
-          height: 66,
+          height: 68,
           padding: "0 32px",
-          background: "rgba(251,250,248,0.86)",
+          background: "rgba(251,250,248,0.88)",
           backdropFilter: "blur(14px)",
           borderBottom: "1px solid var(--border-hairline)",
           display: "flex",
@@ -120,412 +76,852 @@ export default function HowItWorksPage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Link href="/home" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
-            <Logo size={34} />
+          <Link
+            href="/home"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              textDecoration: "none",
+            }}
+          >
+            <Logo size={32} />
           </Link>
-          <Badge tone="brand">Documentation</Badge>
+          <Badge tone="brand">Architecture Brief</Badge>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
-          <Link href="/home" style={{ fontSize: "var(--text-body-sm)", fontWeight: 500, color: "var(--text-secondary)", textDecoration: "none" }}>
-            Home
+
+        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+          <Link
+            href="/home#workbench"
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              color: "var(--text-secondary)",
+              textDecoration: "none",
+            }}
+          >
+            Vertical Workbench
           </Link>
+          <Link
+            href="/packages"
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              color: "var(--text-secondary)",
+              textDecoration: "none",
+            }}
+          >
+            MCP &amp; Marketplace
+          </Link>
+          <Link
+            href="/templates"
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              color: "var(--text-secondary)",
+              textDecoration: "none",
+            }}
+          >
+            Templates
+          </Link>
+          <Link
+            href="/home#pricing"
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              color: "var(--text-secondary)",
+              textDecoration: "none",
+            }}
+          >
+            Pricing
+          </Link>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Link href="/login">
-            <Button variant="outline" size="md">Sign in</Button>
+            <Button variant="ghost" size="sm">
+              Sign in
+            </Button>
           </Link>
-          <Link href="/signup">
-            <Button variant="accent" size="md" icon="Zap">Get started</Button>
+          <Link href="/home#workbench">
+            <Button variant="accent" size="sm" icon="Zap">
+              Run 1-ICP Pipeline
+            </Button>
           </Link>
         </div>
       </nav>
 
       {/* Hero */}
-      <section style={{ padding: "64px 32px 48px", maxWidth: "var(--layout-max)", margin: "0 auto" }}>
-        <Badge tone="deep" icon="BookOpen" style={{ marginBottom: 20 }}>Technical documentation</Badge>
-        <h1 style={{
-          fontFamily: "var(--font-display)",
-          fontSize: "var(--text-display-1)",
-          fontWeight: "var(--weight-bold)",
-          letterSpacing: "var(--tracking-display)",
-          lineHeight: "var(--leading-tight)",
-          marginBottom: 16,
-        }}>
-          How the PAE Compiles Workflows
+      <section
+        style={{
+          padding: "64px 32px 48px",
+          maxWidth: "var(--layout-max)",
+          margin: "0 auto",
+        }}
+      >
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "5px 12px",
+            borderRadius: 999,
+            background: "var(--cobalt-50)",
+            border: "1px solid var(--cobalt-100)",
+            color: "var(--cobalt-600)",
+            fontFamily: "var(--font-data)",
+            fontSize: 11,
+            fontWeight: 600,
+            marginBottom: 18,
+          }}
+        >
+          <Icon name="BookOpen" size={13} color="var(--cobalt-600)" />
+          TECHNICAL ARCHITECTURE BRIEF - SALESGENCY X DIAMITANI INDUSTRIES
+        </div>
+
+        <h1
+          style={{
+            fontFamily: "var(--font-display)",
+            fontSize: "clamp(34px, 4.2vw, 52px)",
+            fontWeight: 700,
+            letterSpacing: "-0.025em",
+            lineHeight: 1.1,
+            margin: "0 0 16px",
+            color: "var(--text-primary)",
+          }}
+        >
+          From 1 Buying Signal to a Production Outbound Engine.
         </h1>
-        <p style={{
-          fontSize: 19,
-          lineHeight: "var(--leading-relaxed)",
-          color: "var(--text-secondary)",
-          maxWidth: 720,
-        }}>
-          The Prospect Automation Engineer (PAE) transforms your business context into a production-ready n8n workflow.
-          Two compilers work together: the prompt compiler generates AI instructions, the graph compiler produces workflow JSON.
+
+        <p
+          style={{
+            fontSize: 18,
+            lineHeight: 1.6,
+            color: "var(--text-secondary)",
+            maxWidth: 740,
+            margin: 0,
+          }}
+        >
+          We do not force you to abandon your existing GTM stack. SalesGency
+          layers a 6-step autonomous pipeline, 7-node n8n orchestration blueprint,
+          and Streamable HTTP MCP server directly over your CRM, data providers,
+          and email sequencers.
         </p>
       </section>
 
-      {/* Two Compilers */}
-      <section style={{ padding: "48px 32px", background: "var(--surface-sunken)", borderTop: "1px solid var(--border-hairline)", borderBottom: "1px solid var(--border-hairline)" }}>
+      {/* Section 1: The 6-Step Automation Flow (3 Phases) */}
+      <section
+        style={{
+          padding: "56px 32px 72px",
+          background: "var(--surface-sunken)",
+          borderTop: "1px solid var(--border-hairline)",
+          borderBottom: "1px solid var(--border-hairline)",
+        }}
+      >
         <div style={{ maxWidth: "var(--layout-max)", margin: "0 auto" }}>
           <SectionHeading
-            eyebrow="Architecture"
-            title="Two Compilers"
-            description="Separate concerns for maximum flexibility. Change your AI provider without rewiring the graph."
+            eyebrow="Phase 1 to Phase 3"
+            title="The 6-Step Automation Flow"
+            description="Every step maps 1:1 to a callable MCP tool (/api/mcp) and a modular n8n sub-workflow."
           />
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginTop: 36 }}>
-            <div style={{ padding: 28, background: "var(--surface-card)", borderRadius: "var(--radius-xl)", border: "1px solid var(--border-hairline)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                <div style={{ width: 48, height: 48, borderRadius: "var(--radius-lg)", background: "var(--cobalt-100)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Icon name="Sparkles" size={24} color="var(--cobalt-600)" />
-                </div>
-                <div>
-                  <h3 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-body-lg)", fontWeight: 600, margin: 0 }}>Prompt Compiler</h3>
-                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>AI instruction generation</span>
-                </div>
-              </div>
-              <div style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.6 }}>
-                <strong style={{ color: "var(--text-primary)" }}>Input:</strong> Company, product, ICP, persona<br />
-                <strong style={{ color: "var(--text-primary)" }}>Output:</strong> AI system prompts for research and email nodes
-              </div>
-            </div>
-            <div style={{ padding: 28, background: "var(--surface-card)", borderRadius: "var(--radius-xl)", border: "1px solid var(--border-hairline)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                <div style={{ width: 48, height: 48, borderRadius: "var(--radius-lg)", background: "var(--signal-info-bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Icon name="Workflow" size={24} color="var(--signal-info)" />
-                </div>
-                <div>
-                  <h3 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-body-lg)", fontWeight: 600, margin: 0 }}>Graph Compiler</h3>
-                  <span style={{ fontSize: 13, color: "var(--text-muted)" }}>n8n workflow generation</span>
-                </div>
-              </div>
-              <div style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.6 }}>
-                <strong style={{ color: "var(--text-primary)" }}>Input:</strong> Trigger, CRM, data tool, sequencer, LLM<br />
-                <strong style={{ color: "var(--text-primary)" }}>Output:</strong> n8n workflow.json + credential setup
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Hard Gates */}
-      <section style={{ padding: "64px 32px", maxWidth: "var(--layout-max)", margin: "0 auto" }}>
-        <SectionHeading
-          eyebrow="Requirements"
-          title="8 Hard Gates"
-          description="These fields must be collected before compile. The system will not generate a workflow until all gates are satisfied."
-        />
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginTop: 36 }}>
-          {HARD_GATES.map((item, i) => (
-            <div key={item.gate} style={{
-              padding: "20px 18px",
-              background: "var(--surface-card)",
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid var(--border-hairline)",
-            }}>
-              <div style={{ fontFamily: "var(--font-data)", fontSize: 10, fontWeight: 700, color: "var(--text-muted)", letterSpacing: 1, marginBottom: 8 }}>
-                GATE {String(i + 1).padStart(2, "0")}
-              </div>
-              <div style={{ fontWeight: 600, color: "var(--text-primary)", marginBottom: 4, fontSize: 14 }}>{item.gate}</div>
-              <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{item.example}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 7-Step Compile Process */}
-      <section style={{ padding: "64px 32px", background: "var(--surface-sunken)", borderTop: "1px solid var(--border-hairline)", borderBottom: "1px solid var(--border-hairline)" }}>
-        <div style={{ maxWidth: "var(--layout-max)", margin: "0 auto" }}>
-          <SectionHeading
-            eyebrow="Compile procedure"
-            title="7-Step Process"
-            description="From user input to running workflow. Each step maps to specific n8n nodes."
-          />
-          <div style={{ marginTop: 36 }}>
-            {COMPILE_STEPS.map((step, i) => (
-              <div key={step.step} style={{
-                display: "grid",
-                gridTemplateColumns: "80px 1fr",
-                gap: 24,
-                padding: "28px 0",
-                borderBottom: i < COMPILE_STEPS.length - 1 ? "1px solid var(--border-hairline)" : "none",
-              }}>
-                <div style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: "var(--radius-lg)",
+          <div
+            style={{
+              marginTop: 36,
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: 18,
+            }}
+          >
+            {SIX_STEP_AUTOMATION_FLOW.map((s) => (
+              <div
+                key={s.step}
+                style={{
+                  padding: 24,
                   background: "var(--surface-card)",
+                  borderRadius: "var(--radius-xl)",
                   border: "1px solid var(--border-hairline)",
+                  boxShadow: "var(--shadow-card)",
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontFamily: "var(--font-data)",
-                  fontSize: 18,
-                  fontWeight: 700,
-                  color: "var(--cobalt-600)",
-                }}>
-                  {step.step}
-                </div>
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                }}
+              >
                 <div>
-                  <h3 style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-body-lg)", fontWeight: 600, margin: "0 0 6px", color: "var(--text-primary)" }}>
-                    {step.title}
-                  </h3>
-                  <div style={{ fontSize: 14, color: "var(--cobalt-600)", fontWeight: 500, marginBottom: 8 }}>
-                    {step.action} <span style={{ color: "var(--text-muted)" }}>→</span> {step.runtime}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      marginBottom: 12,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "var(--font-data)",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: "var(--cobalt-600)",
+                        background: "var(--cobalt-50)",
+                        padding: "3px 8px",
+                        borderRadius: 6,
+                      }}
+                    >
+                      STEP {s.step}
+                    </span>
+                    <code
+                      style={{
+                        fontFamily: "var(--font-data)",
+                        fontSize: 11,
+                        color: "var(--text-muted)",
+                      }}
+                    >
+                      {s.mcpTool}
+                    </code>
                   </div>
-                  <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.6, margin: 0 }}>
-                    {step.details}
+
+                  <div
+                    style={{
+                      fontFamily: "var(--font-data)",
+                      fontSize: 10,
+                      fontWeight: 600,
+                      color: "var(--text-muted)",
+                      textTransform: "uppercase",
+                      marginBottom: 4,
+                    }}
+                  >
+                    {s.phase}
+                  </div>
+
+                  <h3
+                    style={{
+                      margin: "0 0 6px",
+                      fontFamily: "var(--font-display)",
+                      fontSize: 19,
+                      fontWeight: 700,
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    {s.title}
+                  </h3>
+
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: "var(--cobalt-600)",
+                      marginBottom: 10,
+                    }}
+                  >
+                    {s.subtitle}
+                  </div>
+
+                  <p
+                    style={{
+                      fontSize: 13,
+                      color: "var(--text-secondary)",
+                      lineHeight: 1.55,
+                      marginBottom: 16,
+                    }}
+                  >
+                    {s.description}
                   </p>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* 9-Node Pipeline */}
-      <section style={{ padding: "64px 32px", maxWidth: "var(--layout-max)", margin: "0 auto" }}>
-        <SectionHeading
-          eyebrow="Pipeline architecture"
-          title="9-Node Capability Path"
-          description="Every compiled workflow follows this node order. Nodes can be skipped based on configuration, but the order is fixed."
-        />
-
-        {/* Pipeline Visual */}
-        <div style={{
-          marginTop: 36,
-          padding: 32,
-          background: "var(--surface-deep)",
-          borderRadius: "var(--radius-xl)",
-          border: "1px solid var(--border-deep)",
-        }}>
-          <pre style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 13,
-            color: "var(--ink-200)",
-            lineHeight: 2,
-            margin: 0,
-            textAlign: "center",
-          }}>
-{`01 Intake & Cron    →  02 Normalizer     →  03 CRM Dedupe
-        ↓                     ↓                    ↓
-04 Data Adapter     →  05 Research+PAS   →  06 Approval
-        ↓                     ↓                    ↓
-07 CRM Upsert       →  08 Enroll         →  09 Review Alert`}
-          </pre>
-        </div>
-
-        {/* Node Details */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginTop: 28 }}>
-          {NINE_NODES.map((node) => (
-            <div key={node.id} style={{
-              padding: "18px 16px",
-              background: "var(--surface-card)",
-              borderRadius: "var(--radius-lg)",
-              border: "1px solid var(--border-hairline)",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                <div style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 6,
-                  background: "var(--cobalt-100)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontFamily: "var(--font-data)",
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: "var(--cobalt-600)",
-                }}>
-                  {node.id}
-                </div>
-                <div style={{ fontWeight: 600, fontSize: 14, color: "var(--text-primary)" }}>{node.name}</div>
-              </div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-muted)", marginBottom: 8 }}>
-                {node.binding}
-              </div>
-              <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>
-                {node.description}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Supported Tools */}
-      <section style={{ padding: "64px 32px", background: "var(--surface-sunken)", borderTop: "1px solid var(--border-hairline)", borderBottom: "1px solid var(--border-hairline)" }}>
-        <div style={{ maxWidth: "var(--layout-max)", margin: "0 auto" }}>
-          <SectionHeading
-            eyebrow="Integrations"
-            title="Supported Tools Registry"
-            description="These tools are supported out of the box. Most use HTTP Request nodes with credential placeholders."
-          />
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20, marginTop: 36 }}>
-            {[
-              { label: "CRMs", items: TOOL_REGISTRY.crms, color: "#FF7A59" },
-              { label: "LLM Providers", items: TOOL_REGISTRY.llms, color: "#8B5CF6" },
-              { label: "Data Tools", items: TOOL_REGISTRY.data, color: "#3B82F6" },
-              { label: "Outreach", items: TOOL_REGISTRY.outreach, color: "#10B981" },
-            ].map((category) => (
-              <div key={category.label} style={{
-                padding: 24,
-                background: "var(--surface-card)",
-                borderRadius: "var(--radius-xl)",
-                border: "1px solid var(--border-hairline)",
-              }}>
-                <div style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  letterSpacing: 1.2,
-                  color: category.color,
-                  marginBottom: 14,
-                  fontFamily: "var(--font-data)",
-                }}>
-                  {category.label.toUpperCase()}
-                </div>
-                <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
-                  {category.items.map((item) => (
-                    <li key={item} style={{ fontSize: 14, color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ width: 5, height: 5, borderRadius: "50%", background: category.color, flexShrink: 0 }} />
-                      {item}
-                    </li>
+                <div
+                  style={{
+                    paddingTop: 12,
+                    borderTop: "1px solid var(--border-hairline)",
+                    display: "grid",
+                    gap: 6,
+                  }}
+                >
+                  {s.highlights.map((h) => (
+                    <div
+                      key={h}
+                      style={{
+                        fontSize: 12,
+                        color: "var(--text-primary)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <Icon
+                        name="Check"
+                        size={13}
+                        color="var(--signal-good)"
+                      />
+                      <span>{h}</span>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Output Files */}
-      <section style={{ padding: "64px 32px", maxWidth: "var(--layout-max)", margin: "0 auto" }}>
-        <SectionHeading
-          eyebrow="Compile output"
-          title="What You Get"
-          description="Each compile produces these files. Review them before importing to n8n."
-        />
-        <div style={{ marginTop: 36, background: "var(--surface-deep)", borderRadius: "var(--radius-xl)", border: "1px solid var(--border-deep)", overflow: "hidden" }}>
-          {OUTPUT_FILES.map((file, i) => (
-            <div key={file.file} style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 16,
-              padding: "16px 24px",
-              borderBottom: i < OUTPUT_FILES.length - 1 ? "1px solid var(--border-deep)" : "none",
-            }}>
-              <div style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: 13,
-                color: "var(--champagne-300)",
-                minWidth: 240,
-              }}>
-                {file.file}
+      {/* Section 2: Deep Dive - Induced vs Deduced Signals & Delivery Frameworks A/B */}
+      <section
+        style={{
+          padding: "72px 32px",
+          maxWidth: "var(--layout-max)",
+          margin: "0 auto",
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 24,
+          }}
+        >
+          {/* Step 4 Deep Dive */}
+          <div
+            style={{
+              padding: 28,
+              borderRadius: "var(--radius-xl)",
+              background: "var(--surface-card)",
+              border: "1px solid var(--border-hairline)",
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "var(--font-data)",
+                fontSize: 11,
+                fontWeight: 700,
+                color: "var(--cobalt-600)",
+                marginBottom: 8,
+              }}
+            >
+              STEP 04 DEEP RESEARCH (`research_prospect`)
+            </div>
+            <h3
+              style={{
+                margin: "0 0 12px",
+                fontFamily: "var(--font-display)",
+                fontSize: 22,
+                fontWeight: 700,
+                color: "var(--text-primary)",
+              }}
+            >
+              Induced Facts vs. Deduced Pain Signals
+            </h3>
+            <p
+              style={{
+                fontSize: 14,
+                color: "var(--text-secondary)",
+                lineHeight: 1.6,
+                marginBottom: 18,
+              }}
+            >
+              Our research engine separates verifiable facts from strategic
+              inferences so copywriters and AI agents never fabricate claims.
+            </p>
+            <div style={{ display: "grid", gap: 12 }}>
+              <div
+                style={{
+                  padding: 14,
+                  borderRadius: "var(--radius-md)",
+                  background: "var(--surface-sunken)",
+                  border: "1px solid var(--border-hairline)",
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "var(--font-data)",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "var(--signal-good)",
+                    marginBottom: 4,
+                  }}
+                >
+                  INDUCED SIGNALS (DIRECT OBSERVATIONS)
+                </div>
+                <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                  Explicit facts scraped from press releases, job boards, and
+                  LinkedIn posts (e.g., &quot;3 open SDR roles posted in the last 14
+                  days&quot;).
+                </div>
               </div>
-              <div style={{ fontSize: 14, color: "var(--ink-300)" }}>
-                {file.description}
+              <div
+                style={{
+                  padding: 14,
+                  borderRadius: "var(--radius-md)",
+                  background: "var(--surface-sunken)",
+                  border: "1px solid var(--border-hairline)",
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "var(--font-data)",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "var(--cobalt-600)",
+                    marginBottom: 4,
+                  }}
+                >
+                  DEDUCED SIGNALS (AI STRATEGIC INFERENCES)
+                </div>
+                <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                  Operational bottlenecks inferred from the induced facts (e.g.,
+                  &quot;Manual list-building is creating a 60+ min/day research
+                  bottleneck per rep&quot;).
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 5 Deep Dive */}
+          <div
+            style={{
+              padding: 28,
+              borderRadius: "var(--radius-xl)",
+              background: "var(--surface-card)",
+              border: "1px solid var(--border-hairline)",
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "var(--font-data)",
+                fontSize: 11,
+                fontWeight: 700,
+                color: "var(--cobalt-600)",
+                marginBottom: 8,
+              }}
+            >
+              STEP 05 PERSONALIZATION (`write_email`)
+            </div>
+            <h3
+              style={{
+                margin: "0 0 12px",
+                fontFamily: "var(--font-display)",
+                fontSize: 22,
+                fontWeight: 700,
+                color: "var(--text-primary)",
+              }}
+            >
+              Two Flexible Delivery Frameworks
+            </h3>
+            <p
+              style={{
+                fontSize: 14,
+                color: "var(--text-secondary)",
+                lineHeight: 1.6,
+                marginBottom: 18,
+              }}
+            >
+              Choose between generating the complete email or generating a
+              drop-in middle token for existing CRM sequences.
+            </p>
+            <div style={{ display: "grid", gap: 12 }}>
+              <div
+                style={{
+                  padding: 14,
+                  borderRadius: "var(--radius-md)",
+                  background: "var(--surface-sunken)",
+                  border: "1px solid var(--border-hairline)",
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "var(--font-data)",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "var(--text-primary)",
+                    marginBottom: 4,
+                  }}
+                >
+                  FRAMEWORK A: FULL-BODY GENERATION
+                </div>
+                <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                  Generates the complete email from greeting (`Hi First_Name,`)
+                  to sign-off. Ideal for standalone autonomous campaigns.
+                </div>
+              </div>
+              <div
+                style={{
+                  padding: 14,
+                  borderRadius: "var(--radius-md)",
+                  background: "var(--cobalt-50)",
+                  border: "1px solid var(--cobalt-100)",
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "var(--font-data)",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "var(--cobalt-600)",
+                    marginBottom: 4,
+                  }}
+                >
+                  FRAMEWORK B: MODULAR BODY ONLY (`{"{{email_body_token}}"}`)
+                </div>
+                <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+                  Outputs only the 2-3 sentence personalized middle paragraph.
+                  Injected directly into `Hi [Name], {"{{email_body_token}}"} Best,
+                  [Signature]`.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 3: 7-Node Production Architecture Blueprint & C4 Architecture */}
+      <section
+        style={{
+          padding: "72px 32px",
+          background: "var(--surface-deep)",
+          color: "var(--paper-0)",
+        }}
+      >
+        <div style={{ maxWidth: "var(--layout-max)", margin: "0 auto" }}>
+          <div style={{ marginBottom: 32 }}>
+            <div
+              style={{
+                fontFamily: "var(--font-data)",
+                fontSize: 11,
+                fontWeight: 700,
+                color: "var(--champagne-300)",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                marginBottom: 8,
+              }}
+            >
+              System Architecture Blueprint
+            </div>
+            <h2
+              style={{
+                margin: "0 0 10px",
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(26px, 3vw, 36px)",
+                fontWeight: 700,
+              }}
+            >
+              7-Node Production Workflow &amp; ROSTR Runtime
+            </h2>
+            <p
+              style={{
+                margin: 0,
+                fontSize: 15,
+                color: "var(--ink-300)",
+                maxWidth: 680,
+              }}
+            >
+              Built for resilience, zero duplicate outreach, and strict
+              human-in-the-loop safety gates.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(7, 1fr)",
+              gap: 10,
+              marginBottom: 32,
+            }}
+          >
+            {ARCHITECTURE_BLUEPRINT_NODES.map((node) => (
+              <div
+                key={node.id}
+                style={{
+                  padding: 16,
+                  borderRadius: "var(--radius-lg)",
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid var(--border-deep)",
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: "var(--font-data)",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "var(--champagne-300)",
+                    marginBottom: 6,
+                  }}
+                >
+                  NODE {node.id}
+                </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: "var(--paper-0)",
+                    marginBottom: 6,
+                  }}
+                >
+                  {node.title}
+                </div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "var(--ink-300)",
+                    lineHeight: 1.45,
+                  }}
+                >
+                  {node.caption}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Runtime Modules */}
+          <div
+            style={{
+              padding: 24,
+              borderRadius: "var(--radius-xl)",
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid var(--border-deep)",
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "var(--font-data)",
+                fontSize: 11,
+                fontWeight: 700,
+                color: "var(--champagne-300)",
+                marginBottom: 14,
+              }}
+            >
+              ROSTR RUNTIME &amp; PACKAGING ENGINE MODULES
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(5, 1fr)",
+                gap: 14,
+              }}
+            >
+              {ROSTR_RUNTIME_MODULES.map((m) => (
+                <div key={m.path}>
+                  <code
+                    style={{
+                      fontFamily: "var(--font-data)",
+                      fontSize: 11,
+                      color: "var(--paper-0)",
+                      display: "block",
+                      marginBottom: 6,
+                    }}
+                  >
+                    {m.path}
+                  </code>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "var(--ink-300)",
+                      lineHeight: 1.45,
+                    }}
+                  >
+                    {m.responsibility}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 4: Verification & Test Suite */}
+      <section
+        style={{
+          padding: "72px 32px",
+          maxWidth: "var(--layout-max)",
+          margin: "0 auto",
+        }}
+      >
+        <SectionHeading
+          eyebrow="Production Readiness"
+          title="Automated Verification & Security Guarantees"
+          description="Every ROSTR agent package and MCP tool call is verified against deterministic schema, entitlement, and approval-gate test suites."
+        />
+
+        <div
+          style={{
+            marginTop: 32,
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
+            gap: 18,
+          }}
+        >
+          {TEST_SUITE_GROUPS.map((group) => (
+            <div
+              key={group.suite}
+              style={{
+                padding: 24,
+                borderRadius: "var(--radius-xl)",
+                background: "var(--surface-card)",
+                border: "1px solid var(--border-hairline)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 14,
+                }}
+              >
+                <h3
+                  style={{
+                    margin: 0,
+                    fontFamily: "var(--font-display)",
+                    fontSize: 17,
+                    fontWeight: 700,
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  {group.suite}
+                </h3>
+                <span
+                  style={{
+                    padding: "3px 10px",
+                    borderRadius: 999,
+                    background: "var(--signal-good-bg)",
+                    color: "var(--signal-good)",
+                    fontFamily: "var(--font-data)",
+                    fontSize: 11,
+                    fontWeight: 700,
+                  }}
+                >
+                  {group.stats}
+                </span>
+              </div>
+
+              <div style={{ display: "grid", gap: 8 }}>
+                {group.checks.map((c) => (
+                  <div
+                    key={c}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: 8,
+                      fontSize: 13,
+                      color: "var(--text-secondary)",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    <Icon
+                      name="Check"
+                      size={14}
+                      color="var(--signal-good)"
+                      style={{ marginTop: 2, flexShrink: 0 }}
+                    />
+                    <span>{c}</span>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* Quick Test */}
-      <section style={{ padding: "64px 32px", background: "var(--surface-sunken)", borderTop: "1px solid var(--border-hairline)" }}>
-        <div style={{ maxWidth: "var(--layout-max)", margin: "0 auto" }}>
-          <SectionHeading
-            eyebrow="QA checklist"
-            title="Quick Test Before Going Live"
-            description="Run through this checklist after importing your workflow."
-          />
-          <div style={{ marginTop: 36, display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
-            {[
-              "Import workflow.json to n8n",
-              "Create credentials per CREDENTIALS.md",
-              "Set trigger to manual for testing",
-              "Run with a single test lead",
-              "Verify CRM dedupe logic fires",
-              "Verify AI nodes return valid JSON",
-              "Verify approval gate routes correctly",
-              "Check sequence enrollment (draft mode)",
-              "Review Slack/email notifications",
-              "Switch trigger to schedule when ready",
-            ].map((item, i) => (
-              <div key={i} style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                padding: "14px 18px",
-                background: "var(--surface-card)",
-                borderRadius: "var(--radius-lg)",
-                border: "1px solid var(--border-hairline)",
-              }}>
-                <div style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: 6,
-                  border: "2px solid var(--border-deep)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}>
-                  <span style={{ fontFamily: "var(--font-data)", fontSize: 10, color: "var(--text-muted)" }}>{i + 1}</span>
-                </div>
-                <span style={{ fontSize: 14, color: "var(--text-primary)" }}>{item}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section style={{ padding: "64px 32px", textAlign: "center", background: "var(--surface-deep)" }}>
+      <section
+        style={{
+          padding: "56px 32px",
+          textAlign: "center",
+          background: "var(--surface-sunken)",
+          borderTop: "1px solid var(--border-hairline)",
+        }}
+      >
         <div style={{ maxWidth: 640, margin: "0 auto" }}>
-          <h2 style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "var(--text-display-2)",
-            fontWeight: "var(--weight-bold)",
-            letterSpacing: "var(--tracking-display)",
-            color: "var(--paper-0)",
-            marginBottom: 16,
-          }}>
-            Ready to compile your engine?
+          <h2
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: 30,
+              fontWeight: 700,
+              color: "var(--text-primary)",
+              marginBottom: 12,
+            }}
+          >
+            Test the 6-Step Engine Live
           </h2>
-          <p style={{ fontSize: "var(--text-body)", color: "var(--ink-300)", marginBottom: 28, lineHeight: "var(--leading-relaxed)" }}>
-            Answer the 8 hard gates and we generate your custom workflow in seconds.
+          <p
+            style={{
+              fontSize: 15,
+              color: "var(--text-secondary)",
+              marginBottom: 24,
+              lineHeight: 1.6,
+            }}
+          >
+            Run 1 ICP or buying signal through our vertical workbench or
+            download the ROSTR Agent Kits for your own stack.
           </p>
-          <Link href="/signup">
-            <Button variant="accent" size="lg" icon="Zap">
-              Start building
-            </Button>
-          </Link>
+          <div
+            style={{ display: "flex", justifyContent: "center", gap: 12 }}
+          >
+            <Link href="/home#workbench">
+              <Button variant="accent" size="lg" icon="Zap">
+                Launch Vertical Workbench
+              </Button>
+            </Link>
+            <Link href="/packages">
+              <Button variant="outline" size="lg" icon="Package">
+                Browse Agent Marketplace
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer style={{
-        padding: "40px 32px",
-        borderTop: "1px solid var(--border-hairline)",
-        background: "var(--surface-sunken)",
-      }}>
-        <div style={{
-          maxWidth: "var(--layout-max)",
-          margin: "0 auto",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}>
+      <footer
+        style={{
+          padding: "32px",
+          borderTop: "1px solid var(--border-hairline)",
+          background: "var(--surface-page)",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "var(--layout-max)",
+            margin: "0 auto",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
           <Logo size={26} />
-          <div style={{ fontSize: "var(--text-caption)", color: "var(--text-muted)" }}>
-            2026 Prospect PAL. GTM automation, compiled and handed over.
+          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            2026 SalesGency x Diamitani Industries. Prospect Automation Engine.
           </div>
           <div style={{ display: "flex", gap: 18 }}>
-            {["Home", "Documentation", "Pricing"].map((link) => (
-              <Link key={link} href={link === "Home" ? "/home" : link === "Documentation" ? "/how-it-works" : "/home#pricing"} style={{ fontSize: "var(--text-caption)", color: "var(--text-secondary)", textDecoration: "none" }}>
-                {link}
-              </Link>
-            ))}
+            <Link
+              href="/home"
+              style={{
+                fontSize: 12,
+                color: "var(--text-secondary)",
+                textDecoration: "none",
+              }}
+            >
+              Home
+            </Link>
+            <Link
+              href="/packages"
+              style={{
+                fontSize: 12,
+                color: "var(--text-secondary)",
+                textDecoration: "none",
+              }}
+            >
+              Marketplace
+            </Link>
+            <Link
+              href="/home#pricing"
+              style={{
+                fontSize: 12,
+                color: "var(--text-secondary)",
+                textDecoration: "none",
+              }}
+            >
+              Pricing
+            </Link>
           </div>
         </div>
       </footer>
-    </>
+    </div>
   );
 }
