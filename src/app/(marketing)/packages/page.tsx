@@ -13,7 +13,7 @@ import {
   ROSTR_AGENTS,
   ROSTR_RUNTIME_MODULES,
 } from "@/lib/rostr/agents-registry";
-import { DEMO_API_KEY } from "@/lib/mcp/auth";
+import { DEMO_API_KEY } from "@/lib/mcp/constants";
 
 const PACKAGE_STRUCTURE_FILES = [
   {

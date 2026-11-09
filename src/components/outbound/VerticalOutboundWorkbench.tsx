@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { Badge, Button, Icon } from "@/components/ds";
-import { DEMO_API_KEY } from "@/lib/mcp/auth";
+import { DEMO_API_KEY } from "@/lib/mcp/constants";
 
 interface StepResult {
   status: "idle" | "running" | "done" | "bypassed" | "pending_approval" | "sent" | "error";

@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { authenticate, safeEqual } from "./auth";
 import { AGENT_SLUG, schemas, type Providers } from "./steps";
 import type { Store } from "./types";
@@ -291,42 +290,42 @@ export async function executeMcpToolCall(
 
   try {
     if (toolName === "identify_signals") {
-      const args = z.object(schemas.identify_signals).parse(rawArgs);
+      const args = schemas.identify_signals.parse(rawArgs);
       const out = await providers.identifySignals(args);
       await store.logUsage({ userId, toolName, ok: true });
       return textResult(out);
     }
 
     if (toolName === "build_company_list") {
-      const args = z.object(schemas.build_company_list).parse(rawArgs);
+      const args = schemas.build_company_list.parse(rawArgs);
       const out = await providers.buildCompanyList(args);
       await store.logUsage({ userId, toolName, ok: true });
       return textResult(out);
     }
 
     if (toolName === "find_contacts") {
-      const args = z.object(schemas.find_contacts).parse(rawArgs);
+      const args = schemas.find_contacts.parse(rawArgs);
       const out = await providers.findContacts(args);
       await store.logUsage({ userId, toolName, ok: true });
       return textResult(out);
     }
 
     if (toolName === "research_prospect") {
-      const args = z.object(schemas.research_prospect).parse(rawArgs);
+      const args = schemas.research_prospect.parse(rawArgs);
       const out = await providers.researchProspect(args);
       await store.logUsage({ userId, toolName, ok: true });
       return textResult(out);
     }
 
     if (toolName === "write_email") {
-      const args = z.object(schemas.write_email).parse(rawArgs);
+      const args = schemas.write_email.parse(rawArgs);
       const out = await providers.writeEmail(args);
       await store.logUsage({ userId, toolName, ok: true });
       return textResult(out);
     }
 
     if (toolName === "enroll_outreach") {
-      const args = z.object(schemas.enroll_outreach).parse(rawArgs);
+      const args = schemas.enroll_outreach.parse(rawArgs);
 
       if (!args.approvalId) {
         if (!args.contacts?.length) {
@@ -408,23 +407,21 @@ export async function executeMcpToolCall(
     }
 
     if (toolName === "n8n_architect_and_deploy") {
-      const args = z.object(schemas.n8n_architect_and_deploy).parse(rawArgs);
+      const args = schemas.n8n_architect_and_deploy.parse(rawArgs);
       const out = await providers.n8nArchitectAndDeploy(args);
       await store.logUsage({ userId, toolName, ok: true });
       return textResult(out);
     }
 
     if (toolName === "n8n_inspect_executions") {
-      const args = z.object(schemas.n8n_inspect_executions).parse(rawArgs);
+      const args = schemas.n8n_inspect_executions.parse(rawArgs);
       const out = await providers.n8nInspectExecutions(args);
       await store.logUsage({ userId, toolName, ok: true });
       return textResult(out);
     }
 
     if (toolName === "composio_connect_integration") {
-      const args = z
-        .object(schemas.composio_connect_integration)
-        .parse(rawArgs);
+      const args = schemas.composio_connect_integration.parse(rawArgs);
       const out = await providers.composioConnectIntegration(args);
       await store.logUsage({ userId, toolName, ok: true });
       return textResult(out);

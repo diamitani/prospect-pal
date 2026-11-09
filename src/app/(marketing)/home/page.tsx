@@ -20,7 +20,7 @@ import {
   ROSTR_RUNTIME_MODULES,
   SIX_STEP_AUTOMATION_FLOW,
 } from "@/lib/rostr/agents-registry";
-import { DEMO_API_KEY } from "@/lib/mcp/auth";
+import { DEMO_API_KEY } from "@/lib/mcp/constants";
 
 const PIPELINE_NODES: PipelineNode[] = ARCHITECTURE_BLUEPRINT_NODES.map((n, idx) => ({
   step: idx + 1,

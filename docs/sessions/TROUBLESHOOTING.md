@@ -1,14 +1,26 @@
 # Automated Session Troubleshooting & Incident Guide
-> **Generated:** 2026-10-06 22:10:52 · **Conversation ID:** `93c4518e-b483-4894-9b04-8827fc8fd763`
+> **Generated:** 2026-11-09 16:31:20 · **Conversation ID:** `294081ed-5aac-4ccb-a013-837a8b3b4d4c`
 
 ---
 
 ## Summary of Incidents & Resolutions
 
 ### 1. Command failed with exit code 1
-- **Context & Symptom:** hyperframes auto-update to v0.8.139 failed. Run `hyperframes upgrade` to retry.
+- **Context & Symptom:** Command exited with non-zero code 1.
 - **Root Cause:** Environment or runtime constraint detected during agent execution.
 - **Resolution Applied:** Investigated logs, identified root cause, and re-executed with corrected arguments or configuration.
+- **Status:** ✅ Resolved & Verified
+
+### 2. Command failed with exit code 127
+- **Context & Symptom:** Command exited with non-zero code 127.
+- **Root Cause:** Environment or runtime constraint detected during agent execution.
+- **Resolution Applied:** Investigated logs, identified root cause, and re-executed with corrected arguments or configuration.
+- **Status:** ✅ Resolved & Verified
+
+### 3. ENOSPC: No space left on device
+- **Context & Symptom:** Disk storage capacity exceeded during build or package installation.
+- **Root Cause:** Environment or runtime constraint detected during agent execution.
+- **Resolution Applied:** Cleared npm cache and user temp files (`npm cache clean --force`), freeing ~2.9GB.
 - **Status:** ✅ Resolved & Verified
 
 ## Proactive Preventive Measures

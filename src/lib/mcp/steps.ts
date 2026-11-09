@@ -4,7 +4,7 @@ import { COMPOSIO_APPS, getConnectionStatuses, initiateConnection, isComposioCon
 export const AGENT_SLUG = "prospect-automation-engine";
 
 export const schemas = {
-  identify_signals: {
+  identify_signals: z.object({
     icp: z.string().min(1).describe("Who your ideal customer is"),
     signalSources: z
       .array(z.string())
@@ -17,8 +17,8 @@ export const schemas = {
       .default("static_icp")
       .describe("Where this workflow starts"),
     searchQueries: z.array(z.string()).optional(),
-  },
-  build_company_list: {
+  }),
+  build_company_list: z.object({
     source: z
       .enum(["spreadsheet", "crm", "webhook"])
       .describe("Spreadsheet, CRM view or dynamic webhook"),
@@ -33,8 +33,8 @@ export const schemas = {
       .optional(),
     crmFilter: z.string().optional(),
     webhookPayload: z.record(z.string(), z.unknown()).optional(),
-  },
-  find_contacts: {
+  }),
+  find_contacts: z.object({
     method: z
       .enum(["search_syntax_mx", "enrichment_platform", "pre_acquired_list"])
       .describe(
@@ -61,8 +61,8 @@ export const schemas = {
         })
       )
       .optional(),
-  },
-  research_prospect: {
+  }),
+  research_prospect: z.object({
     company: z.string(),
     domain: z.string().optional(),
     prospect: z.object({
@@ -73,8 +73,8 @@ export const schemas = {
     yourProducts: z.string().describe("What you sell"),
     valueProposition: z.string(),
     knownSignals: z.array(z.string()).optional(),
-  },
-  write_email: {
+  }),
+  write_email: z.object({
     brief: z
       .record(z.string(), z.unknown())
       .describe("The brief returned by research_prospect"),
@@ -86,8 +86,8 @@ export const schemas = {
     tone: z.string().optional(),
     firstName: z.string().optional(),
     signature: z.string().optional(),
-  },
-  enroll_outreach: {
+  }),
+  enroll_outreach: z.object({
     route: z.enum(["mailbox_direct", "sequencer"]),
     sequencerId: z
       .string()
@@ -109,8 +109,8 @@ export const schemas = {
       .string()
       .optional()
       .describe("Pass the id of a human-approved request to send it"),
-  },
-  n8n_architect_and_deploy: {
+  }),
+  n8n_architect_and_deploy: z.object({
     intent: z
       .string()
       .min(1)
@@ -139,8 +139,8 @@ export const schemas = {
     deployMode: z
       .enum(["spec_and_json", "live_deploy"])
       .default("spec_and_json"),
-  },
-  n8n_inspect_executions: {
+  }),
+  n8n_inspect_executions: z.object({
     question: z
       .string()
       .default("snapshot")
@@ -150,8 +150,8 @@ export const schemas = {
     executionId: z.string().optional(),
     workflowId: z.string().optional(),
     n8nInstanceUrl: z.string().optional(),
-  },
-  composio_connect_integration: {
+  }),
+  composio_connect_integration: z.object({
     appId: z
       .enum([
         "apollo",
@@ -168,8 +168,8 @@ export const schemas = {
       .enum(["status", "initiate_oauth", "mcp_credential_spec"])
       .default("status"),
     userId: z.string().optional(),
-  },
-} as const;
+  }),
+};
 
 export type Brief = {
   companyOverview: string;
@@ -180,9 +180,7 @@ export type Brief = {
   valueProposition: string;
 };
 
-export type In<K extends keyof typeof schemas> = z.infer<
-  z.ZodObject<(typeof schemas)[K]>
->;
+export type In<K extends keyof typeof schemas> = z.infer<(typeof schemas)[K]>;
 
 /** Swap these for real connectors (search, Clay, your CRM, Claude, your sequencer, n8n, Composio). */
 export interface Providers {

@@ -1,8 +1,8 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { DEMO_API_KEY, KEY_PREFIX } from "./constants";
 import type { Store } from "./types";
 
-export const KEY_PREFIX = "sg_live_";
-export const DEMO_API_KEY = "sg_live_demo_vertical_gtm_outbound_2026";
+export { DEMO_API_KEY, KEY_PREFIX };
 
 export function hashKey(key: string): string {
   return createHash("sha256").update(key).digest("hex");

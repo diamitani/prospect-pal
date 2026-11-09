@@ -3,7 +3,7 @@
 import { CSSProperties, ReactNode } from "react";
 import { Icon, IconProps } from "./Icon";
 
-type BadgeTone = "neutral" | "brand" | "premium" | "verified" | "attention" | "blocked" | "deep";
+type BadgeTone = "neutral" | "brand" | "premium" | "verified" | "attention" | "blocked" | "danger" | "deep";
 
 const TONES: Record<BadgeTone, { background: string; color: string; border: string }> = {
   neutral: {
@@ -32,6 +32,11 @@ const TONES: Record<BadgeTone, { background: string; color: string; border: stri
     border: "transparent",
   },
   blocked: {
+    background: "var(--signal-blocked-bg)",
+    color: "var(--signal-blocked)",
+    border: "transparent",
+  },
+  danger: {
     background: "var(--signal-blocked-bg)",
     color: "var(--signal-blocked)",
     border: "transparent",

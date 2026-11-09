@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Button, Card, Badge, Icon, StatTile } from "@/components/ds";
-import { DEMO_API_KEY } from "@/lib/mcp/auth";
+import { DEMO_API_KEY } from "@/lib/mcp/constants";
 import { TrendingUp, TrendingDown } from "lucide-react";
 
 interface ExecutionRecord {
@@ -420,7 +420,7 @@ export default function AnalystView() {
                           {ex.workflow_name}
                         </span>
                         <Badge
-                          tone={ex.status === "error" ? "danger" : "verified"}
+                          tone={ex.status === "error" ? "blocked" : "verified"}
                         >
                           {ex.status}
                         </Badge>
