@@ -1,0 +1,303 @@
+{
+  "name": "SalesGency \u2014 05 Deliverability DNS Verifier (Pre-Flight)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sg-domain-check",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "deliv-trigger",
+      "name": "01: Trigger Ingest",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        180,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst domains = (Array.isArray(body.domains) ? body.domains : [body.domain || ''])\n  .map(d => String(d).toLowerCase().replace(/^https?:\\/\\//, '').replace(/^www\\./, '').trim())\n  .filter(d => /^[a-z0-9.-]+\\.[a-z]{2,}$/.test(d));\nconst dkim_selector = body.dkim_selector || 'default';\nreturn domains.map(d => ({ json: { domain: d, dkim_selector } }));"
+      },
+      "id": "deliv-normalize",
+      "name": "02: Normalize Domains",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://dns.google/resolve?name={{ $json.domain }}&type=TXT",
+        "method": "GET",
+        "options": {}
+      },
+      "id": "deliv-spf",
+      "name": "03: Fetch SPF (DNS-over-HTTPS)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        620,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const answers = ($input.first().json.Answer || []).map(a => a.data.replace(/^\"|\"$/g, ''));\nconst spf = answers.find(t => t.startsWith('v=spf1'));\nlet pass = false, note = '';\nif (spf) {\n  const lookups = (spf.match(/\\b(include|a|mx|ptr|exists|redirect)=/g) || []).length;\n  pass = lookups <= 10;\n  note = `SPF found; ${lookups} DNS lookups` + (spf.includes('-all') ? '; hard fail (-all) \u2014 good' : spf.includes('~all') ? '; soft fail (~all) \u2014 tighten to -all when safe' : '');\n} else {\n  note = 'No SPF TXT record found';\n}\nreturn [{ json: { ...$('02: Normalize Domains').item.json,\n  spf_record: spf || null, spf_pass: pass, spf_note: note } }];"
+      },
+      "id": "deliv-spf-parse",
+      "name": "04: Parse SPF",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://dns.google/resolve?name=_dmarc.{{ $('02: Normalize Domains').item.json.domain }}&type=TXT",
+        "method": "GET",
+        "options": {}
+      },
+      "id": "deliv-dmarc",
+      "name": "05: Fetch DMARC",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1060,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://dns.google/resolve?name={{ $('02: Normalize Domains').item.json.dkim_selector }}._domainkey.{{ $('02: Normalize Domains').item.json.domain }}&type=TXT",
+        "method": "GET",
+        "options": {}
+      },
+      "id": "deliv-dkim",
+      "name": "06: Fetch DKIM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const prev = $('04: Parse SPF').item.json;\nconst answers = ($input.first().json.Answer || []).map(a => a.data.replace(/^\"|\"$/g, ''));\nconst txt = answers.join(' ');\nconst dmarc = answers.find(t => t.startsWith('v=DMARC1'));\nconst dkim = answers.find(t => t.startsWith('v=DKIM1') || t.includes('k=rsa'));\nconst remediation = [];\nif (!prev.spf_pass) remediation.push('Add SPF: TXT @ \"v=spf1 include:_spf.google.com -all\" (swap include for your provider)');\nif (!dmarc) remediation.push('Add DMARC: TXT _dmarc \"v=DMARC1; p=quarantine; rua=mailto:dmarc-reports@' + prev.domain + '\"');\nif (!dkim) remediation.push('Add DKIM: publish the TXT record from your mail provider at ' + prev.dkim_selector + '._domainkey.' + prev.domain);\nconst overall = prev.spf_pass && !!dmarc && !!dkim;\nreturn [{ json: { domain: prev.domain, dkim_selector: prev.dkim_selector,\n  spf: prev.spf_pass ? 'pass' : 'fail', spf_note: prev.spf_note,\n  dmarc: dmarc ? 'pass' : 'fail', dmarc_record: dmarc || null,\n  dkim: dkim ? 'pass' : 'fail', dkim_record: dkim || null,\n  overall: overall ? 'PASS' : 'FAIL', remediation } }];"
+      },
+      "id": "deliv-eval",
+      "name": "07: Evaluate Records",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.overall }}",
+              "operation": "equals",
+              "value2": "PASS"
+            }
+          ]
+        }
+      },
+      "id": "deliv-gate",
+      "name": "08: All-Pass Gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1720,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c1",
+              "name": "domain",
+              "value": "={{ $json.domain }}",
+              "type": "string"
+            },
+            {
+              "id": "c2",
+              "name": "verdict",
+              "value": "={{ $json.overall }}",
+              "type": "string"
+            },
+            {
+              "id": "c3",
+              "name": "spf",
+              "value": "={{ $json.spf }}",
+              "type": "string"
+            },
+            {
+              "id": "c4",
+              "name": "dkim",
+              "value": "={{ $json.dkim }}",
+              "type": "string"
+            },
+            {
+              "id": "c5",
+              "name": "dmarc",
+              "value": "={{ $json.dmarc }}",
+              "type": "string"
+            },
+            {
+              "id": "c6",
+              "name": "remediation",
+              "value": "={{ $json.remediation }}",
+              "type": "array"
+            },
+            {
+              "id": "c7",
+              "name": "checked_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "deliv-report",
+      "name": "09: Deliverability Report",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1940,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "message": "=Deliverability check FAILED for {{ $json.domain }}: SPF={{ $json.spf }}, DKIM={{ $json.dkim }}, DMARC={{ $json.dmarc }}. Remediation: {{ $json.remediation.join(' | ') }}"
+      },
+      "id": "deliv-fail",
+      "name": "10: Fail Loudly (Stop And Error)",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1940,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "01: Trigger Ingest": {
+      "main": [
+        [
+          {
+            "node": "02: Normalize Domains",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02: Normalize Domains": {
+      "main": [
+        [
+          {
+            "node": "03: Fetch SPF (DNS-over-HTTPS)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03: Fetch SPF (DNS-over-HTTPS)": {
+      "main": [
+        [
+          {
+            "node": "04: Parse SPF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04: Parse SPF": {
+      "main": [
+        [
+          {
+            "node": "05: Fetch DMARC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05: Fetch DMARC": {
+      "main": [
+        [
+          {
+            "node": "06: Fetch DKIM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06: Fetch DKIM": {
+      "main": [
+        [
+          {
+            "node": "07: Evaluate Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07: Evaluate Records": {
+      "main": [
+        [
+          {
+            "node": "08: All-Pass Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08: All-Pass Gate": {
+      "main": [
+        [
+          {
+            "node": "09: Deliverability Report",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "10: Fail Loudly (Stop And Error)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09: Deliverability Report": {
+      "main": []
+    },
+    "10: Fail Loudly (Stop And Error)": {
+      "main": []
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -85,7 +85,7 @@ function LoginForm() {
 
           <div style={{ marginTop: 40, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "16px 20px" }}>
             <p style={{ fontSize: 13, color: "#DBE3FF", fontStyle: "italic", lineHeight: 1.6, margin: "0 0 12px" }}>
-              "Set it up in 20 minutes. 50 qualified leads hitting Smartlead every morning."
+              &ldquo;Set it up in 20 minutes. 50 qualified leads hitting Smartlead every morning.&rdquo;
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#2A41C9", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800 }}>SK</div>
@@ -108,7 +108,7 @@ function LoginForm() {
 
           <div style={{ marginBottom: 32 }}>
             <h1 style={{ fontSize: 26, fontWeight: 900, color: "#111", letterSpacing: "-0.5px", margin: "0 0 6px" }}>Welcome back</h1>
-            <p style={{ fontSize: 14, color: "#6B7280", margin: 0 }}>Sign in to your Prospect PAL workspace</p>
+            <p style={{ fontSize: 14, color: "#6B7280", margin: 0 }}>Sign in to Prospect Pal by Salesgency</p>
           </div>
 
           <OAuthButtons redirectTo={redirectTo} />

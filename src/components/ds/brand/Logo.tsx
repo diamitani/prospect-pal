@@ -14,7 +14,7 @@ export function Logo({
   variant = "lockup",
   size = 32,
   onDeep = false,
-  tagline,
+  tagline = "Internal GTM",
   style,
 }: LogoProps) {
   const ink = onDeep ? "var(--paper-0)" : "var(--ink-800)";
@@ -73,7 +73,18 @@ export function Logo({
               letterSpacing: "0.02em",
             }}
           >
-            PAL
+            Pal
+          </span>
+          <span
+            style={{
+              fontWeight: 500,
+              fontSize: "0.62em",
+              marginLeft: 6,
+              color: onDeep ? "var(--ink-300)" : "var(--text-muted)",
+              letterSpacing: "0.01em",
+            }}
+          >
+            by Salesgency
           </span>
         </span>
         {tagline && (

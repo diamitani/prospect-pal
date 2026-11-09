@@ -1,0 +1,253 @@
+{
+  "name": "SalesGency \u2014 02 Prospect Automation (Intent \u2192 Enrich \u2192 Route)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sg-intent-signal",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "prospect-trigger",
+      "name": "01: Trigger Ingest",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        180,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json.body || $input.first().json;\nreturn [{\n  json: {\n    company_domain: (item.company_domain || item.domain || '').toLowerCase().trim(),\n    company_name: item.company_name || item.company || '',\n    signal_type: item.signal_type || 'intent_generic',\n    evidence_url: item.evidence_url || '',\n    signal_strength: item.signal_strength || 1\n  }\n}];"
+      },
+      "id": "prospect-normalize",
+      "name": "02: Normalize Signal",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.apollo.io/v1/organizations/search",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"api_key\": \"{{ $env.APOLLO_API_KEY }}\",\n  \"q_organization_domains_list\": [\"{{ $json.company_domain }}\"],\n  \"page\": 1,\n  \"per_page\": 1\n}",
+        "options": {}
+      },
+      "id": "prospect-firmo",
+      "name": "03: Firmographic Enrich",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        620,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const org = ($input.first().json.organizations || [])[0] || {};\nconst employees = org.estimated_num_employees || 0;\nconst industry = (org.industry || '').toLowerCase();\nconst excluded = ['education', 'government', 'nonprofit'];\nconst minEmployees = Number($env.PROSPECT_MIN_EMPLOYEES) || 50;\nconst qualified = employees >= minEmployees && !excluded.some(e => industry.includes(e));\nreturn [{ json: { ...$input.first().json, org_name: org.name || '',\n  employees, industry: org.industry || '', qualified,\n  drop_reason: qualified ? '' : 'below ICP threshold or excluded industry' } }];"
+      },
+      "id": "prospect-icp",
+      "name": "04: ICP Evaluation (deterministic)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.qualified }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "prospect-gate",
+      "name": "05: ICP Gate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1060,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.apollo.io/v1/mixed_people/search",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"api_key\": \"{{ $env.APOLLO_API_KEY }}\",\n  \"q_organization_domains\": \"{{ $('02: Normalize Signal').item.json.company_domain }}\",\n  \"person_seniorities\": [\"founder\", \"c_suite\", \"vp\", \"director\"],\n  \"page\": 1,\n  \"per_page\": 5\n}",
+        "options": {}
+      },
+      "id": "prospect-waterfall",
+      "name": "06: Contact Waterfall",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.hubapi.com/crm/v3/objects/companies",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.HUBSPOT_ACCESS_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"properties\": {\n    \"name\": \"{{ $('02: Normalize Signal').item.json.company_name }}\",\n    \"domain\": \"{{ $('02: Normalize Signal').item.json.company_domain }}\",\n    \"hs_lead_status\": \"NEW\",\n    \"sg_signal_type\": \"{{ $('02: Normalize Signal').item.json.signal_type }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "prospect-crm",
+      "name": "07: CRM Writeback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1500,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SLACK_ALERTS_WEBHOOK }}",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \":dart: *Qualified intent signal routed*\\n*Company:* {{ $('02: Normalize Signal').item.json.company_name }} ({{ $('02: Normalize Signal').item.json.company_domain }})\\n*Signal:* {{ $('02: Normalize Signal').item.json.signal_type }}\\n*Employees:* {{ $('04: ICP Evaluation (deterministic)').item.json.employees }}\\n*Contacts revealed:* {{ $json.people?.length || 0 }}\"\n}",
+        "options": {}
+      },
+      "id": "prospect-alert",
+      "name": "08: Slack Route Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1720,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "01: Trigger Ingest": {
+      "main": [
+        [
+          {
+            "node": "02: Normalize Signal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02: Normalize Signal": {
+      "main": [
+        [
+          {
+            "node": "03: Firmographic Enrich",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03: Firmographic Enrich": {
+      "main": [
+        [
+          {
+            "node": "04: ICP Evaluation (deterministic)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04: ICP Evaluation (deterministic)": {
+      "main": [
+        [
+          {
+            "node": "05: ICP Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05: ICP Gate": {
+      "main": [
+        [
+          {
+            "node": "06: Contact Waterfall",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06: Contact Waterfall": {
+      "main": [
+        [
+          {
+            "node": "07: CRM Writeback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07: CRM Writeback": {
+      "main": [
+        [
+          {
+            "node": "08: Slack Route Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08: Slack Route Alert": {
+      "main": []
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
