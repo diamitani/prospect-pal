@@ -1,3 +1,7 @@
+-- WARNING: Do not apply this file to the shared Enably Supabase project.
+-- Enably already has public.runs / public.workspaces / public.artifacts
+-- (incompatible schema). Use 20261110000000_ppal_namespaced_tables.sql instead.
+--
 -- Prospect Pal by Salesgency — Phase 1: runs + expanded leads
 -- Apply in Supabase SQL editor or via CLI. Read-only deploy note: user runs this manually.
 

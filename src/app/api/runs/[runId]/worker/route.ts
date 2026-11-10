@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { createClient } from "@/lib/supabase-server";
 import { executeProspectingRun } from "@/lib/prospecting/runner";
+import { TABLES } from "@/lib/db/tables";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -26,7 +27,7 @@ export async function POST(
   }
 
   const { data: run, error } = await supabase
-    .from("runs")
+    .from(TABLES.runs)
     .select("*")
     .eq("id", runId)
     .single();
@@ -38,7 +39,7 @@ export async function POST(
   }
 
   await supabase
-    .from("runs")
+    .from(TABLES.runs)
     .update({
       status: "running",
       started_at: new Date().toISOString(),
@@ -58,7 +59,7 @@ export async function POST(
         runId,
         onProgress: async (p) => {
           await supabase
-            .from("runs")
+            .from(TABLES.runs)
             .update({
               current_step: p.step,
               progress: [...(run.progress || []), p],
@@ -95,12 +96,12 @@ export async function POST(
         blockers: l.blockers,
         profile_url: l.profile_url,
       }));
-      const { error: leadErr } = await supabase.from("leads").upsert(rows);
+      const { error: leadErr } = await supabase.from(TABLES.leads).upsert(rows);
       if (leadErr) console.warn("[worker] lead upsert", leadErr.message);
     }
 
     const { data: updated } = await supabase
-      .from("runs")
+      .from(TABLES.runs)
       .update({
         status: "completed",
         current_step: "artifacts",
@@ -122,7 +123,7 @@ export async function POST(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     await supabase
-      .from("runs")
+      .from(TABLES.runs)
       .update({
         status: "failed",
         error: message,

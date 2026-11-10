@@ -1,3 +1,7 @@
+-- WARNING: Do not apply this file to the shared Enably Supabase project.
+-- Enably already has public.runs / public.workspaces / public.artifacts
+-- (incompatible schema). Use 20261110000000_ppal_namespaced_tables.sql instead.
+--
 -- Ensure leads table exists for fresh projects before v2 alters
 CREATE TABLE IF NOT EXISTS leads (
   id TEXT PRIMARY KEY,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { createAdminClient } from "@/lib/supabase-admin";
+import { TABLES } from "@/lib/db/tables";
 
 export const runtime = "nodejs";
 
@@ -14,7 +15,7 @@ export async function GET(
     return NextResponse.json({ error: "supabase_unavailable" }, { status: 503 });
   }
   const { data: run, error } = await supabase
-    .from("runs")
+    .from(TABLES.runs)
     .select("*")
     .eq("id", runId)
     .single();
@@ -22,7 +23,7 @@ export async function GET(
     return NextResponse.json({ error: error?.message || "not_found" }, { status: 404 });
   }
   const { data: leads } = await supabase
-    .from("leads")
+    .from(TABLES.leads)
     .select("*")
     .eq("run_id", runId)
     .order("icp_score", { ascending: false });

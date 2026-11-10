@@ -20,7 +20,7 @@ export function PipelineRail({
   className 
 }: PipelineRailProps) {
   const row1 = PIPELINE_STAGES.slice(0, 5);
-  const row2 = PIPELINE_STAGES.slice(5, 8);
+  const row2 = PIPELINE_STAGES.slice(5, 9);
   
   return (
     <div className={cn('flex flex-col items-center gap-4', className)}>

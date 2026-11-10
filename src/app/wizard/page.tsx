@@ -2,19 +2,21 @@
 
 import { WizardLayout } from '@/components/wizard/WizardLayout';
 import { PipelineRail } from '@/components/pipeline/PipelineRail';
+import { useRouter } from 'next/navigation';
 
 export default function WizardIntroPage() {
+  const router = useRouter();
+
   return (
     <WizardLayout
       currentStep={0}
-      totalSteps={7}
+      totalSteps={5}
       stepTitle="Build your prospect automation"
       stepDescription="In a few minutes, we'll configure your outbound campaign with the 9-node pipeline."
-      onNext={() => {}}
+      onNext={() => router.push('/wizard/1')}
       nextLabel="Start"
     >
       <div className="space-y-8">
-        {/* 9-Node Pipeline Preview */}
         <div className="bg-slate-50 rounded-xl p-6">
           <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-4 text-center">
             Your pipeline architecture
@@ -22,7 +24,6 @@ export default function WizardIntroPage() {
           <PipelineRail activeNodes={[1, 2, 3, 4, 5, 6, 7, 8, 9]} size="sm" />
         </div>
 
-        {/* What to expect */}
         <div className="space-y-4">
           <h3 className="font-semibold text-slate-800">What we&apos;ll configure:</h3>
           
@@ -35,7 +36,6 @@ export default function WizardIntroPage() {
           </div>
         </div>
 
-        {/* Time estimate */}
         <div className="flex items-center gap-3 text-sm text-slate-500 bg-blue-50 p-4 rounded-lg">
           <span className="text-xl">⏱️</span>
           <span>Takes about 5-7 minutes. You can save and resume anytime.</span>

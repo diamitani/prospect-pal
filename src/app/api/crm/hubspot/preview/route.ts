@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-supabase";
 import { createClient } from "@/lib/supabase-server";
 import { createAdminClient } from "@/lib/supabase-admin";
+import { TABLES } from "@/lib/db/tables";
 
 export const runtime = "nodejs";
 
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { data: leads, error } = await supabase
-      .from("leads")
+      .from(TABLES.leads)
       .select("*")
       .in("id", leadIds);
 
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
     };
 
     const { data: preview, error: pErr } = await supabase
-      .from("crm_write_previews")
+      .from(TABLES.crmWritePreviews)
       .insert({
         workspace_id: session?.workspaceId || null,
         created_by: session?.id || null,
