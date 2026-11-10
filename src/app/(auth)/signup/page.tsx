@@ -1,23 +1,22 @@
 "use client";
 
-import type { CSSProperties, FormEvent } from "react";
-
-import { useState } from "react";
+import { useState, type CSSProperties, type FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { OAuthButtons } from "@/components/auth/OAuthButtons";
 
 export default function SignupPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setInfo(null);
     try {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
@@ -30,7 +29,12 @@ export default function SignupPage() {
         setLoading(false);
         return;
       }
-      router.push("/dashboard");
+      if (data.needsEmailConfirmation) {
+        setInfo("Check your email to confirm your account, then sign in.");
+        setLoading(false);
+        return;
+      }
+      window.location.replace("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Signup failed");
       setLoading(false);
@@ -66,8 +70,24 @@ export default function SignupPage() {
           </span>
         </h1>
         <p style={{ fontSize: 13, color: "#6B7280", margin: "0 0 20px" }}>
-          Invite-only internal GTM app. Your email must be on the allowlist.
+          Create your workspace. Sign up with Google, GitHub, or email.
         </p>
+
+        <OAuthButtons redirectTo="/dashboard" />
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            margin: "16px 0",
+          }}
+        >
+          <div style={{ flex: 1, height: 1, background: "#f0f0ec" }} />
+          <span style={{ fontSize: 12, color: "#9CA3AF" }}>or email</span>
+          <div style={{ flex: 1, height: 1, background: "#f0f0ec" }} />
+        </div>
+
         {error && (
           <div
             style={{
@@ -80,6 +100,20 @@ export default function SignupPage() {
             }}
           >
             {error}
+          </div>
+        )}
+        {info && (
+          <div
+            style={{
+              background: "#ECFDF5",
+              color: "#065F46",
+              padding: 10,
+              borderRadius: 8,
+              fontSize: 13,
+              marginBottom: 12,
+            }}
+          >
+            {info}
           </div>
         )}
         <label style={{ fontSize: 12, fontWeight: 600 }}>Full name</label>
@@ -124,7 +158,7 @@ export default function SignupPage() {
           {loading ? "Creating…" : "Create workspace"}
         </button>
         <p style={{ fontSize: 12, color: "#6B7280", marginTop: 16 }}>
-          Already invited?{" "}
+          Already have an account?{" "}
           <Link href="/login" style={{ color: "#2A41C9" }}>
             Sign in
           </Link>

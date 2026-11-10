@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth-supabase";
 import { createClient } from "@/lib/supabase-server";
 import { createAdminClient } from "@/lib/supabase-admin";
 import type { CreateRunRequest, EnrichmentMode } from "@/lib/prospecting/types";
+import { TABLES } from "@/lib/db/tables";
 
 export const runtime = "nodejs";
 
@@ -13,7 +14,7 @@ export async function GET() {
     if (!supabase) {
       return NextResponse.json({ runs: [], warning: "supabase_unavailable" });
     }
-    let q = supabase.from("runs").select("*").order("created_at", { ascending: false }).limit(50);
+    let q = supabase.from(TABLES.runs).select("*").order("created_at", { ascending: false }).limit(50);
     if (session?.workspaceId) {
       q = q.eq("workspace_id", session.workspaceId);
     }
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
       notes: [],
     };
 
-    const { data, error } = await supabase.from("runs").insert(row).select("*").single();
+    const { data, error } = await supabase.from(TABLES.runs).insert(row).select("*").single();
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }

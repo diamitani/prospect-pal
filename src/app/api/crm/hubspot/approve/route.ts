@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth-supabase";
 import { createClient } from "@/lib/supabase-server";
 import { createAdminClient } from "@/lib/supabase-admin";
+import { TABLES } from "@/lib/db/tables";
 import {
   executeComposioAction,
   isComposioConfigured,
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { data: preview, error } = await supabase
-      .from("crm_write_previews")
+      .from(TABLES.crmWritePreviews)
       .select("*")
       .eq("id", previewId)
       .single();
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest) {
 
     if (!isComposioConfigured()) {
       await supabase
-        .from("crm_write_previews")
+        .from(TABLES.crmWritePreviews)
         .update({
           status: "approved",
           decided_at: new Date().toISOString(),
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest) {
     };
 
     await supabase
-      .from("crm_write_previews")
+      .from(TABLES.crmWritePreviews)
       .update({
         status: applied ? "applied" : "failed",
         decided_at: new Date().toISOString(),

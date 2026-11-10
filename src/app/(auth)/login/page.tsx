@@ -161,7 +161,7 @@ function LoginForm() {
             <div style={{ flex: 1, height: 1, background: "#f0f0ec" }} />
           </div>
 
-          <Link href="/checkout?plan=pro" style={{
+          <Link href="/signup" style={{
             display: "block", textAlign: "center", padding: "12px",
             fontSize: 14, fontWeight: 700, color: "#2A41C9",
             border: "1.5px solid #2A41C9", borderRadius: 10,

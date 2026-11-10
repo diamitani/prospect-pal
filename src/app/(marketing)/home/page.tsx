@@ -239,13 +239,14 @@ export default function HomePage() {
 
       {/* HERO + VERTICAL APP WORKBENCH */}
       <section
-        id="vertical-app"
+        id="workbench"
         style={{
           padding: "56px 24px 72px",
           maxWidth: "1280px",
           margin: "0 auto",
         }}
       >
+        <span id="vertical-app" />
         {/* Asymmetric Top Hero Header (4 elements max: Eyebrow, Headline, Subtext, CTAs) */}
         <div
           className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end"

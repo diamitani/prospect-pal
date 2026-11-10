@@ -1,9 +1,8 @@
 /**
- * POST /api/auth/signup — allowlist-gated for Prospect Pal by Salesgency (internal).
+ * POST /api/auth/signup — open self sign-up (email + password).
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
-import { isEmailAllowlisted } from "@/lib/auth/allowlist";
 
 export const runtime = "nodejs";
 
@@ -25,25 +24,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const gate = isEmailAllowlisted(email);
-    if (!gate.allowed) {
-      return NextResponse.json(
-        {
-          error:
-            "Signup is invite-only for Prospect Pal by Salesgency. Ask an admin to add your email/domain to the allowlist.",
-          reason: gate.reason,
-        },
-        { status: 403 }
-      );
-    }
-
     const supabase = await createClient();
+    const origin = req.headers.get("origin") || process.env.NEXT_PUBLIC_APP_URL || "";
     const { data, error } = await supabase.auth.signUp({
       email: email.toLowerCase().trim(),
       password,
       options: {
         data: { full_name: name.trim() },
-        emailRedirectTo: undefined,
+        emailRedirectTo: origin ? `${origin}/auth/callback?next=/dashboard` : undefined,
       },
     });
 
@@ -51,7 +39,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ user: { email: data.user?.email } }, { status: 200 });
+    return NextResponse.json({
+      user: { email: data.user?.email },
+      session: Boolean(data.session),
+      needsEmailConfirmation: !data.session,
+    }, { status: 200 });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }

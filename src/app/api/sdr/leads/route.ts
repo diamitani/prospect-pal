@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { getSession } from "@/lib/auth-supabase";
+import { TABLES } from "@/lib/db/tables";
 
 export const runtime = "nodejs";
 
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    let q = supabase.from("leads").select("*").order("created_at", {
+    let q = supabase.from(TABLES.leads).select("*").order("created_at", {
       ascending: false,
     });
     if (runId) q = q.eq("run_id", runId);
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest) {
     const supabase =
       createAdminClient() || (await createClient().catch(() => null));
     if (supabase) {
-      const { error } = await supabase.from("leads").insert([newLead]);
+      const { error } = await supabase.from(TABLES.leads).insert([newLead]);
       if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
       }

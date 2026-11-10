@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { createAdminClient } from "@/lib/supabase-admin";
+import { TABLES } from "@/lib/db/tables";
 
 export const runtime = "nodejs";
 
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
 
     if (supabase) {
       const { error } = await supabase
-        .from("leads")
+        .from(TABLES.leads)
         .update({
           status: "draft_queued",
           disposition: "draft_queued",
