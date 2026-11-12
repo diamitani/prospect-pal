@@ -1,5 +1,5 @@
 # Automated Session Troubleshooting & Incident Guide
-> **Generated:** 2026-11-09 16:31:20 · **Conversation ID:** `294081ed-5aac-4ccb-a013-837a8b3b4d4c`
+> **Generated:** 2026-11-12 02:53:20 · **Conversation ID:** `d5ac1d47-27d0-4acc-9345-d095275217ed`
 
 ---
 
@@ -11,13 +11,7 @@
 - **Resolution Applied:** Investigated logs, identified root cause, and re-executed with corrected arguments or configuration.
 - **Status:** ✅ Resolved & Verified
 
-### 2. Command failed with exit code 127
-- **Context & Symptom:** Command exited with non-zero code 127.
-- **Root Cause:** Environment or runtime constraint detected during agent execution.
-- **Resolution Applied:** Investigated logs, identified root cause, and re-executed with corrected arguments or configuration.
-- **Status:** ✅ Resolved & Verified
-
-### 3. ENOSPC: No space left on device
+### 2. ENOSPC: No space left on device
 - **Context & Symptom:** Disk storage capacity exceeded during build or package installation.
 - **Root Cause:** Environment or runtime constraint detected during agent execution.
 - **Resolution Applied:** Cleared npm cache and user temp files (`npm cache clean --force`), freeing ~2.9GB.

@@ -3,1365 +3,2878 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-  Logo,
-  Button,
-  Badge,
-  Icon,
-  StatTile,
-  PricingCard,
-  PipelineRail,
-  PipelineNode,
-} from "@/components/ds";
-import { VerticalOutboundWorkbench } from "@/components/outbound/VerticalOutboundWorkbench";
-import {
-  ARCHITECTURE_BLUEPRINT_NODES,
-  C4_SYSTEM_CONTEXT_LINKS,
-  ROSTR_AGENTS,
-  ROSTR_RUNTIME_MODULES,
-  SIX_STEP_AUTOMATION_FLOW,
-} from "@/lib/rostr/agents-registry";
-import { DEMO_API_KEY } from "@/lib/mcp/constants";
+  Check,
+  ChevronRight,
+  ChevronDown,
+  ShieldCheck,
+  Sparkles,
+  Zap,
+  Database,
+  Search,
+  FileCode,
+  Send,
+  Cpu,
+  Lock,
+  Activity,
+  Workflow,
+  ArrowRight,
+  Copy,
+  Play,
+  AlertCircle,
+  Globe,
+  CheckCircle2,
+} from "lucide-react";
 
-const PIPELINE_NODES: PipelineNode[] = ARCHITECTURE_BLUEPRINT_NODES.map((n, idx) => ({
-  step: idx + 1,
-  title: n.node.replace(/^\d+\s+/, ""),
-  subtitle: n.platforms,
-  icon: n.icon,
-  stage: n.stage,
-  binding: n.binding,
-  tooltip: n.function,
-}));
+// ── Types ──
+interface PipelineNode {
+  id: string;
+  step: number;
+  title: string;
+  subtitle: string;
+  stage: "trigger" | "shield" | "data" | "ai" | "sequence" | "ops";
+  icon: typeof Zap;
+  binding: string;
+  badge: string;
+  description: string;
+  outputPreview: string;
+}
 
-const HARNESS_SNIPPETS: Record<
-  string,
-  { label: string; filename: string; code: string; caption: string }
-> = {
-  cursor: {
-    label: "Claude Code & Cursor",
-    filename: ".mcp.json",
-    caption:
-      "Connect Claude Code, Cursor, or Windsurf directly to the Streamable HTTP MCP endpoint. Every step enforces license and human approval checks.",
-    code: `{
-  "mcpServers": {
-    "salesgency-outbound": {
-      "url": "https://prospect.salesgency.com/api/mcp",
-      "headers": {
-        "Authorization": "Bearer ${DEMO_API_KEY}"
-      }
-    }
-  }
-}`,
-  },
-  antigravity: {
-    label: "Antigravity & ROSTR Harness",
-    filename: "agents/prospect-automation-engine/manifest.json",
-    caption:
-      "Drop the ROSTR agent manifest and skill pack into your agent directory. Tools with external side effects are gated by human approval.",
-    code: `{
-  "name": "Prospect Automation Engine",
-  "slug": "prospect-automation-engine",
-  "version": "1.0.0",
-  "runtime": "rostr-v1",
-  "mcpEndpoint": "https://prospect.salesgency.com/api/mcp",
-  "skill": "skills/prospect-automation-engine-skill.md",
-  "tools": [
-    "scrape_buying_signals",
-    "dedupe_crm_contact",
-    "generate_pas_outreach",
-    "enroll_in_sequencer"
-  ],
-  "humanApprovalGates": ["enroll_in_sequencer"]
-}`,
-  },
-  vercel: {
-    label: "Vercel AI SDK",
-    filename: "lib/outbound-agent.ts",
-    caption:
-      "Call the 6-step SalesGency MCP tools inside any Next.js route or Vercel AI SDK streamText / generateText call.",
-    code: `import { generateText } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
+interface BentoItem {
+  id: string;
+  title: string;
+  category: string;
+  desc: string;
+  stat: string;
+  statLabel: string;
+  icon: typeof Zap;
+  colSpan: string;
+  badge?: string;
+}
 
-const mcpResponse = await fetch("https://prospect.salesgency.com/api/mcp", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "Authorization": "Bearer ${DEMO_API_KEY}"
+// ── 9-Node Pipeline Definitions ──
+const PIPELINE_NODES: PipelineNode[] = [
+  {
+    id: "01-trigger",
+    step: 1,
+    title: "Trigger & Cron Ingest",
+    subtitle: "Automated Lead Capture",
+    stage: "trigger",
+    icon: Zap,
+    binding: "n8n-nodes-base.cron",
+    badge: "Ingest",
+    description: "Scheduled crons, CRM webhooks, or natural language prompts discover new prospects continuously without manual CSV exports.",
+    outputPreview: "{\n  \"source\": \"apollo_search\",\n  \"batch_id\": \"b_99182\",\n  \"discovered\": 150,\n  \"status\": \"READY_FOR_CLEAN\"\n}",
   },
-  body: JSON.stringify({
-    jsonrpc: "2.0",
-    id: 1,
-    method: "tools/call",
-    params: {
-      name: "research_prospect",
-      arguments: {
-        company: "NexusFlow Data",
-        prospect: { name: "Marcus Vance", title: "VP RevOps" },
-        yourProducts: "SalesGency Prospect Automation Engine",
-        valueProposition: "1 ICP to full outbound workflow in 30 days"
-      }
-    }
-  })
-});`,
+  {
+    id: "02-normalizer",
+    step: 2,
+    title: "Data Normalizer",
+    subtitle: "Schema Sanitization",
+    stage: "trigger",
+    icon: FileCode,
+    binding: "n8n-nodes-base.set",
+    badge: "Clean",
+    description: "Sanitizes messy input schemas, extracts clean root domains, standardizes job titles, and strips invalid characters.",
+    outputPreview: "{\n  \"domain\": \"datadog.com\",\n  \"normalized_title\": \"VP Engineering\",\n  \"clean_name\": \"Sarah Jenkins\",\n  \"valid\": true\n}",
   },
-  cloudflare: {
-    label: "Cloudflare Workers OAuth",
-    filename: "worker-mcp-oauth.ts",
-    caption:
-      "Wrap the stateless MCP server with Cloudflare workers-oauth-provider for web-based Claude and ChatGPT OAuth 2.1 connectors.",
-    code: `import OAuthProvider from "@cloudflare/workers-oauth-provider";
+  {
+    id: "03-crm-shield",
+    step: 3,
+    title: "CRM Dedupe Shield",
+    subtitle: "Deal Collision Defense",
+    stage: "shield",
+    icon: ShieldCheck,
+    binding: "n8n-nodes-base.hubspot",
+    badge: "Zero-Collision",
+    description: "Active shields query Twenty CRM, HubSpot, and Salesforce in real-time. Automatically drops active opportunities, open accounts, and opt-outs.",
+    outputPreview: "{\n  \"crm_check\": \"TWENTY_CRM\",\n  \"existing_account\": false,\n  \"open_opportunity\": false,\n  \"opted_out\": false,\n  \"decision\": \"PROCEED\"\n}",
+  },
+  {
+    id: "04-waterfall",
+    step: 4,
+    title: "Waterfall Contact Reveal",
+    subtitle: "Multi-Source Enrichment",
+    stage: "data",
+    icon: Search,
+    binding: "n8n-nodes-base.apollo",
+    badge: "94.8% Match",
+    description: "Cascades through Apollo, Clay, Prospeo, and Dropcontact to find verified work emails and direct dials with live SMTP bounce checks.",
+    outputPreview: "{\n  \"provider\": \"apollo_clay_waterfall\",\n  \"email\": \"s.jenkins@datadog.com\",\n  \"smtp_check\": \"VALID_DELIVERABLE\",\n  \"confidence\": 0.98\n}",
+  },
+  {
+    id: "05-research",
+    step: 5,
+    title: "Deep Account Research",
+    subtitle: "Company Telemetry",
+    stage: "ai",
+    icon: Globe,
+    binding: "n8n-nodes-base.openai",
+    badge: "Telemetry",
+    description: "Autonomous agents scrape latest 10-K filings, open engineering job postings, tech stacks, and PR to extract specific buying triggers.",
+    outputPreview: "{\n  \"trigger\": \"Hiring 14 DevOps engineers for Kubernetes migration\",\n  \"tech_stack\": [\"AWS\", \"Kubernetes\", \"Terraform\"],\n  \"pain_point\": \"CI/CD pipeline bottleneck\"\n}",
+  },
+  {
+    id: "06-pas-copy",
+    step: 6,
+    title: "PAS AI Copywriter",
+    subtitle: "3-Sentence Precision",
+    stage: "ai",
+    icon: Sparkles,
+    binding: "n8n-nodes-base.openai",
+    badge: "Zero-Slop",
+    description: "Generates high-converting Problem-Agitate-Solution cold copy tailored to individual pain points with zero generic AI clichés.",
+    outputPreview: "{\n  \"hook\": \"Saw Datadog is scaling to 14 Kubernetes clusters this quarter.\",\n  \"agitate\": \"Most teams lose 20+ dev hours weekly on manual drift checks.\",\n  \"solution\": \"Our engine auto-syncs configs in 3s without agent rebuilds.\"\n}",
+  },
+  {
+    id: "07-crm-upsert",
+    step: 7,
+    title: "CRM Contact Sync",
+    subtitle: "Two-Way Enrichment",
+    stage: "shield",
+    icon: Database,
+    binding: "n8n-nodes-base.hubspot",
+    badge: "Auto-Sync",
+    description: "Creates or updates records in Twenty CRM or HubSpot with full enrichment dossiers, research summaries, and personalized email drafts.",
+    outputPreview: "{\n  \"upserted_id\": \"crm_rec_88319\",\n  \"synced_to\": \"Twenty CRM\",\n  \"fields_written\": 18,\n  \"stage\": \"Outbound_Ready\"\n}",
+  },
+  {
+    id: "08-sequencer",
+    step: 8,
+    title: "Sequence Enrollment",
+    subtitle: "Smart Mailbox Send",
+    stage: "sequence",
+    icon: Send,
+    binding: "n8n-nodes-base.smartlead",
+    badge: "Warm-Send",
+    description: "Enrolls contacts into Smartlead, Instantly, or native sequences with scheduled intervals, mailbox warm-up safety, and reply tracking.",
+    outputPreview: "{\n  \"sequencer\": \"Smartlead\",\n  \"campaign\": \"DevOps_Q4_Outbound\",\n  \"scheduled_for\": \"09:14 AM EST\",\n  \"mailbox_health\": \"99.4%\"\n}",
+  },
+  {
+    id: "09-triage",
+    step: 9,
+    title: "Review & Error Triage",
+    subtitle: "Self-Healing Alerts",
+    stage: "ops",
+    icon: Activity,
+    binding: "n8n-nodes-base.slack",
+    badge: "Telemetry",
+    description: "Slack/Discord notifications for human approval gates, real-time rate-limit warnings, and automated self-healing error triage.",
+    outputPreview: "{\n  \"alert\": \"SLACK_WEBHOOK\",\n  \"status\": \"ENROLLED_SUCCESS\",\n  \"retry_count\": 0,\n  \"execution_time_ms\": 2840\n}",
+  },
+];
 
-export default new OAuthProvider({
-  apiRoute: "/api/mcp",
-  apiHandler: {
-    async fetch(request: Request, env: Env) {
-      return fetch("https://prospect.salesgency.com/api/mcp", {
-        method: request.method,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": \`Bearer \${env.SALESGENCY_MASTER_KEY}\`
-        },
-        body: request.body
-      });
-    }
+// ── Bento Features ──
+const BENTO_FEATURES: BentoItem[] = [
+  {
+    id: "bento-swarm",
+    title: "Autonomous 4-Agent Swarm",
+    category: "Architecture",
+    desc: "GTM Architect, CRM Dedupe Shield, PAS Copywriter, and Execution Analyst coordinate in a shared runtime to handle strategy, safety, copy, and ops.",
+    icon: Cpu,
+    stat: "4 Agents",
+    statLabel: "Continuous orchestration",
+    colSpan: "col-span-1 md:col-span-2",
+    badge: "ROSTR v2",
   },
-  authorizeEndpoint: "/oauth/authorize",
-  tokenEndpoint: "/oauth/token"
-});`,
+  {
+    id: "bento-dedupe",
+    title: "CRM Dedupe & Deal Shield",
+    category: "Safety Shield",
+    desc: "Active shields query Twenty CRM, HubSpot, and Salesforce before outreach to prevent pitching existing clients or live pipeline deals.",
+    icon: ShieldCheck,
+    stat: "0",
+    statLabel: "Collision incidents",
+    colSpan: "col-span-1",
+    badge: "Zero-Collision",
   },
-};
+  {
+    id: "bento-compiler",
+    title: "Prompt-to-n8n Compiler",
+    category: "Workflow Engine",
+    desc: "Compile production-grade workflow JSON from plain English prompts. Validated against real node schemas for n8n, Make, and Gumloop.",
+    icon: Workflow,
+    stat: "3 sec",
+    statLabel: "Prompt-to-JSON",
+    colSpan: "col-span-1",
+    badge: "Compiler",
+  },
+  {
+    id: "bento-byok",
+    title: "Zero-Knowledge BYOK Security",
+    category: "Privacy & Vault",
+    desc: "Your API keys and credentials live entirely in your private instance or local environment. Prospect PAL never stores keys or sends emails on your behalf.",
+    icon: Lock,
+    stat: "100%",
+    statLabel: "Local key isolation",
+    colSpan: "col-span-1 md:col-span-2",
+    badge: "100% BYOK",
+  },
+  {
+    id: "bento-waterfall",
+    title: "Waterfall Contact Cascade",
+    category: "Data Integrity",
+    desc: "Cascades through Apollo, Clay, Prospeo, and Dropcontact. Every email undergoes live MX and SMTP bounce checks before enrollment.",
+    icon: Search,
+    stat: "94.8%",
+    statLabel: "Verified deliverability",
+    colSpan: "col-span-1",
+    badge: "Waterfall",
+  },
+  {
+    id: "bento-telemetry",
+    title: "Real-Time Telemetry & Healing",
+    category: "Ops & Observability",
+    desc: "Execution agents scan workflow runs by ID, detect node failure points, diagnose API rate limits, and provide automatic repair instructions.",
+    icon: Activity,
+    stat: "99.9%",
+    statLabel: "Execution reliability",
+    colSpan: "col-span-1 md:col-span-2",
+    badge: "Self-Healing",
+  },
+];
+
+// ── Interactive Playground Presets ──
+interface PlaygroundPreset {
+  name: string;
+  tag: string;
+  company: string;
+  offer: string;
+  icp: string;
+  persona: string;
+  tools: string;
+  pasOutput: {
+    hook: string;
+    agitate: string;
+    solution: string;
+  };
+  metrics: {
+    discovered: number;
+    shielded: number;
+    verified: number;
+    estimatedReplyRate: string;
+  };
+}
+
+const PLAYGROUND_PRESETS: PlaygroundPreset[] = [
+  {
+    name: "DevOps & Cloud SaaS",
+    tag: "B2B Infrastructure",
+    company: "CloudVortex (Series A)",
+    offer: "Kubernetes auto-cost optimization platform, 35% cloud bill reduction.",
+    icp: "50-500 employees, Series A-C, running AWS & Kubernetes.",
+    persona: "VP Engineering, Head of Infrastructure, DevOps Lead.",
+    tools: "Twenty CRM + Apollo.io + Smartlead",
+    pasOutput: {
+      hook: "Saw your team is scaling clusters across multi-region EKS on AWS.",
+      agitate: "Most engineering leads we speak with waste 15+ hours weekly debugging node auto-scaling drift.",
+      solution: "We cut idle Kubernetes spend by 35% with zero agent downtime. Open to seeing the 2-minute benchmark?",
+    },
+    metrics: {
+      discovered: 120,
+      shielded: 18,
+      verified: 98,
+      estimatedReplyRate: "8.4%",
+    },
+  },
+  {
+    name: "B2B FinTech & Payments",
+    tag: "FinTech & AI",
+    company: "PayFlow AI",
+    offer: "Real-time ledger reconciliation engine eliminating month-end closing delays.",
+    icp: "Fintechs & high-volume marketplaces doing $10M+ GMV on Stripe.",
+    persona: "VP Finance, CFO, Head of Accounting.",
+    tools: "HubSpot + Clay + Instantly",
+    pasOutput: {
+      hook: "Noticed PayFlow is expanding payment rails across Europe and North America.",
+      agitate: "Cross-border settlement discrepancies usually force finance teams into 40-hour spreadsheet reconciliations.",
+      solution: "Our engine reconciles multi-entity Stripe payouts automatically in real time. Would a 1-page sample ledger help?",
+    },
+    metrics: {
+      discovered: 85,
+      shielded: 12,
+      verified: 71,
+      estimatedReplyRate: "7.9%",
+    },
+  },
+  {
+    name: "Healthcare & Clinical AI",
+    tag: "HealthTech Compliance",
+    company: "ClinicaSync",
+    offer: "HIPAA-compliant patient intake & chart automation for regional clinics.",
+    icp: "10-100 provider healthcare practices and ambulatory clinics.",
+    persona: "Chief Medical Officer, Clinical Director, Practice Manager.",
+    tools: "Twenty CRM + Prospeo + Smartlead",
+    pasOutput: {
+      hook: "Saw your practice added 3 new outpatient clinics across the tri-state area.",
+      agitate: "Clinicians still lose 2 hours every evening manually inputting EHR intake notes.",
+      solution: "ClinicaSync automates chart intake in under 30 seconds with 100% HIPAA compliance. Open to a brief workflow look?",
+    },
+    metrics: {
+      discovered: 64,
+      shielded: 9,
+      verified: 53,
+      estimatedReplyRate: "9.2%",
+    },
+  },
+];
+
+// ── Customer Spotlight Stories ──
+const TESTIMONIALS = [
+  {
+    name: "Alex Morgan",
+    role: "Founder & CEO",
+    company: "Atlas Labs",
+    metric: "$180k ARR Added",
+    subMetric: "In 45 Days · 0 Collisions",
+    useCase: "B2B SaaS · DevOps Tools",
+    quote: "We replaced a $90k/yr SDR overhead and 6 disparate SaaS tools in our first week. The CRM Dedupe Shield prevented 40+ embarrassing active-deal collisions, and our reply rate tripled.",
+  },
+  {
+    name: "Daniel Reed",
+    role: "Head of Growth",
+    company: "Northway Studio",
+    metric: "0 Lead Collisions",
+    subMetric: "Across 45,000 Enrolled Prospects",
+    useCase: "GTM Agency · 14 Clients",
+    quote: "We manage outbound for 14 enterprise clients from one Prospect PAL instance. Building client-specific n8n workflows used to take 3 days each. Now it takes 5 minutes, and our clients' CRM data is pristine.",
+  },
+  {
+    name: "Emily Carter",
+    role: "VP of Sales",
+    company: "Brightline Tech",
+    metric: "8.4% Positive Reply",
+    subMetric: "Up from 1.8% Generic AI",
+    useCase: "Enterprise HR Tech",
+    quote: "The 3-sentence PAS framework is the secret weapon. No generic AI fluff, just pure pain points grounded in actual company research. We booked 22 qualified enterprise demos in month one.",
+  },
+  {
+    name: "Lucas Meyer",
+    role: "Managing Director",
+    company: "Kinetic Agency",
+    metric: "12 Client Campaigns",
+    subMetric: "100% BYOK · $0 Per-Lead Fees",
+    useCase: "Outbound Growth Agency",
+    quote: "Zero per-lead surcharges. We plug in our clients' Apollo and Smartlead keys and own the workflows outright. It is the cleanest, most defensible GTM architecture on the market.",
+  },
+];
+
+// ── FAQ Items ──
+const FAQS = [
+  {
+    category: "General",
+    q: "What makes Prospect PAL fundamentally different from Apollo, Clay, or Smartlead?",
+    a: "Those platforms are siloed point-solutions. You still have to manually link them with brittle Zapier zaps, write your own AI prompts, and risk emailing existing CRM clients. Prospect PAL is the autonomous orchestrator: it plans, shields, enriches, writes 3-sentence PAS emails, and compiles verified production n8n workflows in 3 seconds.",
+  },
+  {
+    category: "Engine & AI",
+    q: "How does the AI copywriter avoid sounding like generic AI slop?",
+    a: "Prospect PAL enforces the strict 3-sentence Problem-Agitate-Solution (PAS) architecture. It first scrapes company telemetry (10-Ks, open engineering roles, tech stacks) to identify actual friction, then articulates the pain in 3 tight, crisp sentences. Banned are clichés like 'I hope this email finds you well' or 'In today's fast-paced world'.",
+  },
+  {
+    category: "CRM & Integrations",
+    q: "How does the Zero-Collision CRM Dedupe Shield work?",
+    a: "Before any contact is enriched or enrolled, Node 03 executes a real-time query against Twenty CRM, HubSpot, or Salesforce. If the domain has an open deal, an assigned rep, or an opt-out tag, the prospect is instantly dropped from the queue. Your active sales pipeline is 100% protected.",
+  },
+  {
+    category: "Security & BYOK",
+    q: "What does Zero-Knowledge Bring-Your-Own-Key (BYOK) mean for my data?",
+    a: "Your API keys (OpenAI, Claude, Apollo, Smartlead, HubSpot) are configured directly in your self-hosted instance or private environment. Prospect PAL never stores your customer data or API keys on external servers. You own the workflows, the data, and the execution logs permanently.",
+  },
+  {
+    category: "General",
+    q: "Do I need to be an n8n expert or coder to use this?",
+    a: "No. You answer a few simple campaign questions in natural language, or use our interactive copilot. The engine compiles the ready-to-run 9-node JSON workflow and provides 1-click deployment to self-hosted n8n, n8n Cloud, or Make.",
+  },
+  {
+    category: "Engine & AI",
+    q: "Can I customize the workflow nodes after compilation?",
+    a: "Yes! Because Prospect PAL outputs standard n8n JSON, you can open it in any n8n canvas, edit nodes, add custom Python/JS code, plug in internal databases, or add custom approval channels.",
+  },
+];
 
 export default function HomePage() {
-  const [activeNodeIndex, setActiveNodeIndex] = useState<number>(0);
-  const [activeHarness, setActiveHarness] = useState<string>("cursor");
-  const [copiedSnippet, setCopiedSnippet] = useState(false);
+  // State
+  const [activeNodeIndex, setActiveNodeIndex] = useState<number>(2); // Start on CRM Dedupe Shield
+  const [activePlaygroundIndex, setActivePlaygroundIndex] = useState<number>(0);
+  const [copiedSnippet, setCopiedSnippet] = useState<boolean>(false);
+  const [billingPeriod, setBillingPeriod] = useState<"annual" | "monthly">("annual");
+  const [activeFaqCategory, setActiveFaqCategory] = useState<string>("All");
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(0);
 
-  const selectedNode =
-    ARCHITECTURE_BLUEPRINT_NODES[activeNodeIndex] ||
-    ARCHITECTURE_BLUEPRINT_NODES[0];
-  const currentSnippet = HARNESS_SNIPPETS[activeHarness] || HARNESS_SNIPPETS.cursor;
+  const selectedNode = PIPELINE_NODES[activeNodeIndex];
+  const selectedPreset = PLAYGROUND_PRESETS[activePlaygroundIndex];
 
-  const copySnippet = () => {
-    navigator.clipboard.writeText(currentSnippet.code);
+  const handleCopyJson = () => {
+    navigator.clipboard.writeText(selectedNode.outputPreview);
     setCopiedSnippet(true);
-    setTimeout(() => setCopiedSnippet(false), 1800);
+    setTimeout(() => setCopiedSnippet(false), 2000);
   };
 
+  const filteredFaqs =
+    activeFaqCategory === "All"
+      ? FAQS
+      : FAQS.filter((f) => f.category === activeFaqCategory);
+
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        background: "var(--surface-page)",
-        color: "var(--text-primary)",
-        overflowX: "hidden",
-      }}
-    >
-      {/* Sticky Single-Line Navigation (<= 80px height) */}
+    <div style={{ minHeight: "100vh", background: "#F5F7FA", color: "#14142D", overflowX: "hidden" }}>
+
+      {/* ─────────────────────────────────────────────────────────────
+          1. TOP ANNOUNCEMENT BAR
+          ───────────────────────────────────────────────────────────── */}
+      <div
+        style={{
+          background: "linear-gradient(90deg, #101B2D 0%, #1B2942 50%, #101B2D 100%)",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+          padding: "10px 24px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 12,
+          fontSize: "13px",
+          color: "#E2E6EE",
+        }}
+      >
+        <span
+          style={{
+            background: "rgba(58, 86, 228, 0.25)",
+            border: "1px solid rgba(141, 162, 251, 0.4)",
+            color: "#8DA2FB",
+            fontSize: "11px",
+            fontWeight: 700,
+            padding: "2px 8px",
+            borderRadius: "100px",
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+            fontFamily: "var(--font-mono, monospace)",
+          }}
+        >
+          v2.4 Release
+        </span>
+        <span>
+          <strong>Twenty CRM & n8n Cloud Integration Live.</strong> Compile verified outbound flows in seconds.
+        </span>
+        <a
+          href="#pipeline"
+          style={{
+            color: "#D9B968",
+            fontWeight: 600,
+            textDecoration: "none",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            fontSize: "13px",
+          }}
+        >
+          Explore Pipeline <ChevronRight size={14} />
+        </a>
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────
+          2. FLOATING STICKY NAVBAR (Makro Glassmorphic Pill)
+          ───────────────────────────────────────────────────────────── */}
       <header
         style={{
           position: "sticky",
-          top: 0,
+          top: 16,
           zIndex: 50,
-          height: "68px",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          background: "rgba(251, 250, 248, 0.90)",
-          borderBottom: "1px solid var(--border-hairline)",
+          maxWidth: "1280px",
+          margin: "0 auto",
+          padding: "0 20px",
         }}
       >
         <div
           style={{
-            maxWidth: "1280px",
-            margin: "0 auto",
-            height: "100%",
-            padding: "0 24px",
+            background: "rgba(255, 255, 255, 0.82)",
+            backdropFilter: "blur(18px)",
+            WebkitBackdropFilter: "blur(18px)",
+            border: "1px solid rgba(20, 20, 45, 0.08)",
+            boxShadow: "0 4px 20px rgba(16, 27, 45, 0.04)",
+            borderRadius: "100px",
+            padding: "10px 22px",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            gap: 16,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Link
-              href="/home"
+          {/* Brand Lockup */}
+          <Link
+            href="/home"
+            style={{
+              textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              color: "#14142D",
+            }}
+          >
+            <div
               style={{
+                width: 32,
+                height: 32,
+                borderRadius: 9,
+                background: "#14142D",
                 display: "flex",
                 alignItems: "center",
-                textDecoration: "none",
+                justifyContent: "center",
+                color: "#FFFFFF",
+                boxShadow: "0 2px 8px rgba(20, 20, 45, 0.2)",
               }}
             >
-              <Logo size={30} />
-            </Link>
-            <Badge tone="brand">SalesGency × Diamitani</Badge>
-          </div>
-
-          <nav
-            className="hidden lg:flex"
-            style={{ alignItems: "center", gap: 24 }}
-          >
-            {[
-              { label: "Vertical App", href: "#vertical-app" },
-              { label: "6-Step Flow", href: "#flow" },
-              { label: "Architecture", href: "#architecture" },
-              { label: "MCP & Marketplace", href: "#marketplace" },
-              { label: "Templates", href: "/templates" },
-              { label: "Pricing", href: "#pricing" },
-            ].map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
+              <Workflow size={17} strokeWidth={2.2} />
+            </div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
+              <span
                 style={{
-                  fontSize: "13.5px",
-                  fontWeight: 500,
-                  color: "var(--text-secondary)",
-                  textDecoration: "none",
-                  whiteSpace: "nowrap",
+                  fontFamily: "var(--font-sans, system-ui)",
+                  fontWeight: 800,
+                  fontSize: 17,
+                  letterSpacing: "-0.02em",
+                  color: "#14142D",
                 }}
               >
-                {item.label}
-              </Link>
-            ))}
+                Prospect
+              </span>
+              <span
+                style={{
+                  fontFamily: "var(--font-sans, system-ui)",
+                  fontWeight: 800,
+                  fontSize: 17,
+                  letterSpacing: "-0.02em",
+                  color: "#2563EB",
+                }}
+              >
+                PAL
+              </span>
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  padding: "1px 6px",
+                  borderRadius: 6,
+                  background: "#EBEFF5",
+                  color: "#58718A",
+                  marginLeft: 4,
+                  fontFamily: "var(--font-mono, monospace)",
+                }}
+              >
+                v2.4
+              </span>
+            </div>
+          </Link>
+
+          {/* Navigation Links */}
+          <nav
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 26,
+            }}
+            className="hidden md:flex"
+          >
+            <a
+              href="#pipeline"
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: "#58718A",
+                textDecoration: "none",
+                transition: "color 0.15s",
+              }}
+            >
+              5-Pillar Pipeline
+            </a>
+            <a
+              href="#manifesto"
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: "#58718A",
+                textDecoration: "none",
+                transition: "color 0.15s",
+              }}
+            >
+              Architecture
+            </a>
+            <a
+              href="#bento"
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: "#58718A",
+                textDecoration: "none",
+                transition: "color 0.15s",
+              }}
+            >
+              Bento Features
+            </a>
+            <a
+              href="#playground"
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: "#58718A",
+                textDecoration: "none",
+                transition: "color 0.15s",
+              }}
+            >
+              Live Copilot
+            </a>
+            <a
+              href="#pricing"
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: "#58718A",
+                textDecoration: "none",
+                transition: "color 0.15s",
+              }}
+            >
+              Pricing
+            </a>
+            <a
+              href="#faq"
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: "#58718A",
+                textDecoration: "none",
+                transition: "color 0.15s",
+              }}
+            >
+              FAQ
+            </a>
           </nav>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Link href="/dashboard" style={{ textDecoration: "none" }}>
-              <Button variant="outline" size="sm">
-                Open workspace
-              </Button>
+          {/* Action CTAs */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Link
+              href="/login"
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#58718A",
+                textDecoration: "none",
+                padding: "8px 12px",
+              }}
+            >
+              Log in
             </Link>
-            <Link href="/wizard" style={{ textDecoration: "none" }}>
-              <Button variant="accent" size="sm" iconRight="ArrowRight">
-                Compile outbound engine
-              </Button>
+            <Link
+              href="/wizard"
+              style={{
+                background: "#14142D",
+                color: "#FFFFFF",
+                fontSize: 13,
+                fontWeight: 600,
+                padding: "9px 18px",
+                borderRadius: "100px",
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                boxShadow: "0 2px 8px rgba(20, 20, 45, 0.18)",
+                transition: "transform 0.15s, background 0.15s",
+              }}
+            >
+              Deploy Agent <ArrowRight size={14} />
             </Link>
           </div>
         </div>
       </header>
 
-      {/* HERO + VERTICAL APP WORKBENCH */}
+      {/* ─────────────────────────────────────────────────────────────
+          3. HERO SECTION (Makro Style: Big Type + UI Frame + Micro-Widgets)
+          ───────────────────────────────────────────────────────────── */}
       <section
-        id="workbench"
         style={{
-          padding: "56px 24px 72px",
           maxWidth: "1280px",
           margin: "0 auto",
+          padding: "72px 24px 80px",
+          textAlign: "center",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
         }}
       >
-        <span id="vertical-app" />
-        {/* Asymmetric Top Hero Header (4 elements max: Eyebrow, Headline, Subtext, CTAs) */}
+        {/* Micro-Pill Badge */}
         <div
-          className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end"
-          style={{ marginBottom: "36px" }}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            background: "#FFFFFF",
+            border: "1px solid rgba(20, 20, 45, 0.1)",
+            padding: "6px 14px",
+            borderRadius: "100px",
+            fontSize: 12,
+            fontWeight: 600,
+            color: "#35363B",
+            boxShadow: "0 1px 3px rgba(16, 27, 45, 0.04)",
+            marginBottom: 24,
+          }}
         >
-          <div className="lg:col-span-8">
-            <div style={{ marginBottom: "16px" }}>
-              <Badge tone="brand" icon="Zap">
-                SALESGENCY × DIAMITANI INDUSTRIES · ROSTR + PAL + MCP
-              </Badge>
-            </div>
-            <h1
-              style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "clamp(36px, 4.8vw, 58px)",
-                fontWeight: 800,
-                lineHeight: 1.06,
-                letterSpacing: "-0.035em",
-                color: "var(--ink-900)",
-                margin: 0,
-              }}
-            >
-              One ICP or buying signal to a{" "}
-              <span style={{ color: "var(--cobalt-600)" }}>
-                full outbound workflow.
-              </span>
-            </h1>
-          </div>
+          <span
+            style={{
+              width: 7,
+              height: 7,
+              borderRadius: "50%",
+              background: "#10B981",
+              boxShadow: "0 0 8px #10B981",
+              display: "inline-block",
+            }}
+          />
+          <span style={{ fontFamily: "var(--font-mono, monospace)", textTransform: "uppercase", letterSpacing: "0.06em", fontSize: 11 }}>
+            AI-Powered Outbound Automation
+          </span>
+        </div>
 
-          <div
-            className="lg:col-span-4"
-            style={{ display: "flex", flexDirection: "column", gap: 20 }}
+        {/* Makro Huge Display Headline */}
+        <h1
+          style={{
+            fontFamily: "var(--font-sans, system-ui)",
+            fontSize: "clamp(38px, 5.5vw, 68px)",
+            fontWeight: 800,
+            lineHeight: 1.08,
+            letterSpacing: "-0.035em",
+            color: "#14142D",
+            margin: "0 0 20px",
+            maxWidth: "960px",
+          }}
+        >
+          Know your pipeline. <br />
+          <span style={{ color: "#2563EB" }}>Run outbound with AI.</span>
+        </h1>
+
+        {/* Subtitle */}
+        <p
+          style={{
+            fontSize: "clamp(16px, 1.8vw, 19px)",
+            lineHeight: 1.6,
+            color: "#58718A",
+            maxWidth: "680px",
+            margin: "0 0 36px",
+          }}
+        >
+          Turn any ICP brief into a 5-pillar, zero-collision outbound engine in 3 seconds. Verified leads, deep company research, personalized PAS copy, and live CRM shields.
+        </p>
+
+        {/* CTA Buttons */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 14,
+            flexWrap: "wrap",
+            marginBottom: 48,
+          }}
+        >
+          <Link
+            href="/wizard"
+            style={{
+              background: "#14142D",
+              color: "#FFFFFF",
+              fontSize: 15,
+              fontWeight: 600,
+              padding: "14px 28px",
+              borderRadius: "100px",
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              boxShadow: "0 4px 14px rgba(20, 20, 45, 0.22)",
+            }}
           >
-            <p
-              style={{
-                fontSize: "16px",
-                lineHeight: 1.55,
-                color: "var(--text-secondary)",
-                margin: 0,
-              }}
-            >
-              Six steps from signal to sequence. Everything else is a connector, prompt, tool. Run live below or download the 62-node n8n template and 8 AI skills.
-            </p>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <a
-                href="/pae-package/prospect-outreach-n8n-template.zip"
-                download
-                style={{ textDecoration: "none" }}
-              >
-                <Button variant="accent" size="md" icon="Download">
-                  Download 62-node n8n template
-                </Button>
-              </a>
-              <Link href="/packages" style={{ textDecoration: "none" }}>
-                <Button variant="outline" size="md" icon="Package">
-                  MCP &amp; Agent Marketplace
-                </Button>
-              </Link>
-            </div>
-          </div>
+            Deploy Outbound Agent <ArrowRight size={16} />
+          </Link>
+          <a
+            href="#pipeline"
+            style={{
+              background: "#FFFFFF",
+              color: "#14142D",
+              border: "1px solid rgba(20, 20, 45, 0.14)",
+              fontSize: 15,
+              fontWeight: 600,
+              padding: "14px 24px",
+              borderRadius: "100px",
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              boxShadow: "0 1px 3px rgba(16, 27, 45, 0.04)",
+            }}
+          >
+            <Play size={15} fill="#14142D" /> Explore 9-Node Pipeline
+          </a>
         </div>
 
-        {/* Interactive Vertical Outbound Workbench */}
-        <VerticalOutboundWorkbench />
-
-        {/* Proof Metrics Bar (From Page 1 of the SalesGency PDF) */}
-        <div
-          className="grid grid-cols-2 md:grid-cols-4 gap-3"
-          style={{ marginTop: "24px" }}
-        >
-          <StatTile
-            value="3.4x"
-            label="Higher reply rate across personalized PAS cadences"
-            tone="brand"
-          />
-          <StatTile
-            value="20+ hrs"
-            label="Saved per rep / week on research and CRM upkeep"
-            tone="verified"
-          />
-          <StatTile
-            value="100%"
-            label="Native CRM sync with active deal deduplication"
-            tone="neutral"
-          />
-          <StatTile
-            value="6 MCP"
-            unit="tools"
-            label="Streamable HTTP API for Claude, Cursor & n8n"
-            tone="premium"
-          />
-        </div>
-      </section>
-
-      {/* SECTION 2: THE 6-STEP AUTOMATION FLOW (3 PHASES FROM PDF) */}
-      <section
-        id="flow"
-        style={{
-          padding: "88px 24px",
-          background: "var(--surface-sunken)",
-          borderTop: "1px solid var(--border-hairline)",
-          borderBottom: "1px solid var(--border-hairline)",
-        }}
-      >
-        <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
-          <div style={{ maxWidth: "720px", marginBottom: "48px" }}>
-            <h2
-              style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "clamp(28px, 3.6vw, 42px)",
-                fontWeight: 700,
-                letterSpacing: "-0.03em",
-                lineHeight: 1.15,
-                color: "var(--ink-900)",
-                margin: "0 0 12px",
-              }}
-            >
-              The 6-step autonomous outbound flow
-            </h2>
-            <p
-              style={{
-                fontSize: "16px",
-                lineHeight: 1.6,
-                color: "var(--text-secondary)",
-                margin: 0,
-              }}
-            >
-              Everything in the ecosystem, whether an AI agent, data scraper, or CRM integration, is a connector designed to execute these six structured steps.
-            </p>
-          </div>
-
-          {/* 3 Phases Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Social Proof Bar */}
+        <div style={{ marginBottom: 54 }}>
+          <p
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              color: "#7E8B9B",
+              marginBottom: 16,
+              fontFamily: "var(--font-mono, monospace)",
+            }}
+          >
+            Trusted by modern revenue teams, founders, and growth agencies
+          </p>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "clamp(16px, 3vw, 36px)",
+              flexWrap: "wrap",
+              opacity: 0.8,
+            }}
+          >
             {[
-              {
-                phaseTitle: "Phase 1: Identification & Targeting",
-                phaseSub: "Isolate high-intent accounts before spending enrichment credits",
-                steps: SIX_STEP_AUTOMATION_FLOW.slice(0, 2),
-              },
-              {
-                phaseTitle: "Phase 2: Sourcing & Intelligence",
-                phaseSub: "Verify decision-maker deliverability and uncover induced + deduced signals",
-                steps: SIX_STEP_AUTOMATION_FLOW.slice(2, 4),
-              },
-              {
-                phaseTitle: "Phase 3: Messaging & Execution",
-                phaseSub: "Generate Full-Body or Modular CRM Token copy behind a human approval gate",
-                steps: SIX_STEP_AUTOMATION_FLOW.slice(4, 6),
-              },
-            ].map((phaseGroup, pIdx) => (
+              { name: "Twenty CRM", tag: "Native Sync" },
+              { name: "HubSpot", tag: "CRM Shield" },
+              { name: "n8n Cloud", tag: "Engine" },
+              { name: "Apollo.io", tag: "275M Contacts" },
+              { name: "Smartlead", tag: "Sequencer" },
+              { name: "Clay", tag: "Waterfall" },
+              { name: "Anthropic Claude", tag: "BYOK AI" },
+            ].map((stack) => (
               <div
-                key={phaseGroup.phaseTitle}
+                key={stack.name}
                 style={{
-                  background: pIdx === 2 ? "var(--surface-deep)" : "var(--surface-card)",
-                  color: pIdx === 2 ? "var(--paper-0)" : "var(--text-primary)",
-                  borderRadius: "var(--radius-xl)",
-                  border: `1px solid ${
-                    pIdx === 2 ? "var(--border-deep)" : "var(--border-hairline)"
-                  }`,
-                  padding: "28px 24px",
                   display: "flex",
-                  flexDirection: "column",
-                  gap: 20,
-                  boxShadow: "var(--shadow-card)",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "6px 12px",
+                  borderRadius: 8,
+                  background: "rgba(255, 255, 255, 0.6)",
+                  border: "1px solid rgba(20, 20, 45, 0.06)",
                 }}
               >
-                <div
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#2563EB" }} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#14142D" }}>{stack.name}</span>
+                <span style={{ fontSize: 11, color: "#7E8B9B", fontFamily: "var(--font-mono, monospace)" }}>
+                  {stack.tag}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── CENTRAL INTERACTIVE CANVAS MOCKUP ── */}
+        <div
+          style={{
+            width: "100%",
+            position: "relative",
+            maxWidth: "1140px",
+            marginTop: 8,
+          }}
+        >
+          {/* Main Browser Window */}
+          <div
+            style={{
+              background: "#FFFFFF",
+              borderRadius: "20px",
+              border: "1px solid rgba(20, 20, 45, 0.12)",
+              boxShadow: "0 24px 60px -12px rgba(16, 27, 45, 0.12), 0 8px 24px -4px rgba(16, 27, 45, 0.06)",
+              overflow: "hidden",
+              textAlign: "left",
+            }}
+          >
+            {/* Window Top Bar */}
+            <div
+              style={{
+                background: "#F5F7FA",
+                borderBottom: "1px solid rgba(20, 20, 45, 0.08)",
+                padding: "12px 18px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#EF4444", display: "inline-block" }} />
+                <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#F59E0B", display: "inline-block" }} />
+                <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#10B981", display: "inline-block" }} />
+                <span
                   style={{
-                    paddingBottom: "16px",
-                    borderBottom: `1px solid ${
-                      pIdx === 2 ? "var(--border-deep)" : "var(--border-hairline)"
-                    }`,
+                    marginLeft: 12,
+                    fontSize: 12,
+                    fontFamily: "var(--font-mono, monospace)",
+                    color: "#58718A",
+                    background: "#FFFFFF",
+                    padding: "3px 12px",
+                    borderRadius: "6px",
+                    border: "1px solid rgba(20, 20, 45, 0.06)",
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: "17px",
-                      fontWeight: 700,
-                      color: pIdx === 2 ? "var(--paper-0)" : "var(--ink-900)",
-                      marginBottom: 4,
-                    }}
-                  >
-                    {phaseGroup.phaseTitle}
+                  prospect-pal.engine/live-pipeline/v2.4
+                </span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: "#10B981",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                    fontFamily: "var(--font-mono, monospace)",
+                  }}
+                >
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
+                  RUNNING · 0 ERRORS
+                </span>
+                <span style={{ fontSize: 11, color: "#7E8B9B", fontFamily: "var(--font-mono, monospace)" }}>
+                  LATENCY: 2.8s
+                </span>
+              </div>
+            </div>
+
+            {/* Dashboard Telemetry Bar */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                gap: 1,
+                background: "rgba(20, 20, 45, 0.08)",
+                borderBottom: "1px solid rgba(20, 20, 45, 0.08)",
+              }}
+            >
+              <div style={{ background: "#FFFFFF", padding: "16px 20px" }}>
+                <div style={{ fontSize: 11, color: "#7E8B9B", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-mono, monospace)" }}>
+                  Verified Reply Rate
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: "#14142D", marginTop: 4, display: "flex", alignItems: "baseline", gap: 6 }}>
+                  38.4%
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#10B981" }}>+14.2% vs generic</span>
+                </div>
+              </div>
+              <div style={{ background: "#FFFFFF", padding: "16px 20px" }}>
+                <div style={{ fontSize: 11, color: "#7E8B9B", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-mono, monospace)" }}>
+                  CRM Shield Status
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: "#10B981", marginTop: 4, display: "flex", alignItems: "baseline", gap: 6 }}>
+                  0 Collisions
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#58718A" }}>Twenty & HubSpot</span>
+                </div>
+              </div>
+              <div style={{ background: "#FFFFFF", padding: "16px 20px" }}>
+                <div style={{ fontSize: 11, color: "#7E8B9B", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-mono, monospace)" }}>
+                  Waterfall Deliverability
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: "#2563EB", marginTop: 4, display: "flex", alignItems: "baseline", gap: 6 }}>
+                  94.8%
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#58718A" }}>SMTP verified</span>
+                </div>
+              </div>
+              <div style={{ background: "#FFFFFF", padding: "16px 20px" }}>
+                <div style={{ fontSize: 11, color: "#7E8B9B", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-mono, monospace)" }}>
+                  Compilation Speed
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: "#14142D", marginTop: 4, display: "flex", alignItems: "baseline", gap: 6 }}>
+                  3.2 sec
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#10B981" }}>n8n JSON ready</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Interactive Pipeline Canvas Preview */}
+            <div style={{ padding: "28px 24px", background: "#FAFBFD" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: "#14142D", margin: "0 0 4px" }}>
+                    Active 9-Node Production Pipeline
+                  </h3>
+                  <p style={{ fontSize: 13, color: "#58718A", margin: 0 }}>
+                    Click any node to inspect live logic, JSON bindings, and telemetry output.
+                  </p>
+                </div>
+                <span
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "#2563EB",
+                    background: "rgba(37, 99, 235, 0.08)",
+                    padding: "4px 10px",
+                    borderRadius: "100px",
+                    fontFamily: "var(--font-mono, monospace)",
+                  }}
+                >
+                  Node {selectedNode.step} of 9 Selected
+                </span>
+              </div>
+
+              {/* Node Horizontal Scroll / Track */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "stretch",
+                  gap: 10,
+                  overflowX: "auto",
+                  paddingBottom: 12,
+                  scrollbarWidth: "thin",
+                }}
+              >
+                {PIPELINE_NODES.map((node, idx) => {
+                  const isSelected = idx === activeNodeIndex;
+                  const IconComponent = node.icon;
+                  return (
+                    <button
+                      key={node.id}
+                      onClick={() => setActiveNodeIndex(idx)}
+                      style={{
+                        flexShrink: 0,
+                        width: 170,
+                        padding: "14px 12px",
+                        borderRadius: "12px",
+                        textAlign: "left",
+                        cursor: "pointer",
+                        background: "#FFFFFF",
+                        border: isSelected ? "2px solid #2563EB" : "1px solid rgba(20, 20, 45, 0.1)",
+                        boxShadow: isSelected
+                          ? "0 4px 14px rgba(37, 99, 235, 0.15)"
+                          : "0 1px 3px rgba(16, 27, 45, 0.03)",
+                        transition: "all 0.15s",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                        <div
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 6,
+                            background: isSelected ? "#2563EB" : "#EBEFF5",
+                            color: isSelected ? "#FFFFFF" : "#14142D",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <IconComponent size={15} />
+                        </div>
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: isSelected ? "#2563EB" : "#7E8B9B",
+                            fontFamily: "var(--font-mono, monospace)",
+                          }}
+                        >
+                          0{node.step}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#14142D", marginBottom: 2 }}>
+                        {node.title.split(" ")[0]}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#58718A" }}>
+                        {node.subtitle}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Selected Node Telemetry Inspector */}
+              <div
+                style={{
+                  marginTop: 16,
+                  background: "#FFFFFF",
+                  borderRadius: "12px",
+                  border: "1px solid rgba(20, 20, 45, 0.1)",
+                  padding: "18px 20px",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                  gap: 20,
+                  alignItems: "center",
+                }}
+              >
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <span
+                      style={{
+                        background: "#EBEFF5",
+                        color: "#2563EB",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        padding: "2px 8px",
+                        borderRadius: "6px",
+                        fontFamily: "var(--font-mono, monospace)",
+                      }}
+                    >
+                      STAGE 0{selectedNode.step} · {selectedNode.badge}
+                    </span>
+                    <span style={{ fontSize: 12, color: "#7E8B9B", fontFamily: "var(--font-mono, monospace)" }}>
+                      {selectedNode.binding}
+                    </span>
                   </div>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: "13px",
-                      color: pIdx === 2 ? "var(--ink-300)" : "var(--text-secondary)",
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    {phaseGroup.phaseSub}
+                  <h4 style={{ fontSize: 18, fontWeight: 700, color: "#14142D", margin: "0 0 6px" }}>
+                    {selectedNode.title}
+                  </h4>
+                  <p style={{ fontSize: 13, lineHeight: 1.6, color: "#58718A", margin: 0 }}>
+                    {selectedNode.description}
                   </p>
                 </div>
 
-                {phaseGroup.steps.map((st) => (
-                  <div
-                    key={st.step}
-                    style={{
-                      padding: "16px",
-                      borderRadius: "var(--radius-lg)",
-                      background:
-                        pIdx === 2
-                          ? "rgba(255,255,255,0.04)"
-                          : "var(--surface-sunken)",
-                      border: `1px solid ${
-                        pIdx === 2
-                          ? "rgba(255,255,255,0.08)"
-                          : "var(--border-hairline)"
-                      }`,
-                    }}
-                  >
-                    <div
+                <div
+                  style={{
+                    background: "#0E1526",
+                    borderRadius: "10px",
+                    padding: "14px 16px",
+                    color: "#D1E2FF",
+                    fontFamily: "var(--font-mono, monospace)",
+                    fontSize: 12,
+                    position: "relative",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8, borderBottom: "1px solid rgba(255, 255, 255, 0.1)", paddingBottom: 6 }}>
+                    <span style={{ color: "#7E8B9B", fontSize: 11 }}>OUTPUT TELEMETRY</span>
+                    <button
+                      onClick={handleCopyJson}
                       style={{
+                        background: "transparent",
+                        border: "none",
+                        color: copiedSnippet ? "#10B981" : "#8DA2FB",
+                        fontSize: 11,
+                        cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "space-between",
-                        marginBottom: 8,
+                        gap: 4,
                       }}
                     >
-                      <span
-                        style={{
-                          fontFamily: "var(--font-data)",
-                          fontSize: "12px",
-                          fontWeight: 700,
-                          color:
-                            pIdx === 2
-                              ? "var(--champagne-200)"
-                              : "var(--cobalt-600)",
-                        }}
-                      >
-                        {st.step} · {st.title}
-                      </span>
-                      <code
-                        style={{
-                          fontFamily: "var(--font-data)",
-                          fontSize: "11px",
-                          color:
-                            pIdx === 2 ? "var(--ink-200)" : "var(--text-muted)",
-                          background:
-                            pIdx === 2
-                              ? "rgba(0,0,0,0.3)"
-                              : "var(--surface-card)",
-                          padding: "2px 6px",
-                          borderRadius: "4px",
-                        }}
-                      >
-                        {st.mcpTool}
-                      </code>
-                    </div>
-
-                    <p
-                      style={{
-                        margin: "0 0 12px",
-                        fontSize: "13px",
-                        lineHeight: 1.55,
-                        color:
-                          pIdx === 2
-                            ? "var(--ink-200)"
-                            : "var(--text-secondary)",
-                      }}
-                    >
-                      {st.summary}
-                    </p>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 6,
-                      }}
-                    >
-                      {st.bullets.map((b) => (
-                        <div
-                          key={b}
-                          style={{
-                            display: "flex",
-                            alignItems: "flex-start",
-                            gap: 8,
-                            fontSize: "12px",
-                            lineHeight: 1.45,
-                            color:
-                              pIdx === 2
-                                ? "var(--ink-100)"
-                                : "var(--ink-700)",
-                          }}
-                        >
-                          <Icon
-                            name="Check"
-                            size={13}
-                            color={
-                              pIdx === 2
-                                ? "var(--champagne-300)"
-                                : "var(--cobalt-600)"
-                            }
-                            style={{ marginTop: 2 }}
-                          />
-                          <span>{b}</span>
-                        </div>
-                      ))}
-                    </div>
+                      {copiedSnippet ? <Check size={12} /> : <Copy size={12} />}
+                      {copiedSnippet ? "Copied" : "Copy"}
+                    </button>
                   </div>
-                ))}
+                  <pre style={{ margin: 0, overflowX: "auto", maxHeight: 110 }}>
+                    {selectedNode.outputPreview}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── 2 Floating Status Widgets ── */}
+          <div
+            style={{
+              position: "absolute",
+              top: -24,
+              left: -20,
+              background: "#FFFFFF",
+              borderRadius: "14px",
+              padding: "12px 18px",
+              boxShadow: "0 10px 30px rgba(16, 27, 45, 0.12)",
+              border: "1px solid rgba(20, 20, 45, 0.08)",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              maxWidth: 290,
+              textAlign: "left",
+            }}
+            className="hidden lg:flex"
+          >
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                background: "rgba(16, 185, 129, 0.12)",
+                color: "#10B981",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <ShieldCheck size={20} />
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#14142D" }}>
+                CRM Dedupe Shield
+              </div>
+              <div style={{ fontSize: 11, color: "#58718A" }}>
+                100% active deals protected · 0 collisions
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              position: "absolute",
+              bottom: 20,
+              right: -24,
+              background: "#FFFFFF",
+              borderRadius: "14px",
+              padding: "12px 18px",
+              boxShadow: "0 10px 30px rgba(16, 27, 45, 0.12)",
+              border: "1px solid rgba(20, 20, 45, 0.08)",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              maxWidth: 310,
+              textAlign: "left",
+            }}
+            className="hidden lg:flex"
+          >
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                background: "rgba(37, 99, 235, 0.1)",
+                color: "#2563EB",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <Sparkles size={20} />
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#14142D" }}>
+                PAS AI Copywriter
+              </div>
+              <div style={{ fontSize: 11, color: "#58718A" }}>
+                3-sentence letters · zero generic AI slop
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─────────────────────────────────────────────────────────────
+          4. MANIFESTO STATEMENT SECTION
+          ───────────────────────────────────────────────────────────── */}
+      <section
+        id="manifesto"
+        style={{
+          background: "#FFFFFF",
+          borderTop: "1px solid rgba(20, 20, 45, 0.08)",
+          borderBottom: "1px solid rgba(20, 20, 45, 0.08)",
+          padding: "96px 24px",
+        }}
+      >
+        <div style={{ maxWidth: "1080px", margin: "0 auto", textAlign: "center" }}>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              color: "#2563EB",
+              fontFamily: "var(--font-mono, monospace)",
+              marginBottom: 20,
+            }}
+          >
+            THE GTM AUTOMATION MANIFESTO
+          </div>
+
+          <h2
+            style={{
+              fontFamily: "var(--font-sans, system-ui)",
+              fontSize: "clamp(26px, 4vw, 44px)",
+              fontWeight: 700,
+              lineHeight: 1.25,
+              letterSpacing: "-0.025em",
+              color: "#14142D",
+              margin: "0 auto 40px",
+              maxWidth: "960px",
+            }}
+          >
+            Prospect PAL is an autonomous outbound engineering platform for founders and modern revenue teams that replaces brittle 8-tool stacks with self-healing, zero-collision GTM agent pipelines.
+          </h2>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: 16,
+              marginTop: 32,
+              textAlign: "left",
+            }}
+          >
+            {[
+              {
+                title: "1. Ingest & Cron",
+                sub: "Automated Lead Capture",
+                desc: "Discover decision-makers matching exact hiring, tech, and funding signals.",
+                color: "#2563EB",
+              },
+              {
+                title: "2. CRM Dedupe Shield",
+                sub: "Zero-Collision Guarantee",
+                desc: "Real-time check across Twenty CRM, HubSpot, and Salesforce before outreach.",
+                color: "#10B981",
+              },
+              {
+                title: "3. Deep PAS Research",
+                sub: "3-Sentence Precision",
+                desc: "Hyper-personalized Problem-Agitate-Solution letters tailored to individual pain points.",
+                color: "#6366F1",
+              },
+              {
+                title: "4. Sequence Send",
+                sub: "Smart Mailbox Safety",
+                desc: "Automatic enrollment into Smartlead/Instantly with reply tracking & self-healing.",
+                color: "#D97706",
+              },
+            ].map((pillar) => (
+              <div
+                key={pillar.title}
+                style={{
+                  background: "#F6F8FA",
+                  borderRadius: "14px",
+                  padding: "20px 18px",
+                  border: "1px solid rgba(20, 20, 45, 0.08)",
+                }}
+              >
+                <div style={{ fontSize: 11, fontWeight: 700, color: pillar.color, fontFamily: "var(--font-mono, monospace)", marginBottom: 4 }}>
+                  {pillar.sub}
+                </div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: "#14142D", marginBottom: 6 }}>
+                  {pillar.title}
+                </div>
+                <div style={{ fontSize: 13, color: "#58718A", lineHeight: 1.5 }}>
+                  {pillar.desc}
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* SECTION 3: ARCHITECTURE BLUEPRINT (7-NODE PRODUCTION PIPELINE + ROSTR C4) */}
+      {/* ─────────────────────────────────────────────────────────────
+          5. 4 CORE SPOTLIGHT CARDS
+          ───────────────────────────────────────────────────────────── */}
       <section
-        id="architecture"
+        id="pipeline"
         style={{
-          padding: "88px 24px",
           maxWidth: "1280px",
           margin: "0 auto",
+          padding: "96px 24px",
         }}
       >
-        <div style={{ maxWidth: "720px", marginBottom: "40px" }}>
+        <div style={{ textAlign: "center", marginBottom: 64 }}>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              color: "#2563EB",
+              fontFamily: "var(--font-mono, monospace)",
+              marginBottom: 12,
+            }}
+          >
+            ARCHITECTURE IN DEPTH
+          </div>
           <h2
             style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(28px, 3.6vw, 42px)",
-              fontWeight: 700,
+              fontSize: "clamp(28px, 4vw, 42px)",
+              fontWeight: 800,
               letterSpacing: "-0.03em",
-              lineHeight: 1.15,
-              color: "var(--ink-900)",
-              margin: "0 0 12px",
+              color: "#14142D",
+              margin: "0 0 16px",
             }}
           >
-            Production architecture blueprint
+            Engineered for pipeline clarity.
           </h2>
-          <p
-            style={{
-              fontSize: "16px",
-              lineHeight: 1.6,
-              color: "var(--text-secondary)",
-              margin: 0,
-            }}
-          >
-            How the workflow nodes, CRM deduplication shield, PAL prompt compiler, and ROSTR entitlement engine connect in a live production environment.
+          <p style={{ fontSize: 16, color: "#58718A", maxWidth: "600px", margin: "0 auto" }}>
+            Every step is designed to replace manual SDR drudgery while keeping your domain reputation and CRM clean.
           </p>
         </div>
 
-        {/* Interactive Pipeline Rail Card */}
-        <div
-          style={{
-            background: "var(--surface-deep)",
-            borderRadius: "var(--radius-2xl)",
-            border: "1px solid var(--border-deep)",
-            padding: "24px",
-            marginBottom: "28px",
-          }}
-        >
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+
+          {/* Card 1: CRM Dedupe Shield */}
           <div
             style={{
-              display: "flex",
+              background: "#FFFFFF",
+              borderRadius: "20px",
+              border: "1px solid rgba(20, 20, 45, 0.1)",
+              boxShadow: "0 4px 20px rgba(16, 27, 45, 0.04)",
+              padding: "48px 40px",
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+              gap: 40,
               alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: 12,
-              marginBottom: "18px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span
-                style={{
-                  fontFamily: "var(--font-data)",
-                  fontSize: "var(--text-caption)",
-                  color: "var(--ink-200)",
-                }}
-              >
-                prospect-automation-engine.n8n.json
-              </span>
-              <Badge tone="verified" icon="Check">
-                24/24 Automated Tests Passing
-              </Badge>
-            </div>
-            <Link href="/templates" style={{ textDecoration: "none" }}>
-              <Button variant="inverse" size="sm" iconRight="ArrowUpRight">
-                Inspect full workflow JSON
-              </Button>
-            </Link>
-          </div>
-
-          <PipelineRail
-            nodes={PIPELINE_NODES}
-            activeIndex={activeNodeIndex}
-            onSelect={setActiveNodeIndex}
-            onDeep
-          />
-
-          <div
-            style={{
-              marginTop: "18px",
-              padding: "16px 20px",
-              borderRadius: "var(--radius-lg)",
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid var(--border-deep)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: 16,
             }}
           >
             <div>
               <div
                 style={{
-                  fontFamily: "var(--font-data)",
-                  fontSize: "var(--text-micro)",
-                  color: "var(--champagne-200)",
-                  marginBottom: 4,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#10B981",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  fontFamily: "var(--font-mono, monospace)",
+                  marginBottom: 8,
                 }}
               >
-                {selectedNode.node} · {selectedNode.binding}
+                DEAL SAFETY & PIPELINE SHIELD
               </div>
-              <div
-                style={{
-                  fontSize: "var(--text-body-sm)",
-                  color: "var(--paper-0)",
-                  fontWeight: 600,
-                }}
-              >
-                {selectedNode.function}
-              </div>
-              <div
-                style={{
-                  fontSize: "var(--text-caption)",
-                  color: "var(--ink-300)",
-                  marginTop: 2,
-                }}
-              >
-                Platform bindings: {selectedNode.platforms}
-              </div>
-            </div>
-
-            <Badge tone="deep" mono>
-              {selectedNode.node.includes("06")
-                ? "Human-in-the-loop Gate"
-                : "Automated Node"}
-            </Badge>
-          </div>
-        </div>
-
-        {/* 2-Column Architecture Grid: C4 System Context + ROSTR Runtime Modules */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div
-            style={{
-              background: "var(--surface-card)",
-              borderRadius: "var(--radius-xl)",
-              border: "1px solid var(--border-hairline)",
-              padding: "26px",
-              boxShadow: "var(--shadow-hairline)",
-            }}
-          >
-            <h3
-              style={{
-                margin: "0 0 6px",
-                fontSize: "var(--text-h3)",
-                fontWeight: 700,
-              }}
-            >
-              System Context (C4 Level 1 & 2)
-            </h3>
-            <p
-              style={{
-                margin: "0 0 18px",
-                fontSize: "var(--text-caption)",
-                color: "var(--text-secondary)",
-              }}
-            >
-              Vercel serverless runtime, encrypted file vault, and Supabase RLS database connected to five external systems.
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {C4_SYSTEM_CONTEXT_LINKS.map((item) => (
-                <div
-                  key={item.link}
-                  style={{
-                    padding: "11px 14px",
-                    borderRadius: "var(--radius-md)",
-                    background: "var(--surface-sunken)",
-                    display: "flex",
-                    alignItems: "flex-start",
-                    justifyContent: "space-between",
-                    gap: 12,
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        fontSize: "13px",
-                        fontWeight: 600,
-                        color: "var(--ink-900)",
-                      }}
-                    >
-                      {item.link}
+              <h3 style={{ fontSize: 28, fontWeight: 800, color: "#14142D", margin: "0 0 16px", letterSpacing: "-0.02em" }}>
+                See where your pipeline is heading before an SDR burns a deal.
+              </h3>
+              <p style={{ fontSize: 15, lineHeight: 1.6, color: "#58718A", marginBottom: 24 }}>
+                Active shields query Twenty CRM, HubSpot, and Salesforce in real-time. If an account has an active proposal, an assigned executive owner, or an opt-out tag, the prospect is automatically dropped before enrollment.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {[
+                  "No double-touch incidents on existing customer accounts",
+                  "Automatic sync with Twenty CRM and HubSpot deal stages",
+                  "Prevents SDR collisions across overlapping territories",
+                ].map((item) => (
+                  <div key={item} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#35363B" }}>
+                    <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(16, 185, 129, 0.12)", color: "#10B981", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Check size={12} strokeWidth={2.5} />
                     </div>
-                    <div
-                      style={{
-                        fontSize: "12px",
-                        color: "var(--text-secondary)",
-                        marginTop: 2,
-                      }}
-                    >
-                      {item.flows}
-                    </div>
+                    <span>{item}</span>
                   </div>
-                  <Badge tone="brand" mono shape="rounded">
-                    {item.protocol}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div
-            style={{
-              background: "var(--surface-card)",
-              borderRadius: "var(--radius-xl)",
-              border: "1px solid var(--border-hairline)",
-              padding: "26px",
-              boxShadow: "var(--shadow-hairline)",
-            }}
-          >
-            <h3
-              style={{
-                margin: "0 0 6px",
-                fontSize: "var(--text-h3)",
-                fontWeight: 700,
-              }}
-            >
-              ROSTR Runtime & Packaging Engine
-            </h3>
-            <p
-              style={{
-                margin: "0 0 18px",
-                fontSize: "var(--text-caption)",
-                color: "var(--text-secondary)",
-              }}
-            >
-              Five modules take each agent folder from validated manifest to licensed, human-gated execution and a downloadable archive.
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {ROSTR_RUNTIME_MODULES.map((mod) => (
-                <div
-                  key={mod.module}
-                  style={{
-                    padding: "11px 14px",
-                    borderRadius: "var(--radius-md)",
-                    background: "var(--surface-sunken)",
-                  }}
-                >
-                  <code
-                    style={{
-                      fontFamily: "var(--font-data)",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      color: "var(--cobalt-700)",
-                    }}
-                  >
-                    {mod.module}
-                  </code>
-                  <div
-                    style={{
-                      fontSize: "12.5px",
-                      color: "var(--text-secondary)",
-                      marginTop: 3,
-                      lineHeight: 1.45,
-                    }}
-                  >
-                    {mod.purpose}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 4: MCP LAYER, HARNESS INTEGRATION & AGENT MARKETPLACE (Eyebrow #2) */}
-      <section
-        id="marketplace"
-        style={{
-          padding: "88px 24px",
-          background: "var(--surface-deep)",
-          color: "var(--paper-0)",
-        }}
-      >
-        <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
-          <div style={{ maxWidth: "740px", marginBottom: "44px" }}>
-            <div
-              style={{
-                fontFamily: "var(--font-data)",
-                fontSize: "11px",
-                fontWeight: 600,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                color: "var(--champagne-200)",
-                marginBottom: "12px",
-              }}
-            >
-              MCP & AGENT MARKETPLACE
-            </div>
-            <h2
-              style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "clamp(28px, 3.6vw, 42px)",
-                fontWeight: 700,
-                letterSpacing: "-0.03em",
-                lineHeight: 1.15,
-                color: "var(--paper-0)",
-                margin: "0 0 12px",
-              }}
-            >
-              Use in your own agent harness or download from the marketplace
-            </h2>
-            <p
-              style={{
-                fontSize: "16px",
-                lineHeight: 1.6,
-                color: "var(--ink-300)",
-                margin: 0,
-              }}
-            >
-              Connect Claude Code, Cursor, Antigravity, Vercel AI SDK, or Cloudflare Workers to our Streamable HTTP MCP server, or download standalone ROSTR agent kits.
-            </p>
-          </div>
-
-          {/* Harness Integration Code Switcher */}
-          <div
-            style={{
-              background: "var(--surface-deep-raised)",
-              borderRadius: "var(--radius-xl)",
-              border: "1px solid var(--border-deep)",
-              overflow: "hidden",
-              marginBottom: "40px",
-            }}
-          >
-            <div
-              style={{
-                padding: "12px 20px",
-                borderBottom: "1px solid var(--border-deep)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                flexWrap: "wrap",
-                gap: 10,
-              }}
-            >
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {Object.entries(HARNESS_SNIPPETS).map(([key, item]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setActiveHarness(key)}
-                    style={{
-                      padding: "6px 12px",
-                      borderRadius: "var(--radius-sm)",
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      border: "none",
-                      cursor: "pointer",
-                      background:
-                        activeHarness === key
-                          ? "var(--cobalt-600)"
-                          : "rgba(255,255,255,0.05)",
-                      color:
-                        activeHarness === key
-                          ? "var(--paper-0)"
-                          : "var(--ink-200)",
-                    }}
-                  >
-                    {item.label}
-                  </button>
                 ))}
               </div>
-
-              <Button
-                variant="inverse"
-                size="sm"
-                icon={copiedSnippet ? "Check" : "Copy"}
-                onClick={copySnippet}
-              >
-                {copiedSnippet ? "Copied config" : `Copy ${currentSnippet.filename}`}
-              </Button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12">
-              <div
-                className="lg:col-span-5"
-                style={{
-                  padding: "24px",
-                  borderRight: "1px solid var(--border-deep)",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  gap: 16,
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-data)",
-                      fontSize: "12px",
-                      color: "var(--champagne-200)",
-                      marginBottom: 8,
-                    }}
-                  >
-                    {currentSnippet.filename}
-                  </div>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: "14px",
-                      lineHeight: 1.6,
-                      color: "var(--ink-200)",
-                    }}
-                  >
-                    {currentSnippet.caption}
-                  </p>
-                </div>
-
-                <div
-                  style={{
-                    padding: "14px",
-                    borderRadius: "var(--radius-md)",
-                    background: "rgba(0,0,0,0.25)",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                    fontSize: "12px",
-                    color: "var(--ink-200)",
-                  }}
-                >
-                  <strong style={{ color: "var(--paper-0)", display: "block", marginBottom: 4 }}>
-                    Human-Approval Safety Contract
-                  </strong>
-                  When an MCP client invokes <code>enroll_outreach</code>, the server returns <code>pending_approval</code> and an <code>approvalId</code>. Only your operator dashboard or Slack webhook can approve the send.
-                </div>
+            {/* Visual Panel */}
+            <div
+              style={{
+                background: "#F5F7FA",
+                borderRadius: "16px",
+                border: "1px solid rgba(20, 20, 45, 0.08)",
+                padding: "24px",
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#14142D", marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span>REAL-TIME SHIELD INSPECTION</span>
+                <span style={{ color: "#10B981", fontFamily: "var(--font-mono, monospace)", fontSize: 11 }}>ACTIVE · 100% SHIELDED</span>
               </div>
-
-              <div className="lg:col-span-7" style={{ padding: "20px 24px", background: "#080C12" }}>
-                <pre
-                  style={{
-                    margin: 0,
-                    fontFamily: "var(--font-data)",
-                    fontSize: "12.5px",
-                    lineHeight: 1.6,
-                    color: "var(--ink-100)",
-                    overflowX: "auto",
-                  }}
-                >
-                  <code>{currentSnippet.code}</code>
-                </pre>
-              </div>
-            </div>
-          </div>
-
-          {/* 3 Shipping ROSTR Agent Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {ROSTR_AGENTS.map((agent) => (
-              <div
-                key={agent.slug}
-                style={{
-                  background: "var(--surface-deep-raised)",
-                  borderRadius: "var(--radius-xl)",
-                  border: "1px solid var(--border-deep)",
-                  padding: "24px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  gap: 18,
-                }}
-              >
-                <div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {[
+                  { name: "Acme Corp (Sarah Jenkins)", status: "PASSED", note: "No active deal · Cold ICP match", bg: "rgba(16, 185, 129, 0.1)", text: "#10B981" },
+                  { name: "GlobalTech (Mark Alvarez)", status: "SHIELDED", note: "Stage: Proposal Sent ($45k ARR)", bg: "rgba(239, 68, 68, 0.1)", text: "#EF4444" },
+                  { name: "CloudBase (Elena Rostova)", status: "PASSED", note: "Twenty CRM clean · Tier 1 target", bg: "rgba(16, 185, 129, 0.1)", text: "#10B981" },
+                  { name: "Nexus AI (David Chen)", status: "EXCLUDED", note: "Opted-out 45 days ago", bg: "rgba(245, 158, 11, 0.1)", text: "#D97706" },
+                ].map((lead) => (
                   <div
+                    key={lead.name}
                     style={{
+                      background: "#FFFFFF",
+                      borderRadius: "10px",
+                      padding: "12px 14px",
+                      border: "1px solid rgba(20, 20, 45, 0.06)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      gap: 8,
-                      marginBottom: 12,
                     }}
                   >
-                    <Badge tone="deep" mono>
-                      {agent.category}
-                    </Badge>
-                    {agent.humanApprovalGate ? (
-                      <Badge tone="premium" icon="Lock">
-                        Gate: {agent.humanApprovalGate}
-                      </Badge>
-                    ) : (
-                      <Badge tone="verified">Auto-proceed</Badge>
-                    )}
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#14142D" }}>{lead.name}</div>
+                      <div style={{ fontSize: 11, color: "#7E8B9B" }}>{lead.note}</div>
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6, background: lead.bg, color: lead.text, fontFamily: "var(--font-mono, monospace)" }}>
+                      {lead.status}
+                    </span>
                   </div>
+                ))}
+              </div>
+            </div>
+          </div>
 
-                  <h3
-                    style={{
-                      margin: "0 0 8px",
-                      fontSize: "19px",
-                      fontWeight: 700,
-                      color: "var(--paper-0)",
-                    }}
-                  >
-                    {agent.name}
-                  </h3>
-                  <p
-                    style={{
-                      margin: "0 0 16px",
-                      fontSize: "13.5px",
-                      lineHeight: 1.55,
-                      color: "var(--ink-200)",
-                    }}
-                  >
-                    {agent.description}
-                  </p>
-
-                  <div
-                    style={{
-                      padding: "12px",
-                      borderRadius: "var(--radius-md)",
-                      background: "#080C12",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                      fontFamily: "var(--font-data)",
-                      fontSize: "11px",
-                      lineHeight: 1.6,
-                      color: "var(--ink-200)",
-                      marginBottom: 14,
-                    }}
-                  >
-                    {agent.directoryTree.map((line) => (
-                      <div key={line}>{line}</div>
-                    ))}
+          {/* Card 2: Waterfall Contact Reveal */}
+          <div
+            style={{
+              background: "#FFFFFF",
+              borderRadius: "20px",
+              border: "1px solid rgba(20, 20, 45, 0.1)",
+              boxShadow: "0 4px 20px rgba(16, 27, 45, 0.04)",
+              padding: "48px 40px",
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+              gap: 40,
+              alignItems: "center",
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#2563EB",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  fontFamily: "var(--font-mono, monospace)",
+                  marginBottom: 8,
+                }}
+              >
+                DATA REVEAL & VERIFICATION
+              </div>
+              <h3 style={{ fontSize: 28, fontWeight: 800, color: "#14142D", margin: "0 0 16px", letterSpacing: "-0.02em" }}>
+                Surfaces verified work emails without data waste.
+              </h3>
+              <p style={{ fontSize: 15, lineHeight: 1.6, color: "#58718A", marginBottom: 24 }}>
+                Stop paying for bad data or bouncing on single-provider lookups. Prospect PAL executes a tiered waterfall across Apollo, Clay, Prospeo, and Dropcontact, then validates SMTP handshakes live.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {[
+                  "94.8% average deliverability across verified work emails",
+                  "Multi-source fallback cascade preserves API credit spend",
+                  "Direct MX and mailbox ping checks prevent spam-trap hits",
+                ].map((item) => (
+                  <div key={item} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#35363B" }}>
+                    <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(37, 99, 235, 0.1)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Check size={12} strokeWidth={2.5} />
+                    </div>
+                    <span>{item}</span>
                   </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Visual Panel */}
+            <div
+              style={{
+                background: "#0E1526",
+                borderRadius: "16px",
+                padding: "24px",
+                color: "#E2E8F0",
+                fontFamily: "var(--font-mono, monospace)",
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#8DA2FB", marginBottom: 14 }}>
+                // WATERFALL ENRICHMENT CASCADE
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 12 }}>
+                <div style={{ background: "rgba(255, 255, 255, 0.05)", padding: "10px 12px", borderRadius: 8, borderLeft: "3px solid #2563EB" }}>
+                  <div style={{ color: "#93C5FD" }}>STEP 1: Apollo Search API</div>
+                  <div style={{ color: "#64748B", fontSize: 11 }}>Found 14 candidates · Matched persona VP Engineering</div>
                 </div>
-
-                <div style={{ display: "flex", gap: 10 }}>
-                  <a
-                    href={`/api/rostr/agents?slug=${agent.slug}&download=1`}
-                    style={{ textDecoration: "none", flex: 1 }}
-                  >
-                    <Button variant="inverse" size="sm" fullWidth icon="Download">
-                      Download Kit ({agent.price})
-                    </Button>
-                  </a>
-                  <Link href="/packages" style={{ textDecoration: "none" }}>
-                    <Button variant="outline" size="sm">
-                      Specs
-                    </Button>
-                  </Link>
+                <div style={{ background: "rgba(255, 255, 255, 0.05)", padding: "10px 12px", borderRadius: 8, borderLeft: "3px solid #6366F1" }}>
+                  <div style={{ color: "#C0ADFF" }}>STEP 2: Clay Waterfall Enrichment</div>
+                  <div style={{ color: "#64748B", fontSize: 11 }}>Primary reveal verified via Dropcontact fallback</div>
+                </div>
+                <div style={{ background: "rgba(255, 255, 255, 0.05)", padding: "10px 12px", borderRadius: 8, borderLeft: "3px solid #10B981" }}>
+                  <div style={{ color: "#86EFAC" }}>STEP 3: Live SMTP & MX Verification</div>
+                  <div style={{ color: "#10B981", fontSize: 11 }}>250 OK: Mailbox active · Deliverability Score 98%</div>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
+
+          {/* Card 3: PAS AI Copywriter */}
+          <div
+            style={{
+              background: "#FFFFFF",
+              borderRadius: "20px",
+              border: "1px solid rgba(20, 20, 45, 0.1)",
+              boxShadow: "0 4px 20px rgba(16, 27, 45, 0.04)",
+              padding: "48px 40px",
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+              gap: 40,
+              alignItems: "center",
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#6366F1",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  fontFamily: "var(--font-mono, monospace)",
+                  marginBottom: 8,
+                }}
+              >
+                HYPER-PERSONALIZED COPY
+              </div>
+              <h3 style={{ fontSize: 28, fontWeight: 800, color: "#14142D", margin: "0 0 16px", letterSpacing: "-0.02em" }}>
+                No more generic AI spam. Real research, 3 sentences.
+              </h3>
+              <p style={{ fontSize: 15, lineHeight: 1.6, color: "#58718A", marginBottom: 24 }}>
+                Recipients delete 5-paragraph AI templates instantly. Prospect PAL analyzes public filings, GitHub commits, and tech stacks to draft tight, respectful 3-sentence Problem-Agitate-Solution notes that actually earn responses.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {[
+                  "Problem: Cites concrete company initiatives or hiring bottlenecks",
+                  "Agitate: Highlights the immediate cost of inaction",
+                  "Solution: Low-friction ask with zero pushy sales tropes",
+                ].map((item) => (
+                  <div key={item} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#35363B" }}>
+                    <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(99, 102, 241, 0.12)", color: "#6366F1", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Check size={12} strokeWidth={2.5} />
+                    </div>
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Visual Panel */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 12, padding: "14px 16px" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#DC2626", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                  <AlertCircle size={14} /> GENERIC AI OUTBOUND SLOP (1.8% REPLY)
+                </div>
+                <p style={{ fontSize: 12, color: "#991B1B", lineHeight: 1.5, margin: 0 }}>
+                  &ldquo;I hope this email finds you well! In today&apos;s fast-paced digital world, companies like yours must leverage cutting-edge AI synergy to revolutionize their workflow... Do you have 30 minutes on Tuesday?&rdquo;
+                </p>
+              </div>
+
+              <div style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 12, padding: "14px 16px" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#16A34A", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                  <CheckCircle2 size={14} /> PROSPECT PAL 3-SENTENCE PAS (8.4% REPLY)
+                </div>
+                <p style={{ fontSize: 13, color: "#166534", lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
+                  &ldquo;Saw Datadog is expanding from 4 to 14 Kubernetes clusters on AWS this quarter. Most engineering teams lose 20+ dev hours weekly wrestling with node auto-scaling drift. We cut idle cluster spend by 35% with zero agent rebuilds—open to a 2-minute benchmark?&rdquo;
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 4: Self-Healing Execution & Error Triage */}
+          <div
+            style={{
+              background: "#FFFFFF",
+              borderRadius: "20px",
+              border: "1px solid rgba(20, 20, 45, 0.1)",
+              boxShadow: "0 4px 20px rgba(16, 27, 45, 0.04)",
+              padding: "48px 40px",
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+              gap: 40,
+              alignItems: "center",
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#D97706",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  fontFamily: "var(--font-mono, monospace)",
+                  marginBottom: 8,
+                }}
+              >
+                OPS & TELEMETRY
+              </div>
+              <h3 style={{ fontSize: 28, fontWeight: 800, color: "#14142D", margin: "0 0 16px", letterSpacing: "-0.02em" }}>
+                Execution diagnostics that never fail silently.
+              </h3>
+              <p style={{ fontSize: 15, lineHeight: 1.6, color: "#58718A", marginBottom: 24 }}>
+                Workflows break when APIs change, rate limits trigger, or credentials expire. Prospect PAL&apos;s Execution Analyst agent parses runData telemetry in real time, diagnoses root causes, and deploys automatic circuit-breaker retries.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {[
+                  "Automatic exponential backoff on 429 rate limit errors",
+                  "Slack & Discord alerts for Human-in-the-Loop approval gates",
+                  "One-click post-mortem analysis and auto-repair generation",
+                ].map((item) => (
+                  <div key={item} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#35363B" }}>
+                    <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(217, 119, 6, 0.12)", color: "#D97706", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Check size={12} strokeWidth={2.5} />
+                    </div>
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Visual Panel */}
+            <div
+              style={{
+                background: "#0B0F16",
+                borderRadius: "16px",
+                padding: "20px",
+                color: "#94A3B8",
+                fontFamily: "var(--font-mono, monospace)",
+                fontSize: 12,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, borderBottom: "1px solid rgba(255, 255, 255, 0.1)", paddingBottom: 8 }}>
+                <span style={{ color: "#E2E8F0" }}>EXECUTION ANALYST TELEMETRY</span>
+                <span style={{ color: "#10B981" }}>HEALED: 0 FAILURES</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ color: "#64748B" }}>[10:14:22] Run 88319 started for batch 120</div>
+                <div style={{ color: "#FBBF24" }}>[10:14:23] WARN: Apollo API 429 RateLimit detected</div>
+                <div style={{ color: "#60A5FA" }}>[10:14:23] ACTION: Backoff scheduled (wait 1200ms)</div>
+                <div style={{ color: "#34D399" }}>[10:14:25] RETRY: Node 04 resolved successfully (200 OK)</div>
+                <div style={{ color: "#34D399" }}>[10:14:28] ENROLLED: 98 verified prospects sent to Smartlead</div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
 
-      {/* SECTION 5: WHY HIGH-GROWTH TEAMS CHOOSE SALESGENCY (FROM PAGE 7 OF PDF) */}
+      {/* ─────────────────────────────────────────────────────────────
+          6. BENTO GRID
+          ───────────────────────────────────────────────────────────── */}
       <section
-        id="why"
+        id="bento"
         style={{
-          padding: "88px 24px",
-          background: "var(--surface-sunken)",
-          borderBottom: "1px solid var(--border-hairline)",
+          background: "#FFFFFF",
+          borderTop: "1px solid rgba(20, 20, 45, 0.08)",
+          borderBottom: "1px solid rgba(20, 20, 45, 0.08)",
+          padding: "96px 24px",
         }}
       >
         <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
-          <div style={{ maxWidth: "700px", marginBottom: "44px" }}>
+          <div style={{ textAlign: "center", marginBottom: 60 }}>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#2563EB",
+                fontFamily: "var(--font-mono, monospace)",
+                marginBottom: 12,
+              }}
+            >
+              MODULAR CAPABILITIES
+            </div>
             <h2
               style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "clamp(28px, 3.6vw, 42px)",
-                fontWeight: 700,
+                fontSize: "clamp(28px, 4vw, 42px)",
+                fontWeight: 800,
                 letterSpacing: "-0.03em",
-                lineHeight: 1.15,
-                color: "var(--ink-900)",
-                margin: "0 0 12px",
+                color: "#14142D",
+                margin: "0 0 16px",
               }}
             >
-              Why high-growth teams choose SalesGency
+              Tidy build, unlimited power.
             </h2>
-            <p
-              style={{
-                fontSize: "16px",
-                lineHeight: 1.6,
-                color: "var(--text-secondary)",
-                margin: 0,
-              }}
-            >
-              We do not sell bloated software subscriptions. We build and deploy custom revenue engines for your team inside the tools you already own.
+            <p style={{ fontSize: 16, color: "#58718A", maxWidth: "600px", margin: "0 auto" }}>
+              Every component works independently or unifies into a full-stack outbound engine.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                icon: "Zap" as const,
-                title: "Live in 30 Days",
-                body: "We do not do 6-month consulting roadmaps. We audit your funnel, design the architecture, and deploy functioning AI engines in weeks.",
-              },
-              {
-                icon: "KeyRound" as const,
-                title: "You Own the Engine",
-                body: "Built directly on top of your CRM and data tools. No vendor lock-in; you own the workflows, prompts, MCP servers, and data pipelines.",
-              },
-              {
-                icon: "Send" as const,
-                title: "Built for Reps",
-                body: "Emails send directly from your reps' inboxes or sequencers with high deliverability. Reps only step in to handle warm replies and run demos.",
-              },
-            ].map((card) => (
-              <div
-                key={card.title}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+              gap: 24,
+            }}
+          >
+            {BENTO_FEATURES.map((feat) => {
+              const IconComp = feat.icon;
+              return (
+                <div
+                  key={feat.id}
+                  style={{
+                    background: "#F5F7FA",
+                    borderRadius: "18px",
+                    border: "1px solid rgba(20, 20, 45, 0.08)",
+                    padding: "32px 28px",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                      <div
+                        style={{
+                          width: 38,
+                          height: 38,
+                          borderRadius: 9,
+                          background: "#FFFFFF",
+                          color: "#2563EB",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          boxShadow: "0 2px 6px rgba(16, 27, 45, 0.05)",
+                        }}
+                      >
+                        <IconComp size={19} />
+                      </div>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "#58718A",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.06em",
+                          fontFamily: "var(--font-mono, monospace)",
+                          background: "#FFFFFF",
+                          padding: "3px 8px",
+                          borderRadius: 6,
+                          border: "1px solid rgba(20, 20, 45, 0.06)",
+                        }}
+                      >
+                        {feat.category}
+                      </span>
+                    </div>
+
+                    <h3 style={{ fontSize: 19, fontWeight: 700, color: "#14142D", margin: "0 0 10px" }}>
+                      {feat.title}
+                    </h3>
+                    <p style={{ fontSize: 14, lineHeight: 1.6, color: "#58718A", margin: 0 }}>
+                      {feat.desc}
+                    </p>
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 28,
+                      paddingTop: 18,
+                      borderTop: "1px solid rgba(20, 20, 45, 0.08)",
+                      display: "flex",
+                      alignItems: "baseline",
+                      gap: 8,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 26,
+                        fontWeight: 800,
+                        color: "#14142D",
+                        fontFamily: "var(--font-sans, system-ui)",
+                        letterSpacing: "-0.02em",
+                      }}
+                    >
+                      {feat.stat}
+                    </span>
+                    <span style={{ fontSize: 12, color: "#7E8B9B", fontFamily: "var(--font-mono, monospace)" }}>
+                      {feat.statLabel}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ─────────────────────────────────────────────────────────────
+          7. INTERACTIVE LIVE AGENT SIMULATOR
+          ───────────────────────────────────────────────────────────── */}
+      <section
+        id="playground"
+        style={{
+          maxWidth: "1280px",
+          margin: "0 auto",
+          padding: "96px 24px",
+        }}
+      >
+        <div style={{ textAlign: "center", marginBottom: 54 }}>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              color: "#2563EB",
+              fontFamily: "var(--font-mono, monospace)",
+              marginBottom: 12,
+            }}
+          >
+            INTERACTIVE AGENT COPILOT
+          </div>
+          <h2
+            style={{
+              fontSize: "clamp(28px, 4vw, 42px)",
+              fontWeight: 800,
+              letterSpacing: "-0.03em",
+              color: "#14142D",
+              margin: "0 0 16px",
+            }}
+          >
+            Watch the Agent compile in real time.
+          </h2>
+          <p style={{ fontSize: 16, color: "#58718A", maxWidth: "600px", margin: "0 auto" }}>
+            Select an ICP below or enter your offer to see how Prospect PAL synthesizes personas, rules, and copy in 3 seconds.
+          </p>
+        </div>
+
+        {/* Preset Selector Buttons */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 12,
+            flexWrap: "wrap",
+            marginBottom: 32,
+          }}
+        >
+          {PLAYGROUND_PRESETS.map((preset, idx) => {
+            const isSelected = idx === activePlaygroundIndex;
+            return (
+              <button
+                key={preset.name}
+                onClick={() => setActivePlaygroundIndex(idx)}
                 style={{
-                  background: "var(--surface-card)",
-                  borderRadius: "var(--radius-xl)",
-                  border: "1px solid var(--border-hairline)",
-                  padding: "28px 26px",
-                  boxShadow: "var(--shadow-card)",
+                  background: isSelected ? "#14142D" : "#FFFFFF",
+                  color: isSelected ? "#FFFFFF" : "#58718A",
+                  border: isSelected ? "1px solid #14142D" : "1px solid rgba(20, 20, 45, 0.12)",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  padding: "9px 18px",
+                  borderRadius: "100px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  boxShadow: isSelected ? "0 4px 12px rgba(20, 20, 45, 0.15)" : "0 1px 3px rgba(16, 27, 45, 0.04)",
                 }}
               >
-                <div
+                <span>{preset.name}</span>
+                <span
                   style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: "var(--radius-md)",
-                    background: "var(--cobalt-50)",
-                    color: "var(--cobalt-600)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginBottom: 16,
-                  }}
-                >
-                  <Icon name={card.icon} size={20} />
-                </div>
-                <h3
-                  style={{
-                    margin: "0 0 8px",
-                    fontSize: "18px",
+                    fontSize: 10,
                     fontWeight: 700,
-                    color: "var(--ink-900)",
+                    padding: "2px 6px",
+                    borderRadius: 4,
+                    background: isSelected ? "rgba(255, 255, 255, 0.2)" : "#EBEFF5",
+                    color: isSelected ? "#FFFFFF" : "#58718A",
+                    fontFamily: "var(--font-mono, monospace)",
                   }}
                 >
-                  {card.title}
-                </h3>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "14px",
-                    lineHeight: 1.6,
-                    color: "var(--text-secondary)",
-                  }}
-                >
-                  {card.body}
+                  {preset.tag}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Playground Interactive Card */}
+        <div
+          style={{
+            background: "#FFFFFF",
+            borderRadius: "20px",
+            border: "1px solid rgba(20, 20, 45, 0.1)",
+            boxShadow: "0 16px 48px -8px rgba(16, 27, 45, 0.08)",
+            padding: "36px",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+            gap: 36,
+          }}
+        >
+          {/* Left: Input Brief & Persona Extraction */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#2563EB" }} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#14142D", fontFamily: "var(--font-mono, monospace)" }}>
+                CAMPAIGN INPUT BRIEF
+              </span>
+            </div>
+
+            <div style={{ background: "#F5F7FA", borderRadius: 12, padding: "16px", marginBottom: 18, border: "1px solid rgba(20, 20, 45, 0.06)" }}>
+              <div style={{ fontSize: 11, color: "#7E8B9B", textTransform: "uppercase", marginBottom: 4, fontFamily: "var(--font-mono, monospace)" }}>
+                Target ICP & Offer
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#14142D", marginBottom: 6 }}>
+                {selectedPreset.company} · {selectedPreset.offer}
+              </div>
+              <div style={{ fontSize: 12, color: "#58718A" }}>
+                <strong>Criteria:</strong> {selectedPreset.icp}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: "#FFFFFF", border: "1px solid rgba(20, 20, 45, 0.08)", borderRadius: 8 }}>
+                <span style={{ fontSize: 12, color: "#58718A" }}>Extracted Persona</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#14142D" }}>{selectedPreset.persona}</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", background: "#FFFFFF", border: "1px solid rgba(20, 20, 45, 0.08)", borderRadius: 8 }}>
+                <span style={{ fontSize: 12, color: "#58718A" }}>Adapter Stack</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#2563EB", fontFamily: "var(--font-mono, monospace)" }}>
+                  {selectedPreset.tools}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div style={{ background: "#F5F7FA", padding: "12px", borderRadius: 8, textAlign: "center" }}>
+                <div style={{ fontSize: 11, color: "#7E8B9B" }}>Discovered / Shielded</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: "#14142D", marginTop: 2 }}>
+                  {selectedPreset.metrics.discovered} / <span style={{ color: "#EF4444" }}>-{selectedPreset.metrics.shielded}</span>
+                </div>
+              </div>
+              <div style={{ background: "#F5F7FA", padding: "12px", borderRadius: 8, textAlign: "center" }}>
+                <div style={{ fontSize: 11, color: "#7E8B9B" }}>Est. Reply Rate</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: "#10B981", marginTop: 2 }}>
+                  {selectedPreset.metrics.estimatedReplyRate}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Real-time PAS Copy & Workflow Compilation */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#10B981" }} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#14142D", fontFamily: "var(--font-mono, monospace)" }}>
+                  GENERATED 3-SENTENCE PAS OUTBOUND
+                </span>
+              </div>
+              <span style={{ fontSize: 11, color: "#10B981", fontWeight: 700, fontFamily: "var(--font-mono, monospace)" }}>
+                COMPILED IN 3.2s
+              </span>
+            </div>
+
+            <div
+              style={{
+                background: "#FAFBFD",
+                borderRadius: 12,
+                border: "1px solid rgba(20, 20, 45, 0.08)",
+                padding: "20px",
+                marginBottom: 16,
+              }}
+            >
+              <div style={{ borderBottom: "1px solid rgba(20, 20, 45, 0.06)", paddingBottom: 10, marginBottom: 12, fontSize: 12, color: "#58718A" }}>
+                <div><strong>Subject:</strong> Quick question regarding {selectedPreset.persona.split(",")[0]} at {"{{company}}"}</div>
+                <div><strong>To:</strong> {"{{first_name}}"} &lt;{"{{email}}"}&gt;</div>
+              </div>
+
+              <div style={{ fontSize: 14, lineHeight: 1.6, color: "#14142D" }}>
+                <p style={{ margin: "0 0 10px" }}>Hi {"{{first_name}}"},</p>
+                <p style={{ margin: "0 0 10px", color: "#1E293B" }}>
+                  <span style={{ background: "rgba(37, 99, 235, 0.08)", padding: "1px 4px", borderRadius: 4 }}>
+                    {selectedPreset.pasOutput.hook}
+                  </span>{" "}
+                  <span style={{ background: "rgba(239, 68, 68, 0.08)", padding: "1px 4px", borderRadius: 4 }}>
+                    {selectedPreset.pasOutput.agitate}
+                  </span>{" "}
+                  <span style={{ background: "rgba(16, 185, 129, 0.08)", padding: "1px 4px", borderRadius: 4 }}>
+                    {selectedPreset.pasOutput.solution}
+                  </span>
                 </p>
+                <p style={{ margin: 0, color: "#58718A" }}>Best,<br />Alex</p>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <Link
+                href="/wizard"
+                style={{
+                  background: "#14142D",
+                  color: "#FFFFFF",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  padding: "10px 18px",
+                  borderRadius: "8px",
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                Compile My Own Workflow <ArrowRight size={14} />
+              </Link>
+              <span style={{ fontSize: 12, color: "#7E8B9B" }}>
+                Generates validated n8n JSON & CRM shields.
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─────────────────────────────────────────────────────────────
+          8. CUSTOMER SPOTLIGHT
+          ───────────────────────────────────────────────────────────── */}
+      <section
+        style={{
+          background: "#FFFFFF",
+          borderTop: "1px solid rgba(20, 20, 45, 0.08)",
+          borderBottom: "1px solid rgba(20, 20, 45, 0.08)",
+          padding: "96px 24px",
+        }}
+      >
+        <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 60 }}>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#2563EB",
+                fontFamily: "var(--font-mono, monospace)",
+                marginBottom: 12,
+              }}
+            >
+              CUSTOMER SPOTLIGHT
+            </div>
+            <h2
+              style={{
+                fontSize: "clamp(28px, 4vw, 42px)",
+                fontWeight: 800,
+                letterSpacing: "-0.03em",
+                color: "#14142D",
+                margin: "0 0 16px",
+              }}
+            >
+              Proven on real revenue pipelines.
+            </h2>
+            <p style={{ fontSize: 16, color: "#58718A", maxWidth: "600px", margin: "0 auto" }}>
+              See how modern teams replaced SDR tool sprawl and booked real calls.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: 24,
+            }}
+          >
+            {TESTIMONIALS.map((t) => (
+              <div
+                key={t.name}
+                style={{
+                  background: "#F5F7FA",
+                  borderRadius: "16px",
+                  border: "1px solid rgba(20, 20, 45, 0.08)",
+                  padding: "28px 24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                }}
+              >
+                <div>
+                  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14 }}>
+                    <span style={{ fontSize: 18, fontWeight: 800, color: "#2563EB" }}>
+                      {t.metric}
+                    </span>
+                    <span style={{ fontSize: 11, color: "#7E8B9B", fontFamily: "var(--font-mono, monospace)" }}>
+                      {t.useCase}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 14, lineHeight: 1.6, color: "#35363B", margin: "0 0 20px" }}>
+                    &ldquo;{t.quote}&rdquo;
+                  </p>
+                </div>
+
+                <div style={{ paddingTop: 14, borderTop: "1px solid rgba(20, 20, 45, 0.08)", display: "flex", alignItems: "center", gap: 10 }}>
+                  <div
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: "50%",
+                      background: "#14142D",
+                      color: "#FFFFFF",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 700,
+                      fontSize: 13,
+                    }}
+                  >
+                    {t.name[0]}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#14142D" }}>{t.name}</div>
+                    <div style={{ fontSize: 11, color: "#58718A" }}>
+                      {t.role} · {t.company}
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* SECTION 6: TRANSPARENT PRICING */}
+      {/* ─────────────────────────────────────────────────────────────
+          9. INTERACTIVE PRICING MATRIX
+          ───────────────────────────────────────────────────────────── */}
       <section
         id="pricing"
         style={{
-          padding: "88px 24px",
           maxWidth: "1280px",
           margin: "0 auto",
+          padding: "96px 24px",
         }}
       >
-        <div style={{ maxWidth: "680px", marginBottom: "44px" }}>
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              color: "#2563EB",
+              fontFamily: "var(--font-mono, monospace)",
+              marginBottom: 12,
+            }}
+          >
+            TRANSPARENT PRICING
+          </div>
           <h2
             style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(28px, 3.6vw, 42px)",
-              fontWeight: 700,
+              fontSize: "clamp(28px, 4vw, 42px)",
+              fontWeight: 800,
               letterSpacing: "-0.03em",
-              lineHeight: 1.15,
-              color: "var(--ink-900)",
-              margin: "0 0 12px",
+              color: "#14142D",
+              margin: "0 0 16px",
             }}
           >
-            Own your outbound engine forever
+            Own your workflows forever. Zero per-lead surcharges.
           </h2>
-          <p
+          <p style={{ fontSize: 16, color: "#58718A", maxWidth: "600px", margin: "0 auto 28px" }}>
+            Bring your own API keys. No hidden fees or contact markup. Cancel or downgrade anytime.
+          </p>
+
+          <div
             style={{
-              fontSize: "16px",
-              lineHeight: 1.6,
-              color: "var(--text-secondary)",
-              margin: 0,
+              display: "inline-flex",
+              alignItems: "center",
+              background: "#EBEFF5",
+              padding: "4px",
+              borderRadius: "100px",
+              border: "1px solid rgba(20, 20, 45, 0.08)",
             }}
           >
-            Bring your own keys. Zero per-lead surcharges. Deploy via MCP, n8n, Vercel AI Stack, or Cloudflare.
-          </p>
+            <button
+              onClick={() => setBillingPeriod("monthly")}
+              style={{
+                background: billingPeriod === "monthly" ? "#FFFFFF" : "transparent",
+                color: billingPeriod === "monthly" ? "#14142D" : "#58718A",
+                border: "none",
+                fontSize: 13,
+                fontWeight: 600,
+                padding: "8px 18px",
+                borderRadius: "100px",
+                cursor: "pointer",
+                boxShadow: billingPeriod === "monthly" ? "0 2px 6px rgba(16, 27, 45, 0.08)" : "none",
+              }}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingPeriod("annual")}
+              style={{
+                background: billingPeriod === "annual" ? "#FFFFFF" : "transparent",
+                color: billingPeriod === "annual" ? "#14142D" : "#58718A",
+                border: "none",
+                fontSize: 13,
+                fontWeight: 600,
+                padding: "8px 18px",
+                borderRadius: "100px",
+                cursor: "pointer",
+                boxShadow: billingPeriod === "annual" ? "0 2px 6px rgba(16, 27, 45, 0.08)" : "none",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <span>Annual</span>
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  background: "rgba(37, 99, 235, 0.1)",
+                  color: "#2563EB",
+                  padding: "2px 6px",
+                  borderRadius: 100,
+                  fontFamily: "var(--font-mono, monospace)",
+                }}
+              >
+                SAVE 20%
+              </span>
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-          <PricingCard
-            name="ROSTR Agent & MCP Kit"
-            price="$19.99"
-            note="One-time download · Full source"
-            description="Standalone ROSTR agent packages, 6-tool Streamable HTTP MCP server, Supabase migration, and n8n workflow JSON for your own harness."
-            features={[
-              "Prospect Automation Engine + MCP Kit (.zip)",
-              "6 MCP tools with human approval gate",
-              "Canonical 7-node and 9-node n8n JSON",
-              "Delivery Framework A & B prompt templates",
-              "Works in Claude Code, Cursor & Antigravity",
-            ]}
-            cta={
-              <Link href="/packages" style={{ textDecoration: "none" }}>
-                <Button variant="outline" fullWidth>
-                  Download agent kits
-                </Button>
-              </Link>
-            }
-          />
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+            gap: 24,
+            alignItems: "stretch",
+          }}
+        >
+          {/* Tier 1: DIY Package */}
+          <div
+            style={{
+              background: "#FFFFFF",
+              borderRadius: "20px",
+              border: "1px solid rgba(20, 20, 45, 0.1)",
+              padding: "36px 30px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#58718A", textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: "var(--font-mono, monospace)" }}>
+                DIY SKILL PACKAGE
+              </div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6, margin: "14px 0 6px" }}>
+                <span style={{ fontSize: 44, fontWeight: 800, color: "#14142D", letterSpacing: "-0.03em" }}>
+                  $19.99
+                </span>
+                <span style={{ fontSize: 13, color: "#7E8B9B" }}>one-time payment</span>
+              </div>
+              <p style={{ fontSize: 14, color: "#58718A", lineHeight: 1.5, margin: "0 0 24px" }}>
+                For technical operators and solo builders running local coding agents or standalone n8n workflows.
+              </p>
 
-          <PricingCard
-            featured
-            name="Vertical Outbound Platform"
-            price="$99"
-            cadence="/ month"
-            note="Cancel anytime · 100% BYOK"
-            description="Full interactive vertical outbound studio, hosted MCP endpoint, PAL workflow compiler, and unlimited campaign builds."
-            features={[
-              "1 ICP / Signal to full 6-step outbound flow",
-              "Hosted Streamable HTTP MCP key (sg_live_...)",
-              "HubSpot, Salesforce, Clay & Apollo adapters",
-              "1-click Slack & dashboard approval gate",
-              "All 3 ROSTR agents (Outbound, Inbound, Hygiene)",
-              "Direct push to your n8n or Cloudflare instance",
-            ]}
-            cta={
-              <Link href="/checkout?plan=pro" style={{ textDecoration: "none" }}>
-                <Button variant="accent" fullWidth iconRight="ArrowRight">
-                  Compile outbound engine
-                </Button>
-              </Link>
-            }
-          />
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, borderTop: "1px solid rgba(20, 20, 45, 0.08)", paddingTop: 20 }}>
+                {[
+                  "Full Agent Skill Package (.agents/skills)",
+                  "5 production n8n JSON templates",
+                  "3-sentence PAS prompt catalog",
+                  "Zero cloud runtime dependencies",
+                  "Runs locally in Cursor, Claude Code, or Antigravity",
+                ].map((feat) => (
+                  <div key={feat} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#35363B" }}>
+                    <Check size={14} color="#10B981" strokeWidth={2.5} />
+                    <span>{feat}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-          <PricingCard
-            tone="sunken"
-            name="Custom Revenue Engine"
-            price="Custom"
-            note="Live in 30 days · White-glove build"
-            description="We audit your funnel, design the architecture, and deploy functioning AI outbound engines inside your CRM and sequencer."
-            features={[
-              "Complete 30-day SalesGency architecture build",
-              "Custom Clay, ZoomInfo & Apollo waterfalls",
-              "CRM deduplication shield & historical cleanup",
-              "Dedicated Slack approval & rep inbox routing",
-              "Full handover of prompts, workflows & keys",
-            ]}
-            cta={
-              <Link href="/checkout?plan=core" style={{ textDecoration: "none" }}>
-                <Button variant="outline" fullWidth>
-                  Book architecture audit
-                </Button>
+            <div style={{ marginTop: 32 }}>
+              <Link
+                href="/packages"
+                style={{
+                  background: "#F5F7FA",
+                  color: "#14142D",
+                  border: "1px solid rgba(20, 20, 45, 0.12)",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  padding: "12px 20px",
+                  borderRadius: "10px",
+                  textDecoration: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                }}
+              >
+                Get DIY Package — $19.99
               </Link>
-            }
-          />
+            </div>
+          </div>
+
+          {/* Tier 2: Team Pro (Featured) */}
+          <div
+            style={{
+              background: "#FFFFFF",
+              borderRadius: "20px",
+              border: "2px solid #2563EB",
+              padding: "36px 30px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              boxShadow: "0 12px 36px rgba(37, 99, 235, 0.12)",
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: -13,
+                left: "50%",
+                transform: "translateX(-50%)",
+                background: "#2563EB",
+                color: "#FFFFFF",
+                fontSize: 11,
+                fontWeight: 700,
+                padding: "3px 12px",
+                borderRadius: "100px",
+                fontFamily: "var(--font-mono, monospace)",
+                letterSpacing: "0.06em",
+              }}
+            >
+              MOST POPULAR
+            </div>
+
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#2563EB", textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: "var(--font-mono, monospace)" }}>
+                TEAM PRO EDITION
+              </div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6, margin: "14px 0 6px" }}>
+                <span style={{ fontSize: 44, fontWeight: 800, color: "#14142D", letterSpacing: "-0.03em" }}>
+                  {billingPeriod === "annual" ? "$79" : "$99"}
+                </span>
+                <span style={{ fontSize: 13, color: "#7E8B9B" }}>/ month</span>
+              </div>
+              <p style={{ fontSize: 14, color: "#58718A", lineHeight: 1.5, margin: "0 0 24px" }}>
+                For scaling revenue teams & active campaigns. Unlimited campaign generation with master compiler and live execution triage.
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, borderTop: "1px solid rgba(20, 20, 45, 0.08)", paddingTop: 20 }}>
+                {[
+                  "Unlimited 9-node campaign generation",
+                  "Twenty CRM, HubSpot & Salesforce sync",
+                  "Execution Analyst real-time run telemetry",
+                  "Waterfall data adapter (Apollo + Clay)",
+                  "Smartlead & Instantly sequence enrollment",
+                  "100% BYOK key isolation guarantee",
+                ].map((feat) => (
+                  <div key={feat} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#14142D", fontWeight: 500 }}>
+                    <Check size={14} color="#2563EB" strokeWidth={2.5} />
+                    <span>{feat}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginTop: 32 }}>
+              <Link
+                href="/checkout?plan=pro"
+                style={{
+                  background: "#2563EB",
+                  color: "#FFFFFF",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  padding: "13px 20px",
+                  borderRadius: "10px",
+                  textDecoration: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  width: "100%",
+                  boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)",
+                }}
+              >
+                Start Team Plan <ArrowRight size={14} />
+              </Link>
+            </div>
+          </div>
+
+          {/* Tier 3: Scale & Agency */}
+          <div
+            style={{
+              background: "#FFFFFF",
+              borderRadius: "20px",
+              border: "1px solid rgba(20, 20, 45, 0.1)",
+              padding: "36px 30px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#58718A", textTransform: "uppercase", letterSpacing: "0.06em", fontFamily: "var(--font-mono, monospace)" }}>
+                SCALE & AGENCY
+              </div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6, margin: "14px 0 6px" }}>
+                <span style={{ fontSize: 44, fontWeight: 800, color: "#14142D", letterSpacing: "-0.03em" }}>
+                  {billingPeriod === "annual" ? "$159" : "$199"}
+                </span>
+                <span style={{ fontSize: 13, color: "#7E8B9B" }}>/ month</span>
+              </div>
+              <p style={{ fontSize: 14, color: "#58718A", lineHeight: 1.5, margin: "0 0 24px" }}>
+                For GTM consultancies and agencies managing outbound across multiple client workspaces.
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, borderTop: "1px solid rgba(20, 20, 45, 0.08)", paddingTop: 20 }}>
+                {[
+                  "Everything in Team Pro",
+                  "Multi-tenant client workspace sandboxes",
+                  "Custom MCP tool connectors & webhooks",
+                  "White-label client execution reports",
+                  "Priority engineer-led architecture review",
+                  "Dedicated Slack channel with team",
+                ].map((feat) => (
+                  <div key={feat} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#35363B" }}>
+                    <Check size={14} color="#10B981" strokeWidth={2.5} />
+                    <span>{feat}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginTop: 32 }}>
+              <Link
+                href="/checkout?plan=agency"
+                style={{
+                  background: "#14142D",
+                  color: "#FFFFFF",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  padding: "12px 20px",
+                  borderRadius: "10px",
+                  textDecoration: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                }}
+              >
+                Start Agency Plan
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* FOOTER */}
+      {/* ─────────────────────────────────────────────────────────────
+          10. FAQ ACCORDION
+          ───────────────────────────────────────────────────────────── */}
+      <section
+        id="faq"
+        style={{
+          background: "#FFFFFF",
+          borderTop: "1px solid rgba(20, 20, 45, 0.08)",
+          borderBottom: "1px solid rgba(20, 20, 45, 0.08)",
+          padding: "96px 24px",
+        }}
+      >
+        <div style={{ maxWidth: "880px", margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 48 }}>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "#2563EB",
+                fontFamily: "var(--font-mono, monospace)",
+                marginBottom: 12,
+              }}
+            >
+              FREQUENTLY ASKED QUESTIONS
+            </div>
+            <h2
+              style={{
+                fontSize: "clamp(28px, 4vw, 42px)",
+                fontWeight: 800,
+                letterSpacing: "-0.03em",
+                color: "#14142D",
+                margin: "0 0 16px",
+              }}
+            >
+              We have the answers.
+            </h2>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              flexWrap: "wrap",
+              marginBottom: 36,
+            }}
+          >
+            {["All", "General", "Engine & AI", "CRM & Integrations", "Security & BYOK"].map((cat) => {
+              const isSelected = activeFaqCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setActiveFaqCategory(cat)}
+                  style={{
+                    background: isSelected ? "#14142D" : "#F5F7FA",
+                    color: isSelected ? "#FFFFFF" : "#58718A",
+                    border: "none",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    padding: "6px 14px",
+                    borderRadius: "100px",
+                    cursor: "pointer",
+                  }}
+                >
+                  {cat}
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {filteredFaqs.map((faq, index) => {
+              const isOpen = expandedFaq === index;
+              return (
+                <div
+                  key={faq.q}
+                  style={{
+                    background: "#F5F7FA",
+                    borderRadius: "14px",
+                    border: "1px solid rgba(20, 20, 45, 0.08)",
+                    overflow: "hidden",
+                  }}
+                >
+                  <button
+                    onClick={() => setExpandedFaq(isOpen ? null : index)}
+                    style={{
+                      width: "100%",
+                      padding: "20px 24px",
+                      textAlign: "left",
+                      background: "transparent",
+                      border: "none",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      cursor: "pointer",
+                      fontSize: 16,
+                      fontWeight: 700,
+                      color: "#14142D",
+                    }}
+                  >
+                    <span>{faq.q}</span>
+                    <span
+                      style={{
+                        transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+                        transition: "transform 0.2s",
+                        color: "#58718A",
+                      }}
+                    >
+                      <ChevronDown size={18} />
+                    </span>
+                  </button>
+                  {isOpen && (
+                    <div style={{ padding: "0 24px 22px", fontSize: 14, lineHeight: 1.6, color: "#58718A" }}>
+                      {faq.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ─────────────────────────────────────────────────────────────
+          11. FINAL HIGH-IMPACT CTA
+          ───────────────────────────────────────────────────────────── */}
+      <section
+        style={{
+          maxWidth: "1280px",
+          margin: "0 auto",
+          padding: "96px 24px 120px",
+          textAlign: "center",
+        }}
+      >
+        <div
+          style={{
+            background: "linear-gradient(135deg, #101B2D 0%, #1A2840 50%, #0B0F16 100%)",
+            borderRadius: "28px",
+            padding: "clamp(48px, 6vw, 84px) 32px",
+            color: "#FFFFFF",
+            boxShadow: "0 24px 64px -16px rgba(16, 27, 45, 0.35)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              color: "#8DA2FB",
+              fontFamily: "var(--font-mono, monospace)",
+              marginBottom: 16,
+            }}
+          >
+            READY TO SCALE OUTBOUND SAFELY?
+          </div>
+          <h2
+            style={{
+              fontFamily: "var(--font-sans, system-ui)",
+              fontSize: "clamp(32px, 4.5vw, 54px)",
+              fontWeight: 800,
+              lineHeight: 1.15,
+              letterSpacing: "-0.03em",
+              margin: "0 auto 20px",
+              maxWidth: "760px",
+            }}
+          >
+            Ready to take control of your pipeline?
+          </h2>
+          <p
+            style={{
+              fontSize: "clamp(15px, 1.6vw, 18px)",
+              lineHeight: 1.6,
+              color: "#C4CBD8",
+              maxWidth: "600px",
+              margin: "0 auto 40px",
+            }}
+          >
+            Prospect PAL keeps your ICP targeting, copy, and CRM sync crystal clear. Deploy in 3 minutes.
+          </p>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 14,
+              flexWrap: "wrap",
+            }}
+          >
+            <Link
+              href="/wizard"
+              style={{
+                background: "#2563EB",
+                color: "#FFFFFF",
+                fontSize: 15,
+                fontWeight: 600,
+                padding: "14px 28px",
+                borderRadius: "100px",
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                boxShadow: "0 4px 16px rgba(37, 99, 235, 0.4)",
+              }}
+            >
+              Deploy Outbound Agent <ArrowRight size={16} />
+            </Link>
+            <Link
+              href="/packages"
+              style={{
+                background: "rgba(255, 255, 255, 0.1)",
+                color: "#FFFFFF",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                fontSize: 15,
+                fontWeight: 600,
+                padding: "14px 24px",
+                borderRadius: "100px",
+                textDecoration: "none",
+              }}
+            >
+              Get DIY Package ($19.99)
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ─────────────────────────────────────────────────────────────
+          12. ARCHITECTURAL FOOTER
+          ───────────────────────────────────────────────────────────── */}
       <footer
         style={{
-          background: "var(--surface-deep)",
-          borderTop: "1px solid var(--border-deep)",
-          padding: "48px 24px",
-          color: "var(--ink-300)",
-          fontSize: "13px",
+          background: "#FFFFFF",
+          borderTop: "1px solid rgba(20, 20, 45, 0.08)",
+          padding: "72px 24px 40px",
         }}
       >
         <div
           style={{
             maxWidth: "1280px",
             margin: "0 auto",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: 40,
+            marginBottom: 60,
+          }}
+        >
+          {/* Col 1: Brand Info */}
+          <div style={{ gridColumn: "span 2" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <div
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  background: "#14142D",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#FFFFFF",
+                }}
+              >
+                <Workflow size={15} />
+              </div>
+              <span style={{ fontSize: 18, fontWeight: 800, color: "#14142D" }}>
+                Prospect <span style={{ color: "#2563EB" }}>PAL</span>
+              </span>
+            </div>
+            <p style={{ fontSize: 13, lineHeight: 1.6, color: "#58718A", maxWidth: "300px", margin: "0 0 20px" }}>
+              Autonomous GTM & Outbound Agent Engine. Turning ICP briefs into production-grade, zero-collision outbound pipelines.
+            </p>
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                background: "#F5F7FA",
+                border: "1px solid rgba(20, 20, 45, 0.08)",
+                padding: "4px 10px",
+                borderRadius: "100px",
+                fontSize: 11,
+                fontFamily: "var(--font-mono, monospace)",
+                color: "#10B981",
+              }}
+            >
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
+              All Systems Operational · v2.4
+            </div>
+          </div>
+
+          {/* Col 2: Platform */}
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#14142D", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 16, fontFamily: "var(--font-mono, monospace)" }}>
+              Platform
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 13 }}>
+              <a href="#pipeline" style={{ color: "#58718A", textDecoration: "none" }}>5-Pillar Pipeline</a>
+              <a href="#manifesto" style={{ color: "#58718A", textDecoration: "none" }}>CRM Dedupe Shield</a>
+              <a href="#playground" style={{ color: "#58718A", textDecoration: "none" }}>Live Copilot</a>
+              <a href="#bento" style={{ color: "#58718A", textDecoration: "none" }}>Bento Features</a>
+              <Link href="/templates" style={{ color: "#58718A", textDecoration: "none" }}>Workflow Templates</Link>
+            </div>
+          </div>
+
+          {/* Col 3: Integrations */}
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#14142D", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 16, fontFamily: "var(--font-mono, monospace)" }}>
+              Integrations
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 13 }}>
+              <span style={{ color: "#58718A" }}>Twenty CRM</span>
+              <span style={{ color: "#58718A" }}>HubSpot CRM</span>
+              <span style={{ color: "#58718A" }}>n8n Self-Hosted & Cloud</span>
+              <span style={{ color: "#58718A" }}>Apollo.io Adapter</span>
+              <span style={{ color: "#58718A" }}>Smartlead & Instantly</span>
+            </div>
+          </div>
+
+          {/* Col 4: Legal & Trust */}
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#14142D", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 16, fontFamily: "var(--font-mono, monospace)" }}>
+              Security & Legal
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 13 }}>
+              <span style={{ color: "#58718A" }}>100% BYOK Isolation</span>
+              <span style={{ color: "#58718A" }}>Zero Data Storage</span>
+              <span style={{ color: "#58718A" }}>Terms of Service</span>
+              <span style={{ color: "#58718A" }}>Privacy Policy</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Copyright Strip */}
+        <div
+          style={{
+            maxWidth: "1280px",
+            margin: "0 auto",
+            borderTop: "1px solid rgba(20, 20, 45, 0.08)",
+            paddingTop: 24,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             flexWrap: "wrap",
-            gap: 20,
+            gap: 12,
+            fontSize: 12,
+            color: "#7E8B9B",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Logo size={26} onDeep />
-            <span>
-              SalesGency × Diamitani Industries · Built by Patrick Diamitani
-            </span>
-          </div>
-
-          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-            {[
-              { label: "Vertical App", href: "#vertical-app" },
-              { label: "6-Step Flow", href: "#flow" },
-              { label: "Architecture", href: "/how-it-works" },
-              { label: "Agent Marketplace", href: "/packages" },
-              { label: "Workflow JSON", href: "/templates" },
-              { label: "MCP Discovery API", href: "/api/mcp" },
-            ].map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                style={{
-                  color: "var(--ink-300)",
-                  textDecoration: "none",
-                }}
-              >
-                {link.label}
-              </Link>
-            ))}
+          <div>© 2026 Prospect PAL LLC. All rights reserved.</div>
+          <div style={{ display: "flex", gap: 20 }}>
+            <span>Built with Site Empire OS</span>
+            <span>WCAG 2.2 AA Compliant</span>
           </div>
         </div>
       </footer>

@@ -2,33 +2,19 @@ import "../globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "SalesGency Prospect Automation Engine - 1 ICP to Full Outbound Workflow",
-  description:
-    "Scale qualified outbound pipeline with an autonomous sales engine that finds ICP accounts, extracts decision-makers, and writes hyper-personalized emails on behalf of your reps.",
-  keywords: [
-    "outbound automation",
-    "GTM engineering",
-    "ROSTR agent",
-    "PAL compiler",
-    "MCP server",
-    "n8n workflow",
-    "SalesGency",
-  ],
+  title: "Prospect PAL — Autonomous Outbound & GTM Agent Engine",
+  description: "Turn any ICP brief into a 5-pillar, zero-collision outbound engine in 3 seconds. Verified leads, deep company research, personalized PAS copy, and live CRM shields.",
+  keywords: ["outbound automation", "sales automation", "GTM engine", "n8n", "Twenty CRM", "HubSpot", "cold email", "AI agent", "CRM shield", "PAS copywriting"],
+  openGraph: {
+    title: "Prospect PAL — Autonomous Outbound & GTM Agent Engine",
+    description: "Turn any ICP brief into a 5-pillar, zero-collision outbound engine in 3 seconds. Verified leads, deep company research, personalized PAS copy, and live CRM shields.",
+    type: "website",
+  },
 };
 
-export default function MarketingLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      style={{
-        fontFamily: "var(--font-body)",
-        background: "var(--surface-page)",
-        minHeight: "100dvh",
-      }}
-    >
+    <div style={{ fontFamily: "var(--font-body)", background: "#F6F8FA", color: "#14142D", minHeight: "100vh" }}>
       {children}
     </div>
   );
