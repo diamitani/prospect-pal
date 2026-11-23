@@ -38,13 +38,69 @@ export type RunStatus =
   | "failed"
   | "cancelled";
 
+/**
+ * Harness steps (Phase A). `email_research` / `mx_verify` are kept for
+ * backwards compatibility with runs recorded before the harness landed.
+ */
 export type RunStep =
   | "plan"
   | "discover"
-  | "email_research"
-  | "mx_verify"
+  | "enrich"
+  | "verify"
+  | "guard"
   | "score"
-  | "artifacts";
+  | "artifacts"
+  | "email_research"
+  | "mx_verify";
+
+export const HARNESS_STEPS: RunStep[] = [
+  "plan",
+  "discover",
+  "enrich",
+  "verify",
+  "guard",
+  "score",
+  "artifacts",
+];
+
+export type RunEventLevel = "info" | "warn" | "error";
+
+/** One durable step record persisted to ppal_run_events. */
+export interface RunEvent {
+  id?: string;
+  run_id: string | null;
+  step: RunStep;
+  level: RunEventLevel;
+  message: string;
+  meta: Record<string, unknown>;
+  started_at: string;
+  finished_at: string | null;
+  duration_ms: number | null;
+  error: string | null;
+  created_at?: string;
+}
+
+export type SuppressionKind = "email" | "domain";
+
+export interface Suppression {
+  id?: string;
+  workspace_id?: string | null;
+  user_id?: string | null;
+  kind: SuppressionKind;
+  value: string;
+  reason?: string | null;
+  created_at?: string;
+}
+
+export type EnrichmentSource = "apollo" | "hunter" | "free" | "none";
+
+/** Per-lead record of which enrichment path produced (or failed to produce) data. */
+export interface LeadEnrichment {
+  mode: EnrichmentMode;
+  source: EnrichmentSource;
+  attempted: string[];
+  notes: string[];
+}
 
 export interface ScoreBreakdown {
   confirmed_icp_fit: number;
@@ -87,6 +143,8 @@ export interface ProspectLead {
   status: string;
   outreach_subject?: string | null;
   outreach_body?: string | null;
+  enrichment?: LeadEnrichment | null;
+  created_by?: string | null;
   created_at?: string;
   updated_at?: string;
 }

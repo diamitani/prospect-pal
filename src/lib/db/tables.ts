@@ -9,4 +9,6 @@ export const TABLES = {
   runs: "ppal_runs",
   leads: "ppal_leads",
   crmWritePreviews: "ppal_crm_write_previews",
+  runEvents: "ppal_run_events",
+  suppressions: "ppal_suppressions",
 } as const;

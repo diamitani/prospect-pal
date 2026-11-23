@@ -6,6 +6,8 @@ describe("namespaced tables", () => {
     expect(TABLES.runs).toBe("ppal_runs");
     expect(TABLES.leads).toBe("ppal_leads");
     expect(TABLES.crmWritePreviews).toBe("ppal_crm_write_previews");
+    expect(TABLES.runEvents).toBe("ppal_run_events");
+    expect(TABLES.suppressions).toBe("ppal_suppressions");
     for (const name of Object.values(TABLES)) {
       expect(name.startsWith("ppal_")).toBe(true);
     }

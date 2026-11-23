@@ -26,6 +26,15 @@ export const COMPOSIO_APPS = [
     color:    "#3B82F6",
   },
   {
+    id:       "hunter",
+    appName:  "hunter",
+    name:     "Hunter",
+    emoji:    "🎯",
+    desc:     "Domain email search + verification (BYOK enrichment)",
+    category: "lead-source",
+    color:    "#FF5722",
+  },
+  {
     id:       "twenty",
     appName:  "twenty",
     name:     "Twenty CRM",

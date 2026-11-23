@@ -24,7 +24,7 @@ interface UserSession {
 }
 
 export default function DashboardPage() {
-  const [view, setView] = useState<View>("home");
+  const [view, setView] = useState<View>("core-sdr");
   const [projectId, setProjectId] = useState<string | null>(null);
   const [projectName, setProjectName] = useState<string | null>(null);
   const [user, setUser] = useState<UserSession | null>(null);

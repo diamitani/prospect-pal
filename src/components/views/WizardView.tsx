@@ -61,7 +61,6 @@ const OPTIONS: Record<string, { value: string; label: string; description: strin
     { value: "bedrock", label: "AWS Bedrock", description: "Enterprise cloud AI" },
   ],
   approvalPolicy: [
-    { value: "auto", label: "Auto-send", description: "Send without human review" },
     { value: "approval", label: "Human approval", description: "Review each batch before send" },
     { value: "draft", label: "Draft only", description: "Generate but never send" },
   ],

@@ -2,17 +2,17 @@
  * HubSpot write PREVIEW — never writes. Returns exact payload for human approval.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth-supabase";
-import { createClient } from "@/lib/supabase-server";
-import { createAdminClient } from "@/lib/supabase-admin";
 import { TABLES } from "@/lib/db/tables";
+import { ownerOrFilter, requireUser } from "@/lib/harness/auth";
+import { getDb } from "@/lib/harness/db";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
+  const auth = await requireUser();
+  if (!auth.ok) return auth.response;
   try {
-    const session = await getSession().catch(() => null);
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     const leadIds: string[] = body.leadIds || body.lead_ids || [];
     if (!Array.isArray(leadIds) || leadIds.length === 0) {
       return NextResponse.json(
@@ -21,8 +21,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const supabase =
-      createAdminClient() || (await createClient().catch(() => null));
+    const supabase = await getDb();
     if (!supabase) {
       return NextResponse.json({ error: "supabase_unavailable" }, { status: 503 });
     }
@@ -30,7 +29,8 @@ export async function POST(req: NextRequest) {
     const { data: leads, error } = await supabase
       .from(TABLES.leads)
       .select("*")
-      .in("id", leadIds);
+      .in("id", leadIds.slice(0, 200).map(String))
+      .or(ownerOrFilter(auth.owner));
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -54,7 +54,11 @@ export async function POST(req: NextRequest) {
       blockers: l.blockers || [],
       skip_reason: !l.email
         ? "missing_email"
-        : l.disposition === "excluded"
+        : l.status === "suppressed"
+          ? "suppressed"
+          : l.status === "duplicate_prior_run"
+            ? "duplicate_prior_run"
+            : l.disposition === "excluded"
           ? "excluded"
           : l.verification_status === "accept_all"
             ? "accept_all_never_auto"
@@ -78,10 +82,10 @@ export async function POST(req: NextRequest) {
     const { data: preview, error: pErr } = await supabase
       .from(TABLES.crmWritePreviews)
       .insert({
-        workspace_id: session?.workspaceId || null,
-        created_by: session?.id || null,
+        workspace_id: auth.owner.workspaceId,
+        created_by: auth.owner.userId,
         provider: "hubspot",
-        lead_ids: leadIds,
+        lead_ids: (leads || []).map((l) => l.id),
         payload,
         status: "pending",
       })

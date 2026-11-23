@@ -16,7 +16,7 @@ const VIEW_META: Record<View, { title: string; crumb: string }> = {
   builder: { title: "Workflow Builder", crumb: "Build your GTM automation workflow" },
   outputs: { title: "Outputs & Deploy", crumb: "Download or deploy your workflow" },
   analyst: { title: "Analyzer", crumb: "Diagnose workflow errors" },
-  "core-sdr": { title: "Core SDR Agent", crumb: "Autonomous prospecting, deep research, and PAS outreach" },
+  "core-sdr": { title: "Outbound Runs", crumb: "Brief → runs → step timeline → A/B/C queues → HubSpot approval" },
   blueprints: { title: "Agent Package", crumb: "Skills, instructions, and scaffolding" },
   templates: { title: "Templates", crumb: "Proven engines for common use cases" },
   reports: { title: "Reports", crumb: "Execution history and daily summary" },

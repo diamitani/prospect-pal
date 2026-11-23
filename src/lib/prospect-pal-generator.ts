@@ -31,7 +31,28 @@ export interface SectionToolSelection {
   aiEngine: "claude" | "gpt4" | "gemini" | "bedrock";
   sequencer: "smartlead" | "instantly" | "hubspot_seq" | "lemlist";
   alertChannel: "slack" | "discord" | "email" | "auto";
+  /**
+   * "auto" is accepted for backwards compatibility but is ALWAYS coerced to
+   * human approval — generated routines are draft-only (see enforceDraftOnly).
+   */
   approvalPolicy: "auto" | "approval" | "draft";
+}
+
+export type EnforcedApprovalPolicy = "approval" | "draft";
+
+export const ROUTINE_GUARDRAILS = {
+  draftOnly: true,
+  humanApprovalRequired: true,
+  autoSend: false,
+  autoEnroll: false,
+} as const;
+
+/**
+ * Guardrail: generated routines never auto-send or auto-enroll. Any "auto"
+ * (or unknown) policy becomes human approval; "draft" stays draft-only.
+ */
+export function enforceDraftOnlyPolicy(policy: unknown): EnforcedApprovalPolicy {
+  return policy === "draft" ? "draft" : "approval";
 }
 
 export interface GeneratedRoutineResult {
@@ -94,10 +115,15 @@ export async function generateProspectPalRoutine(
     ...intake,
   };
 
-  const mergedTools: SectionToolSelection = {
+  const requestedPolicy = tools.approvalPolicy ?? DEFAULT_TOOL_SELECTION.approvalPolicy;
+  const mergedTools: Omit<SectionToolSelection, "approvalPolicy"> & {
+    approvalPolicy: EnforcedApprovalPolicy;
+  } = {
     ...DEFAULT_TOOL_SELECTION,
     ...tools,
+    approvalPolicy: enforceDraftOnlyPolicy(requestedPolicy),
   };
+  const policyOverridden = requestedPolicy === "auto";
 
   const campaignId = `pal_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
   const now = new Date().toISOString();
@@ -112,6 +138,7 @@ export async function generateProspectPalRoutine(
 
   // Synthesize PAS Copy
   const company = mergedIntake.companyName;
+  const DRAFT_NODE = "08 Draft Queue (Human Approval Required)";
   const offer = mergedIntake.offer;
   const primaryPersona = mergedIntake.personas.split(",")[0].trim() || "Engineering Leader";
   const primaryTrigger = mergedIntake.triggers.split(",")[0].trim() || "Scaling infrastructure";
@@ -211,25 +238,27 @@ export async function generateProspectPalRoutine(
     },
     {
       parameters: {
-        campaignId: "prospect_pal_campaign",
-        email: "={{ $json.email }}",
+        method: "POST",
+        url: "={{ $env.PROSPECT_PAL_URL }}/api/sdr/dispatch",
+        body: "={{ { leadId: $json.lead_id, emailSubject: $json.subject, emailBody: $json.body } }}",
+        draftOnly: true,
       },
-      name: `08 Sequence Enrollment (${mergedTools.sequencer.toUpperCase()})`,
-      type: `n8n-nodes-base.${mergedTools.sequencer === "smartlead" ? "smartlead" : "httpRequest"}`,
+      name: DRAFT_NODE,
+      type: "n8n-nodes-base.httpRequest",
       typeVersion: 1,
       position: [1860, 300],
-      notes: `Enrolls prospect into ${mergedTools.sequencer} with warm-up safety`,
+      notes: `Queues a DRAFT in Prospect Pal (POST /api/sdr/dispatch → draft_queued). Never sends or enrolls. ${mergedTools.sequencer} enrollment happens only after a human approves.`,
     },
     {
       parameters: {
         channel: "#outbound-telemetry",
-        text: "={{ 'Prospect enrolled: ' + $json.email + ' | Status: ' + $json.status }}",
+        text: "={{ 'Draft queued for human approval: ' + $json.email + ' | Status: ' + $json.status }}",
       },
       name: `09 Review & Error Triage (${mergedTools.alertChannel.toUpperCase()})`,
       type: `n8n-nodes-base.${mergedTools.alertChannel === "discord" ? "discord" : "slack"}`,
       typeVersion: 1,
       position: [2090, 300],
-      notes: `Alerts on enrollment & triggers self-healing on failure`,
+      notes: `Notifies reviewers that drafts await approval & triggers self-healing on failure`,
     },
   ];
 
@@ -240,8 +269,8 @@ export async function generateProspectPalRoutine(
     [`04 Waterfall Contact Reveal (${mergedTools.dataTool.toUpperCase()})`]: { main: [[{ node: "05 Deep Account PAS Research", type: "main", index: 0 }]] },
     "05 Deep Account PAS Research": { main: [[{ node: "06 PAS AI Copywriter", type: "main", index: 0 }]] },
     "06 PAS AI Copywriter": { main: [[{ node: `07 CRM Contact Upsert (${mergedTools.crm.toUpperCase()})`, type: "main", index: 0 }]] },
-    [`07 CRM Contact Upsert (${mergedTools.crm.toUpperCase()})`]: { main: [[{ node: `08 Sequence Enrollment (${mergedTools.sequencer.toUpperCase()})`, type: "main", index: 0 }]] },
-    [`08 Sequence Enrollment (${mergedTools.sequencer.toUpperCase()})`]: { main: [[{ node: `09 Review & Error Triage (${mergedTools.alertChannel.toUpperCase()})`, type: "main", index: 0 }]] },
+    [`07 CRM Contact Upsert (${mergedTools.crm.toUpperCase()})`]: { main: [[{ node: DRAFT_NODE, type: "main", index: 0 }]] },
+    [DRAFT_NODE]: { main: [[{ node: `09 Review & Error Triage (${mergedTools.alertChannel.toUpperCase()})`, type: "main", index: 0 }]] },
   };
 
   const n8nWorkflowJson = {
@@ -255,6 +284,8 @@ export async function generateProspectPalRoutine(
       saveExecutionProgress: true,
     },
     meta: {
+      guardrails: ROUTINE_GUARDRAILS,
+      approvalPolicy: mergedTools.approvalPolicy,
       generator: "Prospect PAL v2.4",
       campaignId,
       createdAt: now,
@@ -281,7 +312,7 @@ export async function generateProspectPalRoutine(
 - **AI Engine:** \`${mergedTools.aiEngine}\`
 - **Outreach Sequencer:** \`${mergedTools.sequencer}\`
 - **Alert Channel:** \`${mergedTools.alertChannel}\`
-- **Approval Policy:** \`${mergedTools.approvalPolicy}\`
+- **Approval Policy:** \`${mergedTools.approvalPolicy}\` (draft-only, never auto-send or auto-enroll${policyOverridden ? "; requested auto was overridden to human approval" : ""})
 
 ## 3-Sentence PAS Messaging Directive
 \`\`\`
@@ -294,6 +325,8 @@ Solution: ${solution}
 1. **Never pitch existing active accounts:** Verify against ${mergedTools.crm} before contact reveal.
 2. **Never send generic AI clichés:** Respect the 3-sentence PAS rule.
 3. **Domain reputation shield:** Maintain deliverability > 94% with SMTP verification.
+4. **Draft-only:** Never auto-send and never auto-enroll. Every message is queued as a draft and requires explicit human approval before any sequencer enrollment.
+5. **Suppression list:** Skip any email or domain on the Prospect Pal suppression list and any lead already found in a prior run.
 ${docContext ? `\n## Ingested Playbook & Collateral\n${docContext.slice(0, 1500)}...` : ""}
 `;
 
@@ -302,7 +335,7 @@ ${docContext ? `\n## Ingested Playbook & Collateral\n${docContext.slice(0, 1500)
 2. Check ${mergedTools.crm} for deal collisions. Drop matches immediately.
 3. Run waterfall reveal via ${mergedTools.dataTool}. Validate SMTP handshake.
 4. Synthesize PAS email using ${mergedTools.aiEngine}.
-5. ${mergedTools.approvalPolicy === "approval" ? "Send draft to " + mergedTools.alertChannel + " for 1-click human approval." : "Auto-enroll directly into " + mergedTools.sequencer + "."}
+5. ${mergedTools.approvalPolicy === "draft" ? "Queue as draft only in Prospect Pal. Never send or enroll." : "Queue draft in Prospect Pal and notify " + mergedTools.alertChannel + " for human approval. Enroll into " + mergedTools.sequencer + " only after a human approves."}
 6. Monitor run telemetry; alert if error rate exceeds 1%.`;
 
   return {

@@ -1547,7 +1547,7 @@ export default function HomePage() {
               }}
             >
               <div style={{ fontSize: 12, fontWeight: 700, color: "#8DA2FB", marginBottom: 14 }}>
-                // WATERFALL ENRICHMENT CASCADE
+                {"// WATERFALL ENRICHMENT CASCADE"}
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 12 }}>
                 <div style={{ background: "rgba(255, 255, 255, 0.05)", padding: "10px 12px", borderRadius: 8, borderLeft: "3px solid #2563EB" }}>
