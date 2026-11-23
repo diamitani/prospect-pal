@@ -17,6 +17,7 @@ interface N8nTestResult {
 
 const APPS = [
   { id: "apollo",     name: "Apollo",     emoji: "🏺", desc: "Lead discovery & contact search",   category: "Lead Source",    color: "#3B82F6" },
+  { id: "hunter",     name: "Hunter",     emoji: "🎯", desc: "Domain email search & verification", category: "Lead Source",    color: "#FF5722" },
   { id: "twenty",     name: "Twenty CRM", emoji: "🎯", desc: "Open-source CRM sync & leads",      category: "CRM",            color: "#111827" },
   { id: "hubspot",    name: "HubSpot",    emoji: "🔶", desc: "CRM sync & deduplication",          category: "CRM",            color: "#FF7A59" },
   { id: "salesforce", name: "Salesforce", emoji: "☁️", desc: "Enterprise CRM integration",        category: "CRM",            color: "#00A1E0" },

@@ -213,12 +213,12 @@ export default function WizardPage() {
             { name: "05 Deep Account PAS Research", type: "n8n-nodes-base.openAi" },
             { name: "06 PAS AI Copywriter", type: "n8n-nodes-base.openAi" },
             { name: `07 CRM Contact Upsert (${tools.crm.toUpperCase()})`, type: "n8n-nodes-base.httpRequest" },
-            { name: `08 Sequence Enrollment (${tools.sequencer.toUpperCase()})`, type: "n8n-nodes-base.smartlead" },
+            { name: "08 Draft Queue (Human Approval Required)", type: "n8n-nodes-base.httpRequest" },
             { name: `09 Review & Error Triage (${tools.alertChannel.toUpperCase()})`, type: "n8n-nodes-base.slack" },
           ],
         },
         agentSkillMd: `# Prospect PAL Agent: ${companyName} Outbound Routine\n\nTarget ICP: ${icp}\nPersonas: ${personas}\nCRM Shield: ${tools.crm}\nDeliverability Target: >94%\n\nPAS Hook: Saw ${companyName} is prioritizing ${triggers.split(",")[0]}.\nPAS Agitate: Most ${primaryPersona}s lose 15+ hours weekly.\nPAS Solution: We built ${offer}. Open to a 2-minute benchmark?`,
-        routineInstructions: `Run daily at 09:00 AM. Check ${tools.crm} for deal collisions. Run waterfall reveal via ${tools.dataTool}. Enroll to ${tools.sequencer}.`,
+        routineInstructions: `Run daily at 09:00 AM. Check ${tools.crm} for deal collisions. Run waterfall reveal via ${tools.dataTool}. Queue drafts for human approval; enroll to ${tools.sequencer} only after approval (never auto-send).`,
       });
     } finally {
       setIsGenerating(false);

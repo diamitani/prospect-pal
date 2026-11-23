@@ -36,15 +36,16 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
+  // Outbound harness (primary surface)
+  { id: "core-sdr", label: "Outbound Runs", icon: Bot, section: "Outbound" },
   // Build
-  { id: "home", label: "Dashboard", icon: LayoutDashboard, section: "Build" },
+  { id: "home", label: "Overview", icon: LayoutDashboard, section: "Build" },
   { id: "studio", label: "Studio", icon: MessageSquare },
   { id: "templates", label: "Templates", icon: Layers },
   // Engineer
   { id: "analyst", label: "Analyzer", icon: Stethoscope, section: "Engineer" },
   // Agents
   { id: "blueprints", label: "Agent Package", icon: Package, section: "Agents" },
-  { id: "core-sdr", label: "Core SDR", icon: Bot, badge: "beta" },
   // Account
   { id: "settings", label: "Settings", icon: Settings, section: "Account" },
 ];

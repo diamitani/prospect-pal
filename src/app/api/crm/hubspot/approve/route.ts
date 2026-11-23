@@ -4,10 +4,9 @@
  * Never auto-writes.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth-supabase";
-import { createClient } from "@/lib/supabase-server";
-import { createAdminClient } from "@/lib/supabase-admin";
 import { TABLES } from "@/lib/db/tables";
+import { isUuid, ownsRow, requireUser } from "@/lib/harness/auth";
+import { getDb } from "@/lib/harness/db";
 import {
   executeComposioAction,
   isComposioConfigured,
@@ -16,12 +15,14 @@ import {
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
+  const auth = await requireUser();
+  if (!auth.ok) return auth.response;
+  const session = auth.session;
   try {
-    const session = await getSession().catch(() => null);
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     const previewId = body.preview_id || body.previewId;
     const approved = body.approved === true;
-    if (!previewId) {
+    if (!previewId || !isUuid(previewId)) {
       return NextResponse.json({ error: "preview_id required" }, { status: 400 });
     }
     if (!approved) {
@@ -31,8 +32,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const supabase =
-      createAdminClient() || (await createClient().catch(() => null));
+    const supabase = await getDb();
     if (!supabase) {
       return NextResponse.json({ error: "supabase_unavailable" }, { status: 503 });
     }
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
       .eq("id", previewId)
       .single();
 
-    if (error || !preview) {
+    if (error || !preview || !ownsRow(auth.owner, preview)) {
       return NextResponse.json({ error: "preview_not_found" }, { status: 404 });
     }
     if (preview.status !== "pending") {
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
             reason: "needs_credentials",
             detail:
               "COMPOSIO_API_KEY not set; HubSpot write not executed",
-            actor: session?.email || null,
+            actor: session.email || null,
           },
         })
         .eq("id", previewId);
@@ -78,7 +78,8 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const entityId = session?.id || session?.workspaceId || "default";
+    // Composio entity = the approving user (their own connected HubSpot).
+    const entityId = session.id;
     const contacts =
       (preview.payload as { contacts?: Array<{ email?: string; properties?: Record<string, unknown> }> })
         ?.contacts || [];
@@ -102,7 +103,7 @@ export async function POST(req: NextRequest) {
     const applyResult = {
       applied,
       results,
-      actor: session?.email || null,
+      actor: session.email || null,
     };
 
     await supabase

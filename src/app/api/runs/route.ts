@@ -1,24 +1,29 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth-supabase";
-import { createClient } from "@/lib/supabase-server";
-import { createAdminClient } from "@/lib/supabase-admin";
+import { NextRequest, NextResponse, after } from "next/server";
 import type { CreateRunRequest, EnrichmentMode } from "@/lib/prospecting/types";
 import { TABLES } from "@/lib/db/tables";
+import { ownerOrFilter, requireUser } from "@/lib/harness/auth";
+import { getDb } from "@/lib/harness/db";
+import { processRun } from "@/lib/prospecting/worker";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
+
+const MODES: EnrichmentMode[] = ["free", "byok", "dual"];
 
 export async function GET() {
+  const auth = await requireUser();
+  if (!auth.ok) return auth.response;
   try {
-    const session = await getSession().catch(() => null);
-    const supabase = createAdminClient() || (await createClient().catch(() => null));
+    const supabase = await getDb();
     if (!supabase) {
       return NextResponse.json({ runs: [], warning: "supabase_unavailable" });
     }
-    let q = supabase.from(TABLES.runs).select("*").order("created_at", { ascending: false }).limit(50);
-    if (session?.workspaceId) {
-      q = q.eq("workspace_id", session.workspaceId);
-    }
-    const { data, error } = await q;
+    const { data, error } = await supabase
+      .from(TABLES.runs)
+      .select("*")
+      .or(ownerOrFilter(auth.owner))
+      .order("created_at", { ascending: false })
+      .limit(50);
     if (error) {
       return NextResponse.json({ runs: [], error: error.message }, { status: 200 });
     }
@@ -32,17 +37,18 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireUser();
+  if (!auth.ok) return auth.response;
   try {
-    const session = await getSession().catch(() => null);
-    const body = (await req.json()) as CreateRunRequest;
-    if (!body?.brief || typeof body.brief !== "string") {
+    const body = (await req.json().catch(() => ({}))) as CreateRunRequest;
+    if (!body?.brief || typeof body.brief !== "string" || !body.brief.trim()) {
       return NextResponse.json({ error: "brief is required" }, { status: 400 });
     }
+    const enrichment_mode: EnrichmentMode = MODES.includes(body.enrichment_mode as EnrichmentMode)
+      ? (body.enrichment_mode as EnrichmentMode)
+      : "free";
 
-    const enrichment_mode = (body.enrichment_mode ||
-      "free") as EnrichmentMode;
-
-    const supabase = createAdminClient() || (await createClient().catch(() => null));
+    const supabase = await getDb();
     if (!supabase) {
       return NextResponse.json(
         { error: "Supabase not configured — set NEXT_PUBLIC_SUPABASE_URL and keys" },
@@ -50,11 +56,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Never trust a client-supplied workspace_id: scope to the session owner.
     const row = {
-      workspace_id: body.workspace_id || session?.workspaceId || null,
-      created_by: session?.id || null,
+      workspace_id: auth.owner.workspaceId,
+      created_by: auth.owner.userId,
       status: "queued",
-      brief: body.brief.trim(),
+      brief: body.brief.trim().slice(0, 4000),
       enrichment_mode,
       plan: body.plan || null,
       progress: [],
@@ -66,19 +73,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Fire-and-forget worker kick (same deployment)
-    const base =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
-    if (base && data?.id) {
-      fetch(`${base}/api/runs/${data.id}/worker`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-prospect-pal-worker": process.env.WORKER_SECRET || "dev",
-        },
-        body: JSON.stringify({ kick: true }),
-      }).catch((e) => console.warn("[runs] worker kick failed", e));
+    // Execute in-process after the response is sent (no fragile HTTP self-call).
+    if (data?.id) {
+      after(async () => {
+        const r = await processRun(supabase, data.id);
+        if (r.status === "failed") console.warn("[runs] run failed", data.id, r.error);
+      });
     }
 
     return NextResponse.json({ run: data }, { status: 201 });

@@ -7,12 +7,15 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { generateProspectPalRoutine } from "@/lib/prospect-pal-generator";
+import { requireUser } from "@/lib/harness/auth";
 import type { GeneratorIntake, SectionToolSelection } from "@/lib/prospect-pal-generator";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
+  const auth = await requireUser();
+  if (!auth.ok) return auth.response;
   try {
     const body = await req.json().catch(() => ({}));
     const intake: Partial<GeneratorIntake> = body.intake || {};

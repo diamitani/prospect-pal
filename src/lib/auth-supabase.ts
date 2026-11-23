@@ -27,28 +27,46 @@ export async function getSession(): Promise<SessionUser | null> {
     return null;
   }
 
-  // Fetch user profile
-  const { data: profile } = await supabase
-    .from('users')
-    .select('full_name, plan, onboarding_completed')
-    .eq('id', user.id)
-    .single();
+  // Enably-safe: unprefixed `users` / `workspaces` may be missing, have a
+  // different schema, or have no row for this user. Never let that break
+  // login — fall back to auth metadata + user-only scoping.
+  let profile: { full_name?: string | null; plan?: SessionUser['plan'] | null; onboarding_completed?: boolean | null } | null = null;
+  try {
+    const { data } = await supabase
+      .from('users')
+      .select('full_name, plan, onboarding_completed')
+      .eq('id', user.id)
+      .maybeSingle();
+    profile = data;
+  } catch {
+    profile = null;
+  }
 
-  // Fetch default workspace (first workspace owned by user)
-  const { data: workspace } = await supabase
-    .from('workspaces')
-    .select('id, name')
-    .eq('owner_id', user.id)
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .single();
+  let workspace: { id?: string | null; name?: string | null } | null = null;
+  try {
+    const { data } = await supabase
+      .from('workspaces')
+      .select('id, name')
+      .eq('owner_id', user.id)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    workspace = data;
+  } catch {
+    workspace = null;
+  }
+
+  const metaName =
+    (user.user_metadata?.full_name as string | undefined) ||
+    (user.user_metadata?.name as string | undefined);
+  const email = user.email || '';
 
   return {
     id: user.id,
-    email: user.email!,
-    name: profile?.full_name || user.email!.split('@')[0],
+    email,
+    name: profile?.full_name || metaName || email.split('@')[0] || 'User',
     plan: profile?.plan || 'free',
-    workspaceId: workspace?.id || '',
+    workspaceId: workspace?.id ? String(workspace.id) : '',
     workspaceName: workspace?.name || '',
     onboardingCompleted: profile?.onboarding_completed || false,
   };
